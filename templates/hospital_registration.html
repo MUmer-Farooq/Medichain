@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+{# Flask Dynamic Route: /register-hospital — POST form #}
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Hospital Registration — MediChain</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/hospital_registration.css') }}" />
+
+</head>
+
+<body>
+
+  <!-- Back to home -->
+  <a href="{{ url_for('index') }}" class="text-muted fs-13"><i class="fas fa-arrow-left me-1"></i>Back to MediChain</a>
+  </div>
+
+  <div class="reg-card">
+    <!-- Header -->
+    <div class="reg-header">
+      <div class="d-flex align-items-center gap-3 mb-2">
+        <div
+          style="width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">
+          <i class="fas fa-hospital"></i>
+        </div>
+        <div>
+          <h4 class="mb-0 fw-700" style="color:#fff;">Hospital Registration</h4>
+          <p class="mb-0 fs-12" style="color:rgba(255,255,255,.7);">Join the MediChain blockchain network</p>
+        </div>
+      </div>
+      <div class="d-flex gap-3 mt-3 flex-wrap">
+        <div class="d-flex align-items-center gap-2" style="color:rgba(255,255,255,.8);font-size:.82rem;"><i
+            class="fas fa-shield-halved"></i>SSL Secured</div>
+        <div class="d-flex align-items-center gap-2" style="color:rgba(255,255,255,.8);font-size:.82rem;"><i
+            class="fas fa-clock"></i>Review within 2–3 business days</div>
+        <div class="d-flex align-items-center gap-2" style="color:rgba(255,255,255,.8);font-size:.82rem;"><i
+            class="fas fa-headset"></i>Support available 24/7</div>
+      </div>
+    </div>
+
+    <!-- Step Indicators -->
+    <div class="step-indicator" id="stepIndicator">
+      <div class="step-item active" id="si-1">
+        <div class="snum">1</div><br />Hospital Info
+      </div>
+      <div class="step-item" id="si-2">
+        <div class="snum">2</div><br />Admin Details
+      </div>
+      <div class="step-item" id="si-3">
+        <div class="snum">3</div><br />Documents
+      </div>
+      <div class="step-item" id="si-4">
+        <div class="snum">4</div><br />Review
+      </div>
+    </div>
+
+    {# Flask: <form action="{{ url_for('hospital_registration') }}" method="POST" enctype="multipart/form-data"> #}
+    <form id="regForm" novalidate>
+      <!-- STEP 1: Hospital Information -->
+      <div class="step-pane active" id="step1">
+        <div class="section-title"><i class="fas fa-hospital me-2"></i>Hospital Information</div>
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label">Hospital Name <span class="req-badge"><i
+                  class="fas fa-asterisk"></i>Required</span></label>
+            {# Flask: {{ form.hospital_name(class="form-control") }} #}
+            <input type="text" class="form-control" name="hospital_name" placeholder="e.g. Sindh Government Hospital"
+              required />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Registration Number</label>
+            <input type="text" class="form-control" name="reg_number" placeholder="e.g. HOS-2024-0123" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Hospital Type</label>
+            {# Flask: {{ form.hospital_type(class="form-select") }} #}
+            <select class="form-select" name="hospital_type" required>
+              <option value="">Select Type</option>
+              <option>Government Hospital</option>
+              <option>Private Hospital</option>
+              <option>Specialist Centre</option>
+              <option>Clinic</option>
+              <option>Teaching Hospital</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Specialization</label>
+            <select class="form-select" name="specialization">
+              <option value="">Select Specialization</option>
+              <option>General Medicine</option>
+              <option>Cardiology</option>
+              <option>Oncology</option>
+              <option>Neurology</option>
+              <option>Pediatrics</option>
+              <option>Orthopedics</option>
+              <option>Multi-Speciality</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">State</label>
+            <select class="form-select" name="state" required>
+              <option value="">Select State</option>
+              <option>Sindh</option>
+              <option>Punjab</option>
+              <option>KPK</option>
+              <option>Balochistan</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">City</label>
+            <input type="text" class="form-control" name="city" placeholder="e.g. Karachi" required />
+          </div>
+          <div class="col-12">
+            <label class="form-label">Full Address</label>
+            <textarea class="form-control" name="address" rows="2" placeholder="Full hospital address"
+              required></textarea>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Postcode</label>
+            <input type="text" class="form-control" name="postcode" placeholder="50000" required />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" class="form-control" name="phone" placeholder="+60 3-XXXX XXXX" required />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Hospital Email</label>
+            <input type="email" class="form-control" name="hospital_email" placeholder="info@hospital.com" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Website (Optional)</label>
+            <input type="url" class="form-control" name="website" placeholder="https://www.hospital.com" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Bed Capacity</label>
+            <input type="number" class="form-control" name="bed_capacity" placeholder="e.g. 500" min="1" />
+          </div>
+        </div>
+        <div class="d-flex justify-content-end mt-4">
+          <button type="button" class="btn btn-primary" onclick="goStep(2)">Next: Admin Details <i
+              class="fas fa-arrow-right ms-2"></i></button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Admin Details -->
+      <div class="step-pane" id="step2">
+        <div class="section-title"><i class="fas fa-user-tie me-2"></i>Hospital Administrator</div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Administrator Full Name</label>
+            <input type="text" class="form-control" name="admin_name" placeholder="Full name" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">IC / Passport Number</label>
+            <input type="text" class="form-control" name="admin_ic" placeholder="XXXXXX-XX-XXXX" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Administrator Email</label>
+            <input type="email" class="form-control" name="admin_email" placeholder="admin@hospital.com" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Administrator Phone</label>
+            <input type="tel" class="form-control" name="admin_phone" placeholder="+60 1X-XXXX XXXX" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Designation / Job Title</label>
+            <input type="text" class="form-control" name="designation" placeholder="e.g. Hospital Director" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Department</label>
+            <input type="text" class="form-control" name="department" placeholder="e.g. Administration" />
+          </div>
+        </div>
+        <div class="section-title mt-4"><i class="fas fa-lock me-2"></i>Set Account Password</div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Password</label>
+            <div class="input-group">
+              <input type="password" class="form-control" name="password" id="regPassword"
+                placeholder="Min. 8 characters" required minlength="8" />
+              <button type="button" class="btn btn-outline-secondary"
+                onclick="MediChain.togglePassword('regPassword',this.querySelector('i'))"><i
+                  class="fas fa-eye"></i></button>
+            </div>
+            <div class="form-text">Min 8 chars with uppercase, number, and symbol</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" class="form-control" name="confirm_password" id="regConfirm"
+              placeholder="Re-enter password" required />
+          </div>
+        </div>
+        <div class="d-flex justify-content-between mt-4">
+          <button type="button" class="btn btn-outline-secondary" onclick="goStep(1)"><i
+              class="fas fa-arrow-left me-2"></i>Back</button>
+          <button type="button" class="btn btn-primary" onclick="goStep(3)">Next: Documents <i
+              class="fas fa-arrow-right ms-2"></i></button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Documents -->
+      <div class="step-pane" id="step3">
+        <div class="section-title"><i class="fas fa-file-alt me-2"></i>Required Documents</div>
+        <div class="mc-alert mc-alert-info mb-4"><i class="fas fa-info-circle alert-icon"></i>Upload clear scanned
+          copies. Accepted: PDF, JPG, PNG (Max 5MB each).</div>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label class="form-label">Hospital Registration Certificate <span class="req-badge"><i
+                  class="fas fa-asterisk"></i>Required</span></label>
+            <div class="doc-upload-area" onclick="document.getElementById('doc1').click()">
+              <div class="upload-icon"><i class="fas fa-file-certificate"></i></div>
+              <div class="fw-600 fs-13">Click to upload</div>
+              <div class="text-muted fs-12 mt-1">PDF, JPG, PNG — Max 5MB</div>
+              <input type="file" id="doc1" name="reg_certificate" class="d-none" accept=".pdf,.jpg,.jpeg,.png"
+                onchange="showFile(this,'doc1-name')" />
+              <div id="doc1-name" class="mt-2 text-primary fs-12 fw-600"></div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Ministry of Health License <span class="req-badge"><i
+                  class="fas fa-asterisk"></i>Required</span></label>
+            <div class="doc-upload-area" onclick="document.getElementById('doc2').click()">
+              <div class="upload-icon"><i class="fas fa-id-card"></i></div>
+              <div class="fw-600 fs-13">Click to upload</div>
+              <div class="text-muted fs-12 mt-1">PDF, JPG, PNG — Max 5MB</div>
+              <input type="file" id="doc2" name="moh_license" class="d-none" accept=".pdf,.jpg,.jpeg,.png"
+                onchange="showFile(this,'doc2-name')" />
+              <div id="doc2-name" class="mt-2 text-primary fs-12 fw-600"></div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Administrator IC / Passport</label>
+            <div class="doc-upload-area" onclick="document.getElementById('doc3').click()">
+              <div class="upload-icon"><i class="fas fa-passport"></i></div>
+              <div class="fw-600 fs-13">Click to upload</div>
+              <div class="text-muted fs-12 mt-1">PDF, JPG, PNG — Max 5MB</div>
+              <input type="file" id="doc3" name="admin_ic_doc" class="d-none" accept=".pdf,.jpg,.jpeg,.png"
+                onchange="showFile(this,'doc3-name')" />
+              <div id="doc3-name" class="mt-2 text-primary fs-12 fw-600"></div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Letter of Authorization (Optional)</label>
+            <div class="doc-upload-area" onclick="document.getElementById('doc4').click()">
+              <div class="upload-icon"><i class="fas fa-file-signature"></i></div>
+              <div class="fw-600 fs-13">Click to upload</div>
+              <div class="text-muted fs-12 mt-1">PDF, JPG, PNG — Max 5MB</div>
+              <input type="file" id="doc4" name="auth_letter" class="d-none" accept=".pdf,.jpg,.jpeg,.png"
+                onchange="showFile(this,'doc4-name')" />
+              <div id="doc4-name" class="mt-2 text-primary fs-12 fw-600"></div>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-between mt-4">
+          <button type="button" class="btn btn-outline-secondary" onclick="goStep(2)"><i
+              class="fas fa-arrow-left me-2"></i>Back</button>
+          <button type="button" class="btn btn-primary" onclick="goStep(4)">Review Application <i
+              class="fas fa-arrow-right ms-2"></i></button>
+        </div>
+      </div>
+
+      <!-- STEP 4: Review -->
+      <div class="step-pane" id="step4">
+        <div class="section-title"><i class="fas fa-check-circle me-2"></i>Review &amp; Submit</div>
+        <div class="mc-alert mc-alert-warning mb-4"><i class="fas fa-triangle-exclamation alert-icon"></i>Please review
+          all information before submitting. Your application will be reviewed within 2–3 business days.</div>
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <div class="p-3 rounded-3" style="background:#f8faff;border:1px solid var(--border-color);">
+              <div class="fs-11 fw-700 text-uppercase text-muted mb-2">Hospital Info</div>
+              <div class="fs-13"><i class="fas fa-hospital text-primary me-2"></i>Hospital Kuala Lumpur</div>
+              <div class="fs-13 mt-1"><i class="fas fa-map-marker-alt text-muted me-2"></i>50200, Kuala Lumpur</div>
+              <div class="fs-13 mt-1"><i class="fas fa-tag text-muted me-2"></i>Government Hospital</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 rounded-3" style="background:#f8faff;border:1px solid var(--border-color);">
+              <div class="fs-11 fw-700 text-uppercase text-muted mb-2">Admin Info</div>
+              <div class="fs-13"><i class="fas fa-user text-primary me-2"></i>Ahmad bin Ali</div>
+              <div class="fs-13 mt-1"><i class="fas fa-envelope text-muted me-2"></i>admin@hospital.com</div>
+              <div class="fs-13 mt-1"><i class="fas fa-briefcase text-muted me-2"></i>Hospital Director</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-check mb-3">
+          <input type="checkbox" class="form-check-input" id="agreeTerms" required />
+          <label class="form-check-label fs-13" for="agreeTerms">I confirm that all information provided is accurate and
+            I agree to the <a href="#" class="text-primary">Terms &amp; Conditions</a> and <a href="#"
+              class="text-primary">Data Processing Agreement</a>.</label>
+        </div>
+        <div class="form-check mb-4">
+          <input type="checkbox" class="form-check-input" id="agreeHipaa" required />
+          <label class="form-check-label fs-13" for="agreeHipaa">I understand that MediChain stores medical records on a
+            blockchain and our hospital is responsible for data entered by our staff.</label>
+        </div>
+        <div class="d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-secondary" onclick="goStep(3)"><i
+              class="fas fa-arrow-left me-2"></i>Back</button>
+          <button type="submit" class="btn btn-success px-5" id="submitBtn" onclick="submitForm(event)">
+            <i class="fas fa-paper-plane me-2"></i>Submit Application
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="text-center mt-3">
+    <a href="{{ url_for('login') }}" class="text-muted fs-13">Already registered? <strong>Sign In</strong></a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/hospital_registration.js') }}"></script>
+</body>
+
+</html>

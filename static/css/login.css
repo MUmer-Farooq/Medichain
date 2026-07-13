@@ -1,0 +1,183 @@
+body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0d1b3e 0%, #1a2e6b 50%, #0d3b6b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 960px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+}
+
+@media(max-width:768px) {
+  .login-container {
+    grid-template-columns: 1fr;
+  }
+
+  .login-left {
+    display: none !important;
+  }
+}
+
+.login-left {
+  background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 60%, #00bcd4 100%);
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-left::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .06);
+}
+
+.login-left::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  left: -60px;
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .04);
+}
+
+.login-right {
+  background: #fff;
+  padding: 3rem;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: 2rem;
+}
+
+.brand-logo .icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #fff;
+  text-decoration: none;
+
+}
+
+.brand-logo .icon a {
+  color: white;
+
+}
+
+.brand-logo .name {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.left-tagline {
+  color: rgba(255, 255, 255, .9);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.3;
+  position: relative;
+  z-index: 1;
+}
+
+.left-tagline span {
+  color: rgba(255, 255, 255, .6);
+  font-size: .9rem;
+  font-weight: 400;
+  display: block;
+  margin-top: .5rem;
+}
+
+.left-features {
+  position: relative;
+  z-index: 1;
+}
+
+.left-feature {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  color: rgba(255, 255, 255, .8);
+  font-size: .85rem;
+  margin-bottom: .75rem;
+}
+
+.left-feature .check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .65rem;
+  flex-shrink: 0;
+}
+
+.role-tabs {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: 1.5rem;
+}
+
+.role-tab {
+  flex: 1;
+  padding: .5rem;
+  text-align: center;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  color: var(--text-medium);
+}
+
+.role-tab.active,
+.role-tab:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.pw-wrap {
+  position: relative;
+}
+
+.pw-wrap .pw-toggle {
+  position: absolute;
+  right: .75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--text-light);
+  font-size: .9rem;
+  border: none;
+  background: none;
+  padding: 4px;
+}

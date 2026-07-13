@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+{# Flask Dynamic Route: /doctor/patients #}
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>My Patients — MediChain Doctor</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body class="page-bg">
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
+<aside class="mc-sidebar" id="mc-sidebar">
+  <a href="dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-chain"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Doctor Portal</span></div></a>
+  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">AA</div><div class="user-info"><div class="user-name">Dr. Ahmad Azman</div><div class="user-role">Cardiologist</div></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a href="dashboard.html" class="nav-item-link"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
+    <div class="nav-section-label">Patient Care</div>
+    <a href="patients.html" class="nav-item-link active"><i class="fas fa-users nav-icon"></i><span class="nav-text">My Patients</span></a>
+    <a href="create_record.html" class="nav-item-link"><i class="fas fa-file-plus nav-icon"></i><span class="nav-text">Create Record</span></a>
+    <a href="upload_reports.html" class="nav-item-link"><i class="fas fa-cloud-upload-alt nav-icon"></i><span class="nav-text">Upload Reports</span></a>
+    <a href="medical_history.html" class="nav-item-link"><i class="fas fa-history nav-icon"></i><span class="nav-text">Medical History</span></a>
+    <div class="nav-section-label">Account</div>
+    <a href="profile.html" class="nav-item-link"><i class="fas fa-user-circle nav-icon"></i><span class="nav-text">My Profile</span></a>
+    <a href="../login.html" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
+  </nav>
+  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>General Hospital KL</span></div></div>
+</aside>
+<header class="mc-topbar">
+  <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><a href="dashboard.html" class="text-muted">Doctor</a><span class="bc-sep">/</span><span class="bc-current">My Patients</span></div></div>
+  <div class="topbar-right">
+    <div class="topbar-search"><i class="fas fa-search search-icon"></i><input type="text" id="table-search" placeholder="Search patients…"/></div>
+    <div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">AA</div><span class="ud-name">Dr. Ahmad</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div>
+  </div>
+</header>
+<main class="mc-content">
+  <div class="page-header">
+    <div class="page-header-left"><h4><i class="fas fa-users me-2 text-info"></i>My Patients</h4><p>Patients under your care at General Hospital Kuala Lumpur</p></div>
+    <div class="page-header-right">
+      <a href="create_record.html" class="btn btn-primary btn-sm"><i class="fas fa-file-plus me-1"></i>New Record</a>
+    </div>
+  </div>
+
+  <div class="stats-grid mb-4">
+    <div class="stat-card primary"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value">48</div><div class="stat-label">Total Patients</div></div>
+    <div class="stat-card success"><div class="stat-icon"><i class="fas fa-calendar-check"></i></div><div class="stat-value">8</div><div class="stat-label">Scheduled Today</div></div>
+    <div class="stat-card warning"><div class="stat-icon"><i class="fas fa-flask"></i></div><div class="stat-value">2</div><div class="stat-label">Pending Results</div></div>
+    <div class="stat-card info"><div class="stat-icon"><i class="fas fa-file-medical"></i></div><div class="stat-value">312</div><div class="stat-label">Records Created</div></div>
+  </div>
+
+  <div class="mc-card mb-3"><div class="card-body py-3"><div class="search-filter-bar"><div class="search-box"><i class="fas fa-search"></i><input type="text" id="table-search" placeholder="Search by name, IC, ID…"/></div><select class="form-select form-select-sm" style="width:auto;"><option value="">All Status</option><option>Active</option><option>Referred</option><option>Discharged</option></select></div></div></div>
+
+  <div class="mc-card">
+    <div class="card-header"><span><i class="fas fa-list text-primary me-2"></i>Patient List</span></div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        {# Flask Dynamic: {% for patient in doctor.patients %} #}
+        <table class="mc-table" id="mc-table">
+          <thead><tr><th>Patient ID</th><th>Name</th><th>Age/Gender</th><th>Blood</th><th>Diagnosis</th><th>Records</th><th>Last Visit</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td class="font-monospace fs-11">MC-2024-008342</td><td><div class="fw-600">Ahmad Bin Jalil</div><div class="fs-11 text-muted">810415-07-5234</div></td><td>45 / M</td><td><span class="badge" style="background:#ffebee;color:#c62828;font-size:.68rem;">O+</span></td><td>Type 2 Diabetes</td><td>24</td><td>Jun 28</td><td><div class="table-actions"><a href="medical_history.html" class="btn-icon" title="View History"><i class="fas fa-history"></i></a><a href="create_record.html" class="btn-icon btn-success" title="New Record"><i class="fas fa-file-plus"></i></a><a href="upload_reports.html" class="btn-icon btn-info" title="Upload"><i class="fas fa-upload"></i></a></div></td></tr>
+            <tr><td class="font-monospace fs-11">MC-2024-007891</td><td><div class="fw-600">Siti Hajar Aziz</div><div class="fs-11 text-muted">920312-10-6784</div></td><td>34 / F</td><td><span class="badge" style="background:#e8f0fe;color:#1565c0;font-size:.68rem;">A+</span></td><td>Hypertension</td><td>18</td><td>Jun 25</td><td><div class="table-actions"><a href="medical_history.html" class="btn-icon"><i class="fas fa-history"></i></a><a href="create_record.html" class="btn-icon btn-success"><i class="fas fa-file-plus"></i></a><a href="upload_reports.html" class="btn-icon btn-info"><i class="fas fa-upload"></i></a></div></td></tr>
+            <tr><td class="font-monospace fs-11">MC-2024-006543</td><td><div class="fw-600">Robert Lee Cheng Wei</div><div class="fs-11 text-muted">781120-14-3312</div></td><td>48 / M</td><td><span class="badge" style="background:#e8f5e9;color:#1b5e20;font-size:.68rem;">B+</span></td><td>Coronary Artery Disease</td><td>32</td><td>Jun 20</td><td><div class="table-actions"><a href="medical_history.html" class="btn-icon"><i class="fas fa-history"></i></a><a href="create_record.html" class="btn-icon btn-success"><i class="fas fa-file-plus"></i></a><a href="upload_reports.html" class="btn-icon btn-info"><i class="fas fa-upload"></i></a></div></td></tr>
+            <tr><td class="font-monospace fs-11">MC-2024-005120</td><td><div class="fw-600">Aida binti Rahman</div><div class="fs-11 text-muted">891004-06-4521</div></td><td>37 / F</td><td><span class="badge" style="background:#fff8e1;color:#e65100;font-size:.68rem;">AB+</span></td><td>Diabetes + Hypertension</td><td>8</td><td>Jun 15</td><td><div class="table-actions"><a href="medical_history.html" class="btn-icon"><i class="fas fa-history"></i></a><a href="create_record.html" class="btn-icon btn-success"><i class="fas fa-file-plus"></i></a><a href="upload_reports.html" class="btn-icon btn-info"><i class="fas fa-upload"></i></a></div></td></tr>
+            <tr><td class="font-monospace fs-11">MC-2024-004876</td><td><div class="fw-600">Raj Kumar Pillai</div><div class="fs-11 text-muted">700518-10-7892</div></td><td>56 / M</td><td><span class="badge" style="background:#fce4ec;color:#880e4f;font-size:.68rem;">O-</span></td><td>Heart Failure</td><td>45</td><td>Jun 12</td><td><div class="table-actions"><a href="medical_history.html" class="btn-icon"><i class="fas fa-history"></i></a><a href="create_record.html" class="btn-icon btn-success"><i class="fas fa-file-plus"></i></a><a href="upload_reports.html" class="btn-icon btn-info"><i class="fas fa-upload"></i></a></div></td></tr>
+          </tbody>
+        </table>
+        {# Flask: {% endfor %} #}
+      </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+      <small class="text-muted">Showing 5 of 48 patients</small>
+      <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded',()=>{MediChain.initTableSort();MediChain.initPagination({pageSize:10});});</script>
+</body>
+</html>

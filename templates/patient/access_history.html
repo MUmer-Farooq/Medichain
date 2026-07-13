@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+{# Flask Dynamic Route: /patient/access-history #}
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Access History — MediChain Patient</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../static/css/style.css"/>
+  <link rel="stylesheet" href="../static/css/dashboard.css"/>
+  <link rel="stylesheet" href="../static/css/responsive.css"/>
+</head>
+<body class="page-bg">
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
+<aside class="mc-sidebar" id="mc-sidebar">
+  <a href="dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-chain"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Patient Portal</span></div></a>
+  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#ff6d00,#ffcc02);color:#000;">AJ</div><div class="user-info"><div class="user-name">Ahmad Bin Jalil</div><div class="user-role">Patient</div></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a href="dashboard.html" class="nav-item-link"><i class="fas fa-home nav-icon"></i><span class="nav-text">My Dashboard</span></a>
+    <div class="nav-section-label">Health Records</div>
+    <a href="my_records.html" class="nav-item-link"><i class="fas fa-file-medical nav-icon"></i><span class="nav-text">My Records</span></a>
+    <a href="reports.html" class="nav-item-link"><i class="fas fa-file-alt nav-icon"></i><span class="nav-text">Lab &amp; Reports</span></a>
+    <a href="access_history.html" class="nav-item-link active"><i class="fas fa-history nav-icon"></i><span class="nav-text">Access History</span></a>
+    <div class="nav-section-label">Account</div>
+    <a href="profile.html" class="nav-item-link"><i class="fas fa-user-circle nav-icon"></i><span class="nav-text">My Profile</span></a>
+    <a href="../login.html" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
+  </nav>
+  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>General Hospital KL</span></div></div>
+</aside>
+<header class="mc-topbar">
+  <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><a href="dashboard.html" class="text-muted">Patient</a><span class="bc-sep">/</span><span class="bc-current">Access History</span></div></div>
+  <div class="topbar-right"><div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#ff6d00,#ffcc02);color:#000;">AJ</div><span class="ud-name">Ahmad</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div></div>
+</header>
+<main class="mc-content">
+  <div class="page-header">
+    <div class="page-header-left"><h4><i class="fas fa-history me-2 text-primary"></i>Access History &amp; Consent Management</h4><p>Track who accessed your records and manage doctor permissions</p></div>
+    <div class="page-header-right">
+      <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#grantModal"><i class="fas fa-user-plus me-1"></i>Grant Access</button>
+    </div>
+  </div>
+
+  <div class="mc-alert mc-alert-info mb-4">
+    <i class="fas fa-shield-halved alert-icon"></i>
+    All access events are permanently logged on the blockchain. You can revoke access at any time.
+  </div>
+
+  <!-- Active Access -->
+  <div class="mc-card mb-4">
+    <div class="card-header"><span><i class="fas fa-user-shield text-success me-2"></i>Currently Active Access</span><span class="badge badge-success-soft ms-2">3 Active</span></div>
+    <div class="card-body">
+      {# Flask Dynamic: {% for consent in active_consents %} #}
+      <div class="row g-3">
+        <div class="col-md-6 col-lg-4">
+          <div class="p-3 rounded-3 border" style="border-color:var(--success)!important;">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1a73e8,#00bcd4);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.85rem;flex-shrink:0;">AA</div>
+              <div><div class="fw-600">Dr. Ahmad Azman</div><div class="fs-12 text-muted">Cardiologist • HKL</div></div>
+            </div>
+            <div class="d-flex justify-content-between fs-12 mb-1"><span class="text-muted">Access Level:</span><span class="fw-600">Full Access</span></div>
+            <div class="d-flex justify-content-between fs-12 mb-1"><span class="text-muted">Granted:</span><span>Jan 15, 2024</span></div>
+            <div class="d-flex justify-content-between fs-12 mb-3"><span class="text-muted">Expires:</span><span class="text-success fw-600">Permanent</span></div>
+            <button class="btn btn-danger btn-sm w-100" onclick="revokeAccess('Dr. Ahmad Azman')"><i class="fas fa-ban me-1"></i>Revoke Access</button>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="p-3 rounded-3 border" style="border-color:var(--info)!important;">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7c4dff,#ce93d8);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.85rem;flex-shrink:0;">SK</div>
+              <div><div class="fw-600">Dr. Suresh Kumar</div><div class="fs-12 text-muted">Neurologist • HKL</div></div>
+            </div>
+            <div class="d-flex justify-content-between fs-12 mb-1"><span class="text-muted">Access Level:</span><span class="fw-600">Read Only</span></div>
+            <div class="d-flex justify-content-between fs-12 mb-1"><span class="text-muted">Granted:</span><span>Mar 10, 2026</span></div>
+            <div class="d-flex justify-content-between fs-12 mb-3"><span class="text-muted">Expires:</span><span class="text-info fw-600">Sep 10, 2026</span></div>
+            <button class="btn btn-danger btn-sm w-100" onclick="revokeAccess('Dr. Suresh Kumar')"><i class="fas fa-ban me-1"></i>Revoke Access</button>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="p-3 rounded-3 border" style="border-color:var(--warning)!important;">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#e91e63,#f48fb1);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.85rem;flex-shrink:0;">NR</div>
+              <div><div class="fw-600">Dr. Nurul Ain</div><div class="fs-12 text-muted">Pediatrician • HKL</div></div>
+            </div>
+            <div class="d-flex justify-content-between fs-12 mb-1"><span class="text-muted">Access Level:</span><span class="fw-600">Read Only</span></div>
+            <div class="d-flex justify-content-between fs-12 mb-1"><span class="text-muted">Granted:</span><span>Jun 1, 2026</span></div>
+            <div class="d-flex justify-content-between fs-12 mb-3"><span class="text-muted">Expires:</span><span class="text-warning fw-600">Jun 30, 2026 !</span></div>
+            <button class="btn btn-danger btn-sm w-100" onclick="revokeAccess('Dr. Nurul Ain')"><i class="fas fa-ban me-1"></i>Revoke Access</button>
+          </div>
+        </div>
+      </div>
+      {# Flask: {% endfor %} #}
+    </div>
+  </div>
+
+  <!-- Access Log Table -->
+  <div class="mc-card">
+    <div class="card-header"><span><i class="fas fa-list text-primary me-2"></i>Access Log <span class="badge badge-primary-soft ms-2">Blockchain Verified</span></span></div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        {# Flask Dynamic: {% for log in access_logs %} #}
+        <table class="mc-table" id="mc-table">
+          <thead><tr><th>Doctor</th><th>Hospital</th><th>Action</th><th>Record</th><th>Timestamp</th><th>Blockchain</th></tr></thead>
+          <tbody>
+            <tr><td class="fw-600">Dr. Ahmad Azman</td><td>General Hospital KL</td><td><span class="badge badge-success-soft">View Record</span></td><td>Diabetes Consultation</td><td>Jun 30 14:32</td><td class="font-monospace fs-11 text-success">Tx-94220</td></tr>
+            <tr><td class="fw-600">Dr. Ahmad Azman</td><td>General Hospital KL</td><td><span class="badge badge-primary-soft">Create Record</span></td><td>Prescription</td><td>Jun 28 14:30</td><td class="font-monospace fs-11 text-success">Tx-94218</td></tr>
+            <tr><td class="fw-600">Dr. Suresh Kumar</td><td>General Hospital KL</td><td><span class="badge badge-success-soft">View Record</span></td><td>ECG Report</td><td>Jun 20 10:15</td><td class="font-monospace fs-11 text-success">Tx-93890</td></tr>
+            <tr><td class="fw-600">Dr. Ahmad Azman</td><td>General Hospital KL</td><td><span class="badge badge-success-soft">View Lab Result</span></td><td>HbA1c Panel</td><td>Jun 26 09:45</td><td class="font-monospace fs-11 text-success">Tx-94102</td></tr>
+            <tr><td class="fw-600">Dr. Nurul Ain</td><td>General Hospital KL</td><td><span class="badge badge-info-soft">Granted Access</span></td><td>All Records</td><td>Jun 1 08:00</td><td class="font-monospace fs-11 text-success">Tx-92450</td></tr>
+          </tbody>
+        </table>
+        {# Flask: {% endfor %} #}
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Grant Access Modal -->
+<div class="modal fade" id="grantModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Grant Record Access</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        {# Flask: POST /patient/grant-access #}
+        <div class="row g-3">
+          <div class="col-12"><label class="form-label">Doctor's Medical Council # or Email</label><input type="text" class="form-control" placeholder="MCR-XXXX or dr.name@hospital.com" required/></div>
+          <div class="col-md-6"><label class="form-label">Access Level</label><select class="form-select"><option>Full Access</option><option>Read Only</option><option>Lab Results Only</option></select></div>
+          <div class="col-md-6"><label class="form-label">Access Duration</label><select class="form-select"><option>Permanent</option><option>30 Days</option><option>90 Days</option><option>6 Months</option><option>1 Year</option></select></div>
+          <div class="col-12"><div class="mc-alert mc-alert-warning"><i class="fas fa-triangle-exclamation alert-icon"></i>This access will be permanently recorded on the blockchain.</div></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-success" onclick="MediChain.showToast('Access granted and recorded on blockchain!','success');bootstrap.Modal.getInstance(document.getElementById('grantModal')).hide()"><i class="fas fa-check me-1"></i>Grant Access</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script src="../static/js/app.js"></script>
+<script>
+  function revokeAccess(name) {
+    Swal.fire({icon:'warning',title:'Revoke Access?',html:`<strong>${name}</strong> will no longer be able to access your records. This will be recorded on blockchain.`,showCancelButton:true,confirmButtonText:'Revoke',confirmButtonColor:'var(--danger)',cancelButtonColor:'#6c757d'}).then(r=>{if(r.isConfirmed)MediChain.showToast(`Access revoked for ${name}`,'success');});
+  }
+  document.addEventListener('DOMContentLoaded',()=>{MediChain.initTableSort();});
+</script>
+</body>
+</html>

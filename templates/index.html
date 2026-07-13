@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+{# Flask Dynamic Route: Landing Page #}
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediChain — Blockchain Healthcare Records</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="../static/css/style.css" />
+  <link rel="stylesheet" href="../static/css/responsive.css" />
+  <link rel="stylesheet" href="../static/css/index.css">
+
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="lp-navbar navbar navbar-expand-lg" id="lp-navbar">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">
+        <span class="brand-icon"><i class="fas fa-chain"></i></span>
+        Medi<span style="color:var(--secondary)">Chain</span>
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMain">
+        <ul class="navbar-nav mx-auto">
+          <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+          <li class="nav-item"><a class="nav-link" href="#how-it-works">How It Works</a></li>
+          <li class="nav-item"><a class="nav-link" href="#blockchain">Blockchain</a></li>
+          <li class="nav-item"><a class="nav-link" href="#roles">User Roles</a></li>
+        </ul>
+        <div class="d-flex gap-2">
+          <a href="login.html" class="btn btn-outline-primary btn-sm px-3">Sign In</a>
+          <a href="hospital_registration.html" class="btn btn-primary btn-sm px-3">Register Hospital</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6" data-aos="fade-right">
+          <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-3"
+            style="background:var(--primary-light);color:var(--primary);font-size:.78rem;font-weight:600;">
+            <i class="fas fa-shield-halved"></i> Powered by Hyperledger Fabric
+          </div>
+          <h1>Secure Healthcare Records on the <span>Blockchain</span></h1>
+          <p class="text-muted mt-3 mb-4" style="font-size:1.05rem;line-height:1.7;max-width:500px;">MediChain enables
+            hospitals to securely store, manage, and share patient medical records across a tamper-proof blockchain
+            network — ensuring privacy, compliance, and interoperability.</p>
+          <div class="d-flex gap-3 flex-wrap mb-4">
+            <a href="hospital_registration.html" class="btn btn-primary px-4 py-2"><i
+                class="fas fa-hospital me-2"></i>Register Hospital</a>
+            <a href="login.html" class="btn btn-outline-primary px-4 py-2"><i class="fas fa-sign-in-alt me-2"></i>Sign
+              In</a>
+          </div>
+          <div class="d-flex gap-4">
+            <div><strong class="d-block fs-4 fw-700 text-primary">58+</strong><small
+                class="text-muted">Hospitals</small></div>
+            <div class="border-start ps-4"><strong class="d-block fs-4 fw-700 text-success">410K+</strong><small
+                class="text-muted">Patient Records</small></div>
+            <div class="border-start ps-4"><strong class="d-block fs-4 fw-700 text-info">99.9%</strong><small
+                class="text-muted">Uptime</small></div>
+          </div>
+        </div>
+        <div class="col-lg-6 d-none d-lg-block" data-aos="fade-left" data-aos-delay="200">
+          <div class="position-relative ms-4">
+            <div class="hero-card-mockup">
+              <div class="d-flex align-items-center gap-2 mb-3">
+                <div style="width:10px;height:10px;border-radius:50%;background:#f44336;"></div>
+                <div style="width:10px;height:10px;border-radius:50%;background:#ffab00;"></div>
+                <div style="width:10px;height:10px;border-radius:50%;background:#00c853;"></div>
+                <span class="ms-2 text-muted fs-12">Patient Record — Encrypted</span>
+              </div>
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <div
+                  style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#1a73e8,#00bcd4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;font-weight:700;flex-shrink:0;">
+                  AJ</div>
+                <div>
+                  <div class="fw-600">Ahmad Bin Jalil</div>
+                  <div class="text-muted fs-12">ID: MC-2024-008342</div>
+                </div>
+                <span class="badge badge-success-soft ms-auto">Verified</span>
+              </div>
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <div class="p-2 rounded-2" style="background:#f8faff;">
+                    <div class="fs-11 text-muted">Blood Type</div>
+                    <div class="fw-600 fs-13">O+</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-2 rounded-2" style="background:#f8faff;">
+                    <div class="fs-11 text-muted">Last Visit</div>
+                    <div class="fw-600 fs-13">Jun 28, 2026</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-2 rounded-2" style="background:#f8faff;">
+                    <div class="fs-11 text-muted">Records</div>
+                    <div class="fw-600 fs-13">24 Records</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-2 rounded-2" style="background:#f8faff;">
+                    <div class="fs-11 text-muted">Status</div>
+                    <div class="fw-600 fs-13 text-success"><i class="fas fa-circle-check me-1"></i>Secured</div>
+                  </div>
+                </div>
+              </div>
+              <div class="p-2 rounded-2 d-flex align-items-center gap-2"
+                style="background:#e8f5e9;border:1px solid #a5d6a7;">
+                <i class="fas fa-lock text-success fs-12"></i>
+                <span class="fs-11 fw-500 text-success">Hash: 0x3f8a...c92e — Immutable on Hyperledger</span>
+              </div>
+            </div>
+            <div class="hero-stat-badge tr" data-aos="zoom-in" data-aos-delay="400">
+              <div
+                style="width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 2s infinite;">
+              </div>
+              Network Active
+            </div>
+            <div class="hero-stat-badge bl" data-aos="zoom-in" data-aos-delay="600">
+              <i class="fas fa-shield-halved text-primary"></i>256-bit Encrypted
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS BAR -->
+  <section class="stats-bar">
+    <div class="container">
+      <div class="row g-3 text-center">
+        <div class="col-6 col-md-3" data-aos="fade-up"><strong class="d-block"
+            style="font-size:2.2rem;font-weight:800;">58+</strong><small style="opacity:.75;">Hospitals
+            Connected</small></div>
+        <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="100"><strong class="d-block"
+            style="font-size:2.2rem;font-weight:800;">410K</strong><small style="opacity:.75;">Patient Records</small>
+        </div>
+        <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="200"><strong class="d-block"
+            style="font-size:2.2rem;font-weight:800;">1,240</strong><small style="opacity:.75;">Registered
+            Doctors</small></div>
+        <div class="col-6 col-md-3" data-aos="fade-up" data-aos-delay="300"><strong class="d-block"
+            style="font-size:2.2rem;font-weight:800;">94K+</strong><small style="opacity:.75;">Blockchain
+            Transactions</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="text-center mb-5" data-aos="fade-up">
+        <span class="badge badge-primary-soft mb-2">Features</span>
+        <h2 class="fw-800" style="font-size:2rem;">Everything Healthcare Needs</h2>
+        <p class="text-muted mt-2">A complete, secure platform built for modern healthcare interoperability.</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4" data-aos="fade-up">
+          <div class="feature-card">
+            <div class="fi-icon" style="background:#e8f0fe;color:var(--primary);"><i class="fas fa-shield-halved"></i>
+            </div>
+            <h5 class="fw-600 mb-2">Blockchain Security</h5>
+            <p class="text-muted fs-13 mb-0">Every record is cryptographically hashed and stored on Hyperledger Fabric —
+              tampering is impossible.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
+          <div class="feature-card">
+            <div class="fi-icon" style="background:#e8f5e9;color:var(--success);"><i class="fas fa-hospital-user"></i>
+            </div>
+            <h5 class="fw-600 mb-2">Multi-Hospital Access</h5>
+            <p class="text-muted fs-13 mb-0">Authorized hospitals can securely access and update patient records with
+              full consent management.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="200">
+          <div class="feature-card">
+            <div class="fi-icon" style="background:#e1f5fe;color:var(--info);"><i class="fas fa-user-shield"></i></div>
+            <h5 class="fw-600 mb-2">Patient Consent Control</h5>
+            <p class="text-muted fs-13 mb-0">Patients retain full control over who can access their data with
+              time-limited permissions.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="300">
+          <div class="feature-card">
+            <div class="fi-icon" style="background:#fff8e1;color:var(--warning);"><i class="fas fa-file-medical"></i>
+            </div>
+            <h5 class="fw-600 mb-2">Complete Medical Records</h5>
+            <p class="text-muted fs-13 mb-0">Doctors create comprehensive records including diagnosis, prescriptions,
+              lab results and reports.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="400">
+          <div class="feature-card">
+            <div class="fi-icon" style="background:#f3e5f5;color:#7c4dff;"><i class="fas fa-chart-line"></i></div>
+            <h5 class="fw-600 mb-2">Real-time Analytics</h5>
+            <p class="text-muted fs-13 mb-0">Comprehensive dashboards with live statistics, charts, and reports for
+              administrators.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="500">
+          <div class="feature-card">
+            <div class="fi-icon" style="background:#e0f7fa;color:var(--secondary);"><i class="fas fa-lock"></i></div>
+            <h5 class="fw-600 mb-2">Role-Based Access</h5>
+            <p class="text-muted fs-13 mb-0">Strict RBAC for System Admin, Hospital Admin, Doctor, and Patient with
+              Flask-Login sessions.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how-it-works" id="how-it-works">
+    <div class="container">
+      <div class="text-center mb-5" data-aos="fade-up">
+        <span class="badge badge-primary-soft mb-2">Process</span>
+        <h2 class="fw-800" style="font-size:2rem;">How MediChain Works</h2>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-3 text-center" data-aos="fade-up">
+          <div class="step-number">1</div>
+          <h5 class="fw-600 mb-2">Hospital Registration</h5>
+          <p class="text-muted fs-13">Hospitals apply for membership. System Admin reviews and approves, granting
+            network access.</p>
+        </div>
+        <div class="col-md-3 text-center" data-aos="fade-up" data-aos-delay="100">
+          <div class="step-number">2</div>
+          <h5 class="fw-600 mb-2">Doctor Onboarding</h5>
+          <p class="text-muted fs-13">Hospital Admins register doctors who receive credentials to access and create
+            patient records.</p>
+        </div>
+        <div class="col-md-3 text-center" data-aos="fade-up" data-aos-delay="200">
+          <div class="step-number">3</div>
+          <h5 class="fw-600 mb-2">Record Creation</h5>
+          <p class="text-muted fs-13">Doctors create medical records that are hashed and committed to the Hyperledger
+            Fabric blockchain.</p>
+        </div>
+        <div class="col-md-3 text-center" data-aos="fade-up" data-aos-delay="300">
+          <div class="step-number">4</div>
+          <h5 class="fw-600 mb-2">Secure Access</h5>
+          <p class="text-muted fs-13">Patients control access. Authorized doctors from any member hospital can view
+            records with consent.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BLOCKCHAIN -->
+  <section class="blockchain-section" id="blockchain">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6" data-aos="fade-right">
+          <span class="badge badge-primary-soft mb-3">Hyperledger Fabric</span>
+          <h2 class="fw-800 mb-3" style="font-size:2rem;">Enterprise-Grade Blockchain</h2>
+          <p class="text-muted mb-4">Built on Hyperledger Fabric, MediChain uses a permissioned blockchain ensuring only
+            authorized entities participate while maintaining full data immutability.</p>
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="d-flex gap-3">
+                <div
+                  style="width:36px;height:36px;border-radius:8px;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i class="fas fa-link"></i>
+                </div>
+                <div>
+                  <div class="fw-600 fs-13">Immutable Ledger</div>
+                  <div class="fs-12 text-muted">Records cannot be altered once committed</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="d-flex gap-3">
+                <div
+                  style="width:36px;height:36px;border-radius:8px;background:#e8f5e9;color:var(--success);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i class="fas fa-eye-slash"></i>
+                </div>
+                <div>
+                  <div class="fw-600 fs-13">Privacy Channels</div>
+                  <div class="fs-12 text-muted">Hospital-specific private channels</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="d-flex gap-3">
+                <div
+                  style="width:36px;height:36px;border-radius:8px;background:#e1f5fe;color:var(--info);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i class="fas fa-network-wired"></i>
+                </div>
+                <div>
+                  <div class="fw-600 fs-13">Multi-Org Network</div>
+                  <div class="fs-12 text-muted">Multiple organizations with consensus</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="d-flex gap-3">
+                <div
+                  style="width:36px;height:36px;border-radius:8px;background:#fff8e1;color:var(--warning);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <i class="fas fa-certificate"></i>
+                </div>
+                <div>
+                  <div class="fw-600 fs-13">PKI Identity</div>
+                  <div class="fs-12 text-muted">Certificate-based authentication</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6" data-aos="fade-left" data-aos-delay="150">
+          <div class="blockchain-visual">
+            <div class="bl-comment">// Block #18,432 — MediChain Network</div>
+            <br />{<br />
+            &nbsp;&nbsp;<span class="bl-key">"blockNumber"</span>: <span class="bl-val">18432</span>,<br />
+            &nbsp;&nbsp;<span class="bl-key">"timestamp"</span>: <span
+              class="bl-val">"2026-06-30T14:22:08Z"</span>,<br />
+            &nbsp;&nbsp;<span class="bl-key">"previousHash"</span>: <span class="bl-val">"0x3f8a4c2e..."</span>,<br />
+            &nbsp;&nbsp;<span class="bl-key">"dataHash"</span>: <span class="bl-val">"0xa9f2b7d1..."</span>,<br />
+            &nbsp;&nbsp;<span class="bl-key">"transactions"</span>: [{<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="bl-key">"txId"</span>: <span class="bl-val">"Tx-94218"</span>,<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="bl-key">"type"</span>: <span
+              class="bl-val">"CREATE_RECORD"</span>,<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="bl-key">"patientId"</span>: <span
+              class="bl-val">"MC-2024-008342"</span>,<br />
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="bl-key">"status"</span>: <span class="bl-val">"COMMITTED"</span><br />
+            &nbsp;&nbsp;}],<br />
+            &nbsp;&nbsp;<span class="bl-key">"endorsements"</span>: <span class="bl-val">3</span> <span
+              class="bl-comment">// Peer nodes</span><br />
+            }<br />
+            <div class="mt-2 d-flex align-items-center gap-2">
+              <div style="width:8px;height:8px;border-radius:50%;background:#64ffda;animation:pulse 2s infinite;"></div>
+              <span style="color:#64ffda;">Network Active — 58 Peers Connected</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROLES -->
+  <section class="roles" id="roles">
+    <div class="container">
+      <div class="text-center mb-5" data-aos="fade-up">
+        <span class="badge badge-primary-soft mb-2">User Roles</span>
+        <h2 class="fw-800" style="font-size:2rem;">Built for Every Stakeholder</h2>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-3" data-aos="fade-up"><a href="login.html" class="text-decoration-none">
+            <div class="role-card adm">
+              <div class="role-icon" style="background:#e8f0fe;color:var(--primary);"><i class="fas fa-user-cog"></i>
+              </div>
+              <h5 class="fw-600 mb-2">System Admin</h5>
+              <p class="text-muted fs-13 mb-3">Manage the MediChain network — approve hospitals, monitor blockchain,
+                view system analytics.</p><span class="badge badge-primary-soft">View Dashboard →</span>
+            </div>
+          </a></div>
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100"><a href="login.html"
+            class="text-decoration-none">
+            <div class="role-card hosp">
+              <div class="role-icon" style="background:#e8f5e9;color:var(--success);"><i class="fas fa-hospital"></i>
+              </div>
+              <h5 class="fw-600 mb-2">Hospital Admin</h5>
+              <p class="text-muted fs-13 mb-3">Manage hospital operations — doctors, patients, records, and reports for
+                your institution.</p><span class="badge badge-success-soft">View Dashboard →</span>
+            </div>
+          </a></div>
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200"><a href="login.html"
+            class="text-decoration-none">
+            <div class="role-card doc">
+              <div class="role-icon" style="background:#e1f5fe;color:var(--info);"><i class="fas fa-user-md"></i></div>
+              <h5 class="fw-600 mb-2">Doctor</h5>
+              <p class="text-muted fs-13 mb-3">Create and manage patient records, upload reports, and view complete
+                medical histories.</p><span class="badge badge-info-soft">View Dashboard →</span>
+            </div>
+          </a></div>
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300"><a href="login.html"
+            class="text-decoration-none">
+            <div class="role-card pat">
+              <div class="role-icon" style="background:#fff8e1;color:var(--warning);"><i class="fas fa-person"></i>
+              </div>
+              <h5 class="fw-600 mb-2">Patient</h5>
+              <p class="text-muted fs-13 mb-3">View your medical records, reports, and control who has access to your
+                health information.</p><span class="badge badge-warning-soft">View Dashboard →</span>
+            </div>
+          </a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container" data-aos="fade-up">
+      <h2>Ready to Join MediChain?</h2>
+      <p class="mb-4" style="opacity:.85;font-size:1rem;">Register your hospital today and start securing patient
+        records on the blockchain.</p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a href="hospital_registration.html" class="btn btn-lg px-5 py-2"
+          style="background:#fff;color:var(--primary);font-weight:600;border-radius:10px;"><i
+            class="fas fa-hospital me-2"></i>Register Hospital</a>
+        <a href="login.html" class="btn btn-lg px-5 py-2"
+          style="background:rgba(255,255,255,.15);color:#fff;border:2px solid rgba(255,255,255,.4);font-weight:600;border-radius:10px;"><i
+            class="fas fa-sign-in-alt me-2"></i>Sign In</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  {# Flask: {% include 'components/footer.html' %} #}
+  {% include 'components/footer.html' %}
+  <footer class="lp-footer">
+    <div class="container">
+      <div class="row g-4 pb-4 border-bottom" style="border-color:rgba(255,255,255,.1)!important;">
+        <div class="col-lg-4">
+          <div class="footer-brand"><i class="fas fa-chain text-primary"></i>MediChain</div>
+          <p class="fs-13">A blockchain-based healthcare record management system for secure, interoperable medical data
+            sharing.</p>
+        </div>
+        <div class="col-6 col-lg-2 offset-lg-2">
+          <h6>Product</h6>
+          <ul class="list-unstyled">
+            <li class="mb-1"><a href="#features">Features</a></li>
+            <li class="mb-1"><a href="#how-it-works">How It Works</a></li>
+            <li class="mb-1"><a href="#blockchain">Blockchain</a></li>
+          </ul>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h6>Portals</h6>
+          <ul class="list-unstyled">
+            <li class="mb-1"><a href="login.html">System Admin</a></li>
+            <li class="mb-1"><a href="login.html">Hospital Admin</a></li>
+            <li class="mb-1"><a href="login.html">Doctor</a></li>
+            <li class="mb-1"><a href="login.html">Patient</a></li>
+          </ul>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h6>Access</h6>
+          <ul class="list-unstyled">
+            <li class="mb-1"><a href="login.html">Sign In</a></li>
+            <li class="mb-1"><a href="hospital_registration.html">Register</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="d-flex justify-content-between pt-3 flex-wrap gap-2">
+        <small>© 2026 MediChain — Final Year Project</small>
+        <small>Hyperledger Fabric + Flask + PostgreSQL</small>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script src="../static/js/app.js"></script>
+  <script src="../static/js/index.js"></script>
+</body>
+
+</html>

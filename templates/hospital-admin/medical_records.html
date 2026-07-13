@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+{# Flask Dynamic Route: /hospital-admin/medical-records #}
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Medical Records — MediChain</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}"/>
+
+</head>
+<body class="page-bg">
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
+<aside class="mc-sidebar" id="mc-sidebar">
+  <a href="dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-chain"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Hospital Admin</span></div></a>
+  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#00c853,#00bcd4);">HA</div><div class="user-info"><div class="user-name">Dr. Farah Malik</div><div class="user-role">Hospital Administrator</div></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a href="dashboard.html" class="nav-item-link"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
+    <div class="nav-section-label">Management</div>
+    <a href="doctors.html" class="nav-item-link"><i class="fas fa-user-md nav-icon"></i><span class="nav-text">Manage Doctors</span></a>
+    <a href="patients.html" class="nav-item-link"><i class="fas fa-users nav-icon"></i><span class="nav-text">Patients</span></a>
+    <a href="medical_records.html" class="nav-item-link active"><i class="fas fa-file-medical nav-icon"></i><span class="nav-text">Medical Records</span></a>
+    <div class="nav-section-label">Reports</div>
+    <a href="reports.html" class="nav-item-link"><i class="fas fa-chart-bar nav-icon"></i><span class="nav-text">Reports</span></a>
+    <div class="nav-section-label">Account</div>
+    <a href="settings.html" class="nav-item-link"><i class="fas fa-cog nav-icon"></i><span class="nav-text">Settings</span></a>
+    <a href="../login.html" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
+  </nav>
+  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>General Hospital KL</span></div></div>
+</aside>
+<header class="mc-topbar">
+  <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><a href="dashboard.html" class="text-muted">Dashboard</a><span class="bc-sep">/</span><span class="bc-current">Medical Records</span></div></div>
+  <div class="topbar-right">
+    <div class="topbar-search"><i class="fas fa-search search-icon"></i><input type="text" id="table-search" placeholder="Search records…"/></div>
+    <div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#00c853,#00bcd4);">HA</div><span class="ud-name">Dr. Farah</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div>
+  </div>
+</header>
+<main class="mc-content">
+  <div class="page-header">
+    <div class="page-header-left"><h4><i class="fas fa-file-medical me-2 text-info"></i>Medical Records</h4><p>All medical records created by doctors at General Hospital KL</p></div>
+    <div class="page-header-right">
+      <button class="btn btn-outline-secondary btn-sm"><i class="fas fa-download me-1"></i>Export</button>
+      <a href="../doctor/create_record.html" class="btn btn-info btn-sm text-white"><i class="fas fa-file-plus me-1"></i>New Record</a>
+    </div>
+  </div>
+
+  <div class="stats-grid mb-4">
+    <div class="stat-card info"><div class="stat-icon"><i class="fas fa-file-medical"></i></div><div class="stat-value">12,400</div><div class="stat-label">Total Records</div></div>
+    <div class="stat-card primary"><div class="stat-icon"><i class="fas fa-stethoscope"></i></div><div class="stat-value">4,820</div><div class="stat-label">Consultations</div></div>
+    <div class="stat-card success"><div class="stat-icon"><i class="fas fa-flask"></i></div><div class="stat-value">3,240</div><div class="stat-label">Lab Results</div></div>
+    <div class="stat-card warning"><div class="stat-icon"><i class="fas fa-x-ray"></i></div><div class="stat-value">2,180</div><div class="stat-label">Radiology</div></div>
+    <div class="stat-card secondary"><div class="stat-icon"><i class="fas fa-pills"></i></div><div class="stat-value">2,160</div><div class="stat-label">Prescriptions</div></div>
+  </div>
+
+  <div class="mc-card mb-3">
+    <div class="card-body py-3">
+      <div class="search-filter-bar">
+        <div class="search-box"><i class="fas fa-search"></i><input type="text" id="table-search" placeholder="Search by patient, doctor, type, diagnosis…"/></div>
+        <select class="form-select form-select-sm" style="width:auto;" onchange="MediChain.filterTable(this)" data-col="3">
+          <option value="">All Types</option><option>Consultation</option><option>Lab Result</option><option>Radiology</option><option>Prescription</option><option>Surgery</option><option>Vaccination</option>
+        </select>
+        <select class="form-select form-select-sm" style="width:auto;">
+          <option value="">All Dates</option><option>Today</option><option>This Week</option><option>This Month</option><option>Last Month</option>
+        </select>
+        <select class="form-select form-select-sm" style="width:auto;">
+          <option value="">All Doctors</option><option>Dr. Ahmad Azman</option><option>Dr. Nurul Ain</option><option>Dr. Suresh Kumar</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="mc-card">
+    <div class="card-header"><span><i class="fas fa-list text-info me-2"></i>All Records <span class="badge badge-info-soft ms-2">12,400</span></span></div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        {# Flask Dynamic: {% for record in records.paginate(...) %} #}
+        <table class="mc-table" id="mc-table">
+          <thead><tr><th>Record ID</th><th>Patient</th><th>Doctor</th><th>Type</th><th>Diagnosis</th><th>Blockchain</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td class="font-monospace fs-11">REC-2026-041892</td><td>Ahmad Bin Jalil</td><td>Dr. Ahmad Azman</td><td><span class="badge badge-primary-soft">Consultation</span></td><td>Type 2 Diabetes</td><td><span class="badge badge-success-soft"><i class="fas fa-lock me-1"></i>Verified</span></td><td>Jun 28, 2026</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-secondary" title="Blockchain Proof" onclick="MediChain.showToast('Block #18,432 — Hash: 0xa9f2...','info')"><i class="fas fa-cubes"></i></a></div></td></tr>
+            <tr><td class="font-monospace fs-11">REC-2026-041756</td><td>Siti Hajar Aziz</td><td>Dr. Nurul Ain</td><td><span class="badge badge-success-soft">Lab Result</span></td><td>Blood Panel — Normal</td><td><span class="badge badge-success-soft"><i class="fas fa-lock me-1"></i>Verified</span></td><td>Jun 25, 2026</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-secondary" onclick="MediChain.showToast('Block #18,421 — Hash: 0x3c7a...','info')"><i class="fas fa-cubes"></i></a></div></td></tr>
+            <tr><td class="font-monospace fs-11">REC-2026-041590</td><td>Robert Lee</td><td>Dr. Suresh Kumar</td><td><span class="badge badge-primary-soft" style="background:#e3f2fd;color:#1565c0;">Radiology</span></td><td>MRI Brain — Reviewed</td><td><span class="badge badge-success-soft"><i class="fas fa-lock me-1"></i>Verified</span></td><td>Jun 20, 2026</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-secondary"><i class="fas fa-cubes"></i></a></div></td></tr>
+            <tr><td class="font-monospace fs-11">REC-2026-041430</td><td>Aida Rahman</td><td>Dr. Ahmad Azman</td><td><span class="badge badge-warning-soft">Prescription</span></td><td>Metformin 500mg x 30</td><td><span class="badge badge-success-soft"><i class="fas fa-lock me-1"></i>Verified</span></td><td>Jun 15, 2026</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-secondary"><i class="fas fa-cubes"></i></a></div></td></tr>
+            <tr><td class="font-monospace fs-11">REC-2026-041200</td><td>Raj Kumar Pillai</td><td>Dr. Lim Wei</td><td><span class="badge badge-danger-soft">Surgery</span></td><td>Knee Replacement — L</td><td><span class="badge badge-success-soft"><i class="fas fa-lock me-1"></i>Verified</span></td><td>Jun 12, 2026</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-secondary"><i class="fas fa-cubes"></i></a></div></td></tr>
+          </tbody>
+        </table>
+        {# Flask: {% endfor %} #}
+      </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+      <small class="text-muted">Showing 5 of 12,400 records</small>
+      <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
+    </div>
+  </div>
+</main>
+
+<!-- Record View Modal -->
+<div class="modal fade" id="viewRecordModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Medical Record — REC-2026-041892</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        {# Flask Dynamic: {{ record }} #}
+        <div class="row g-3 mb-3">
+          <div class="col-md-6"><span class="text-muted fs-12">Patient:</span><div class="fw-600">Ahmad Bin Jalil (MC-2024-008342)</div></div>
+          <div class="col-md-6"><span class="text-muted fs-12">Doctor:</span><div class="fw-600">Dr. Ahmad Azman — Cardiology</div></div>
+          <div class="col-md-6"><span class="text-muted fs-12">Record Type:</span><div><span class="badge badge-primary-soft">Consultation</span></div></div>
+          <div class="col-md-6"><span class="text-muted fs-12">Date:</span><div class="fw-600">28 June 2026, 14:30</div></div>
+        </div>
+        <hr/>
+        <div class="mb-3"><div class="fw-600 mb-1">Diagnosis</div><div>Type 2 Diabetes Mellitus (E11)</div></div>
+        <div class="mb-3"><div class="fw-600 mb-1">Notes</div><div class="fs-13">Patient presents with elevated blood glucose levels (HbA1c: 8.2%). Advised dietary changes and initiated Metformin therapy. Follow-up in 3 months.</div></div>
+        <div class="p-2 rounded" style="background:#f8faff;border:1px solid var(--border-color);font-family:'Courier New',monospace;font-size:.75rem;">
+          <span style="color:#546e7a;">Blockchain Record — </span>
+          Block #18,432 | Hash: 0xa9f2b7d1c4e8f3a2 | Tx: Tx-94218 | Status: COMMITTED
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button class="btn btn-outline-primary" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+<script>document.addEventListener('DOMContentLoaded',()=>{MediChain.initTableSort();MediChain.initPagination({pageSize:10});});</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+{# Flask Dynamic Route: /doctor/profile #}
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>My Profile — MediChain Doctor</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+</head>
+<body class="page-bg">
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
+<aside class="mc-sidebar" id="mc-sidebar">
+  <a href="dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-chain"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Doctor Portal</span></div></a>
+  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">AA</div><div class="user-info"><div class="user-name">Dr. Ahmad Azman</div><div class="user-role">Cardiologist</div></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a href="dashboard.html" class="nav-item-link"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
+    <div class="nav-section-label">Patient Care</div>
+    <a href="patients.html" class="nav-item-link"><i class="fas fa-users nav-icon"></i><span class="nav-text">My Patients</span></a>
+    <a href="create_record.html" class="nav-item-link"><i class="fas fa-file-plus nav-icon"></i><span class="nav-text">Create Record</span></a>
+    <a href="upload_reports.html" class="nav-item-link"><i class="fas fa-cloud-upload-alt nav-icon"></i><span class="nav-text">Upload Reports</span></a>
+    <a href="medical_history.html" class="nav-item-link"><i class="fas fa-history nav-icon"></i><span class="nav-text">Medical History</span></a>
+    <div class="nav-section-label">Account</div>
+    <a href="profile.html" class="nav-item-link active"><i class="fas fa-user-circle nav-icon"></i><span class="nav-text">My Profile</span></a>
+    <a href="../login.html" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
+  </nav>
+  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>General Hospital KL</span></div></div>
+</aside>
+<header class="mc-topbar">
+  <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><a href="dashboard.html" class="text-muted">Doctor</a><span class="bc-sep">/</span><span class="bc-current">My Profile</span></div></div>
+  <div class="topbar-right"><button class="btn btn-primary btn-sm" onclick="MediChain.showToast('Profile saved!','success')"><i class="fas fa-save me-1"></i>Save Changes</button></div>
+</header>
+<main class="mc-content">
+  <div class="page-header">
+    <div class="page-header-left"><h4><i class="fas fa-user-md me-2 text-primary"></i>My Profile</h4><p>Manage your professional profile and account settings</p></div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Profile Card -->
+    <div class="col-lg-4">
+      <div class="mc-card profile-card text-center mb-4">
+        <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#1a73e8,#00bcd4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:2.2rem;font-weight:700;margin:0 auto 1.25rem;">AA</div>
+        <h5 class="fw-700 mb-0">Dr. Ahmad Azman bin Hassan</h5>
+        <div class="text-muted fs-13">MCR-4521</div>
+        <span class="badge badge-primary-soft mt-2">Cardiologist</span>
+        <span class="badge badge-success-soft mt-2">Active</span>
+        <hr/>
+        <div class="text-start">
+          <div class="d-flex justify-content-between py-2 border-bottom fs-12"><span class="text-muted">Hospital</span><strong>General Hospital KL</strong></div>
+          <div class="d-flex justify-content-between py-2 border-bottom fs-12"><span class="text-muted">Patients</span><strong>48</strong></div>
+          <div class="d-flex justify-content-between py-2 border-bottom fs-12"><span class="text-muted">Records</span><strong>312</strong></div>
+          <div class="d-flex justify-content-between py-2 fs-12"><span class="text-muted">Joined</span><strong>January 2024</strong></div>
+        </div>
+        <button class="btn btn-outline-primary btn-sm w-100 mt-3"><i class="fas fa-camera me-1"></i>Change Profile Photo</button>
+      </div>
+
+      <!-- Blockchain Identity -->
+      <div class="mc-card">
+        <div class="card-header"><span><i class="fas fa-cubes text-success me-2"></i>Blockchain Identity</span></div>
+        <div class="card-body">
+          <div class="p-3 rounded-3" style="background:var(--text-dark);font-family:'Courier New',monospace;font-size:.7rem;color:#64ffda;">
+            <div style="color:#546e7a;">// Doctor Certificate</div>
+            <div style="color:#80cbc4;">"doctorId": <span style="color:#f48fb1;">"MCR-4521"</span></div>
+            <div style="color:#80cbc4;">"mspId": <span style="color:#f48fb1;">"HKL-MSP"</span></div>
+            <div style="color:#80cbc4;">"certExpiry": <span style="color:#f48fb1;">"2027-01-15"</span></div>
+            <div style="color:#80cbc4;">"status": <span style="color:#69f0ae;">"VALID"</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <!-- Personal Info -->
+      <div class="mc-card mb-4">
+        <div class="card-header"><span><i class="fas fa-user text-primary me-2"></i>Personal Information</span></div>
+        <div class="card-body">
+          {# Flask Dynamic: {{ current_user }} #}
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Full Name</label><input type="text" class="form-control" value="Dr. Ahmad Azman bin Hassan"/></div>
+            <div class="col-md-6"><label class="form-label">MC Registration #</label><input type="text" class="form-control" value="MCR-4521" readonly/></div>
+            <div class="col-md-6"><label class="form-label">Email</label><input type="email" class="form-control" value="dr.ahmad@hkl.gov.my"/></div>
+            <div class="col-md-6"><label class="form-label">Phone</label><input type="tel" class="form-control" value="+60 12-345-6789"/></div>
+            <div class="col-md-6"><label class="form-label">Specialization</label><input type="text" class="form-control" value="Cardiology" readonly/></div>
+            <div class="col-md-6"><label class="form-label">IC Number</label><input type="text" class="form-control" value="820315-07-XXXX" readonly/></div>
+            <div class="col-12"><label class="form-label">Brief Bio</label><textarea class="form-control" rows="2">Cardiologist with 15 years of experience specializing in interventional cardiology and heart failure management.</textarea></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Change Password -->
+      <div class="mc-card mb-4">
+        <div class="card-header"><span><i class="fas fa-shield-halved text-warning me-2"></i>Change Password</span></div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4"><label class="form-label">Current Password</label><input type="password" class="form-control" placeholder="••••••••"/></div>
+            <div class="col-md-4"><label class="form-label">New Password</label><input type="password" class="form-control" placeholder="Min 8 chars"/></div>
+            <div class="col-md-4"><label class="form-label">Confirm Password</label><input type="password" class="form-control" placeholder="Re-enter"/></div>
+            <div class="col-12"><button class="btn btn-warning btn-sm" onclick="MediChain.showToast('Password updated!','success')"><i class="fas fa-key me-1"></i>Update Password</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="mc-card">
+        <div class="card-header"><span><i class="fas fa-bell text-info me-2"></i>Notification Preferences</span></div>
+        <div class="card-body">
+          <div class="d-flex flex-column gap-3">
+            <div class="d-flex justify-content-between align-items-center"><div><div class="fw-500 fs-13">Lab Result Ready</div><div class="fs-12 text-muted">Notify when patient lab results arrive</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" checked/></div></div>
+            <div class="d-flex justify-content-between align-items-center"><div><div class="fw-500 fs-13">Appointment Reminder</div><div class="fs-12 text-muted">1 hour before each appointment</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" checked/></div></div>
+            <div class="d-flex justify-content-between align-items-center"><div><div class="fw-500 fs-13">Record Access Alert</div><div class="fs-12 text-muted">When another doctor accesses your patient's records</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" checked/></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

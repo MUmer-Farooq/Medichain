@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+{# Flask Dynamic Route: /hospital-admin/doctors #}
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Manage Doctors — MediChain</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../static/css/style.css"/>
+  <link rel="stylesheet" href="../static/css/dashboard.css"/>
+  <link rel="stylesheet" href="../static/css/responsive.css"/>
+</head>
+<body class="page-bg">
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
+<aside class="mc-sidebar" id="mc-sidebar">
+  <a href="dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-chain"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Hospital Admin</span></div></a>
+  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#00c853,#00bcd4);">HA</div><div class="user-info"><div class="user-name">Dr. Farah Malik</div><div class="user-role">Hospital Administrator</div></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a href="dashboard.html" class="nav-item-link"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
+    <div class="nav-section-label">Management</div>
+    <a href="doctors.html" class="nav-item-link active"><i class="fas fa-user-md nav-icon"></i><span class="nav-text">Manage Doctors</span></a>
+    <a href="patients.html" class="nav-item-link"><i class="fas fa-users nav-icon"></i><span class="nav-text">Patients</span></a>
+    <a href="medical_records.html" class="nav-item-link"><i class="fas fa-file-medical nav-icon"></i><span class="nav-text">Medical Records</span></a>
+    <div class="nav-section-label">Reports</div>
+    <a href="reports.html" class="nav-item-link"><i class="fas fa-chart-bar nav-icon"></i><span class="nav-text">Reports</span></a>
+    <div class="nav-section-label">Account</div>
+    <a href="settings.html" class="nav-item-link"><i class="fas fa-cog nav-icon"></i><span class="nav-text">Settings</span></a>
+    <a href="../login.html" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
+  </nav>
+  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>General Hospital KL</span></div></div>
+</aside>
+<header class="mc-topbar">
+  <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><a href="dashboard.html" class="text-muted">Dashboard</a><span class="bc-sep">/</span><span class="bc-current">Doctors</span></div></div>
+  <div class="topbar-right">
+    <div class="topbar-search"><i class="fas fa-search search-icon"></i><input type="text" id="table-search" placeholder="Search doctors…"/></div>
+    <div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#00c853,#00bcd4);">HA</div><span class="ud-name">Dr. Farah</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div>
+  </div>
+</header>
+<main class="mc-content">
+  <div class="page-header">
+    <div class="page-header-left"><h4><i class="fas fa-user-md me-2 text-success"></i>Manage Doctors</h4><p>Register and manage doctors at General Hospital Kuala Lumpur</p></div>
+    <div class="page-header-right">
+      <button class="btn btn-outline-secondary btn-sm"><i class="fas fa-download me-1"></i>Export</button>
+      <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addDoctorModal"><i class="fas fa-user-plus me-1"></i>Add Doctor</button>
+    </div>
+  </div>
+
+  <div class="stats-grid mb-4">
+    <div class="stat-card success"><div class="stat-icon"><i class="fas fa-user-md"></i></div><div class="stat-value">38</div><div class="stat-label">Active</div></div>
+    <div class="stat-card warning"><div class="stat-icon"><i class="fas fa-user-clock"></i></div><div class="stat-value">4</div><div class="stat-label">Off Duty</div></div>
+    <div class="stat-card danger"><div class="stat-icon"><i class="fas fa-user-slash"></i></div><div class="stat-value">2</div><div class="stat-label">Inactive</div></div>
+    <div class="stat-card info"><div class="stat-icon"><i class="fas fa-stethoscope"></i></div><div class="stat-value">12</div><div class="stat-label">Specializations</div></div>
+  </div>
+
+  <div class="mc-card mb-3">
+    <div class="card-body py-3">
+      <div class="search-filter-bar">
+        <div class="search-box"><i class="fas fa-search"></i><input type="text" id="table-search" placeholder="Search by name, specialization, ID…"/></div>
+        <select class="form-select form-select-sm" style="width:auto;" onchange="MediChain.filterTable(this)" data-col="4">
+          <option value="">All Status</option><option>Active</option><option>Off Duty</option><option>Inactive</option>
+        </select>
+        <select class="form-select form-select-sm" style="width:auto;" onchange="MediChain.filterTable(this)" data-col="3">
+          <option value="">All Specializations</option><option>Cardiology</option><option>Neurology</option><option>Pediatrics</option><option>Orthopedics</option><option>General</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="mc-card">
+    <div class="card-header"><span><i class="fas fa-list text-success me-2"></i>All Doctors <span class="badge badge-success-soft ms-2">44</span></span></div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        {# Flask Dynamic: {% for doctor in doctors %} #}
+        <table class="mc-table" id="mc-table">
+          <thead><tr><th>#</th><th>Doctor</th><th>MC # / IC</th><th>Specialization</th><th>Status</th><th>Patients</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td><div class="d-flex align-items-center gap-2"><div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1a73e8,#00bcd4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:700;flex-shrink:0;">AA</div><div><div class="fw-600 fs-13">Dr. Ahmad Azman</div><div class="fs-11 text-muted">dr.ahmad@hospital.com</div></div></div></td><td class="font-monospace fs-12">MCR-4521</td><td><span class="badge badge-primary-soft">Cardiology</span></td><td><span class="badge badge-success-soft">Active</span></td><td>48</td><td>Jan 2024</td><td><div class="table-actions"><a href="#" class="btn-icon" title="View Profile" data-bs-toggle="modal" data-bs-target="#viewDoctorModal"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-warning" title="Edit"><i class="fas fa-edit"></i></a><a href="#" class="btn-icon btn-danger" onclick="MediChain.confirmDelete({title:'Deactivate Doctor?',text:'The doctor will lose access to MediChain.'})"><i class="fas fa-user-minus"></i></a></div></td></tr>
+            <tr><td>2</td><td><div class="d-flex align-items-center gap-2"><div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#e91e63,#f48fb1);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:700;flex-shrink:0;">NR</div><div><div class="fw-600 fs-13">Dr. Nurul Ain Rashid</div><div class="fs-11 text-muted">dr.nurul@hospital.com</div></div></div></td><td class="font-monospace fs-12">MCR-3891</td><td><span class="badge badge-success-soft">Pediatrics</span></td><td><span class="badge badge-success-soft">Active</span></td><td>32</td><td>Feb 2024</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-warning"><i class="fas fa-edit"></i></a><a href="#" class="btn-icon btn-danger" onclick="MediChain.confirmDelete({title:'Deactivate Doctor?'})"><i class="fas fa-user-minus"></i></a></div></td></tr>
+            <tr><td>3</td><td><div class="d-flex align-items-center gap-2"><div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#7c4dff,#ce93d8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:700;flex-shrink:0;">SK</div><div><div class="fw-600 fs-13">Dr. Suresh Kumar</div><div class="fs-11 text-muted">dr.suresh@hospital.com</div></div></div></td><td class="font-monospace fs-12">MCR-2744</td><td><span class="badge" style="background:#f3e5f5;color:#7c4dff;">Neurology</span></td><td><span class="badge badge-success-soft">Active</span></td><td>55</td><td>Mar 2024</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-warning"><i class="fas fa-edit"></i></a><a href="#" class="btn-icon btn-danger" onclick="MediChain.confirmDelete({title:'Deactivate Doctor?'})"><i class="fas fa-user-minus"></i></a></div></td></tr>
+            <tr><td>4</td><td><div class="d-flex align-items-center gap-2"><div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#ff6d00,#ffcc02);display:flex;align-items:center;justify-content:center;color:#000;font-size:.75rem;font-weight:700;flex-shrink:0;">LW</div><div><div class="fw-600 fs-13">Dr. Lim Wei Chong</div><div class="fs-11 text-muted">dr.lim@hospital.com</div></div></div></td><td class="font-monospace fs-12">MCR-5102</td><td><span class="badge badge-warning-soft">Orthopedics</span></td><td><span class="badge badge-warning-soft">Off Duty</span></td><td>28</td><td>Apr 2024</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-warning"><i class="fas fa-edit"></i></a><a href="#" class="btn-icon btn-danger" onclick="MediChain.confirmDelete({title:'Deactivate Doctor?'})"><i class="fas fa-user-minus"></i></a></div></td></tr>
+          </tbody>
+        </table>
+        {# Flask: {% endfor %} #}
+      </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+      <small class="text-muted">Showing 4 of 44 doctors</small>
+      <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
+    </div>
+  </div>
+</main>
+
+<!-- Add Doctor Modal -->
+<div class="modal fade" id="addDoctorModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Register New Doctor</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        {# Flask: POST /hospital-admin/doctors/add #}
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">Full Name</label><input type="text" class="form-control" placeholder="Dr. Full Name" required/></div>
+          <div class="col-md-6"><label class="form-label">Medical Council Registration #</label><input type="text" class="form-control" placeholder="MCR-XXXX"/></div>
+          <div class="col-md-6"><label class="form-label">Email Address</label><input type="email" class="form-control" placeholder="doctor@hospital.com"/></div>
+          <div class="col-md-6"><label class="form-label">Phone</label><input type="tel" class="form-control" placeholder="+60 1X-XXXX XXXX"/></div>
+          <div class="col-md-6"><label class="form-label">Specialization</label><select class="form-select"><option>General Medicine</option><option>Cardiology</option><option>Neurology</option><option>Pediatrics</option><option>Orthopedics</option><option>Oncology</option><option>Radiology</option></select></div>
+          <div class="col-md-6"><label class="form-label">IC / Passport Number</label><input type="text" class="form-control" placeholder="XXXXXX-XX-XXXX"/></div>
+          <div class="col-md-6"><label class="form-label">Initial Password</label><input type="password" class="form-control" placeholder="Temporary password"/></div>
+          <div class="col-md-6"><label class="form-label">Access Level</label><select class="form-select"><option>Full Access</option><option>Read Only</option><option>Department Only</option></select></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-success" onclick="MediChain.showToast('Doctor registered successfully! Credentials sent to email.','success');bootstrap.Modal.getInstance(document.getElementById('addDoctorModal')).hide()"><i class="fas fa-user-plus me-1"></i>Register Doctor</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Doctor Modal -->
+<div class="modal fade" id="viewDoctorModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Doctor Profile — Dr. Ahmad Azman</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        {# Flask Dynamic: {{ doctor_profile }} #}
+        <div class="d-flex align-items-center gap-4 mb-4">
+          <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1a73e8,#00bcd4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.8rem;font-weight:700;">AA</div>
+          <div><h5 class="fw-700 mb-0">Dr. Ahmad Azman bin Hassan</h5><div class="text-muted">MCR-4521 · Cardiologist</div><span class="badge badge-success-soft mt-1">Active</span></div>
+        </div>
+        <div class="row g-3 fs-13">
+          <div class="col-md-6"><span class="text-muted">Email:</span> dr.ahmad@hospital.com</div>
+          <div class="col-md-6"><span class="text-muted">Phone:</span> +60 12-345-6789</div>
+          <div class="col-md-6"><span class="text-muted">Patients Handled:</span> 48</div>
+          <div class="col-md-6"><span class="text-muted">Records Created:</span> 312</div>
+          <div class="col-md-6"><span class="text-muted">Joined:</span> January 2024</div>
+          <div class="col-md-6"><span class="text-muted">Last Login:</span> Today, 08:34 AM</div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button class="btn btn-warning" onclick="MediChain.showToast('Edit mode coming soon','info')"><i class="fas fa-edit me-1"></i>Edit Profile</button></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script src="../static/js/app.js"></script>
+<script>document.addEventListener('DOMContentLoaded',()=>{MediChain.initTableSort();MediChain.initPagination({pageSize:10});});</script>
+</body>
+</html>

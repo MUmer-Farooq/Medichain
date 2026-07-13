@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+{# Flask Dynamic Route: /system-admin/blockchain-monitor #}
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Blockchain Monitor — MediChain</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}"/>
+  <style>
+    .bc-terminal{background:var(--text-dark);border-radius:12px;padding:1.5rem;font-family:'Courier New',monospace;font-size:.8rem;color:#64ffda;height:320px;overflow-y:auto;}
+    .bc-terminal .bc-comment{color:#546e7a;}.bc-terminal .bc-key{color:#80cbc4;}.bc-terminal .bc-val{color:#f48fb1;}.bc-terminal .bc-ok{color:#69f0ae;}
+    .peer-card{background:#fff;border-radius:10px;padding:1rem;border:1px solid var(--border-color);transition:all .2s;}
+    .peer-card:hover{border-color:var(--primary);box-shadow:var(--shadow-sm);}
+    .peer-status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+    .tx-row{display:grid;grid-template-columns:120px 1fr 140px 100px 80px;gap:1rem;padding:.75rem 1rem;border-bottom:1px solid #f0f4ff;align-items:center;font-size:.82rem;}
+    .tx-row:last-child{border-bottom:none;}
+    .tx-row-header{background:#f8faff;font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-light);}
+  </style>
+</head>
+<body class="page-bg">
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
+<aside class="mc-sidebar" id="mc-sidebar">
+  <a href="dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-heartbeat"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Blockchain Health</span></div></a>
+  <div class="sidebar-user"><div class="user-avatar">SA</div><div class="user-info"><div class="user-name">System Admin</div><div class="user-role">Super Administrator</div></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="dashboard.html" class="nav-item-link"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
+    <a href="hospital_requests.html" class="nav-item-link"><i class="fas fa-clock nav-icon"></i><span class="nav-text">Hospital Requests</span><span class="nav-badge danger">8</span></a>
+    <a href="hospitals.html" class="nav-item-link"><i class="fas fa-hospital nav-icon"></i><span class="nav-text">Manage Hospitals</span></a>
+    <div class="nav-section-label">Analytics</div>
+    <a href="analytics.html" class="nav-item-link"><i class="fas fa-chart-line nav-icon"></i><span class="nav-text">Analytics</span></a>
+    <a href="blockchain_monitor.html" class="nav-item-link active"><i class="fas fa-cubes nav-icon"></i><span class="nav-text">Blockchain Monitor</span></a>
+    <div class="nav-section-label">System</div>
+    <a href="settings.html" class="nav-item-link"><i class="fas fa-cog nav-icon"></i><span class="nav-text">Settings</span></a>
+    <a href="/logout" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
+  </nav>
+  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>v1.0.0 — Network Online</span></div></div>
+</aside>
+<header class="mc-topbar">
+  <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><a href="dashboard.html" class="text-muted">Dashboard</a><span class="bc-sep">/</span><span class="bc-current">Blockchain Monitor</span></div></div>
+  <div class="topbar-right">
+    <div class="d-flex align-items-center gap-2 me-2"><div class="node-status online"></div><span class="fs-12 fw-600 text-success">Network Online</span></div>
+    <div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar">SA</div><span class="ud-name">System Admin</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div>
+  </div>
+</header>
+<main class="mc-content">
+  <div class="page-header">
+    <div class="page-header-left"><h4><i class="fas fa-cubes me-2 text-success"></i>Blockchain Monitor</h4><p>Real-time Hyperledger Fabric network status, blocks, and transactions</p></div>
+    <div class="page-header-right">
+      <button class="btn btn-outline-secondary btn-sm"><i class="fas fa-sync me-1"></i>Refresh</button>
+      <button class="btn btn-success btn-sm" onclick="MediChain.showToast('Network health: All peers operational','success')"><i class="fas fa-heartbeat me-1"></i>Check Health</button>
+    </div>
+  </div>
+
+  <!-- Network Status Cards -->
+  {# Flask Dynamic: /api/blockchain/status #}
+  <div class="stats-grid mb-4">
+    <div class="stat-card success"><div class="stat-icon"><i class="fas fa-cubes"></i></div><div class="stat-value" id="live-block-count">18,432</div><div class="stat-label">Latest Block</div><div class="stat-change up"><i class="fas fa-circle" style="font-size:.4rem;"></i>&nbsp;Growing</div></div>
+    <div class="stat-card primary"><div class="stat-icon"><i class="fas fa-exchange-alt"></i></div><div class="stat-value" id="live-tx-count">94,218</div><div class="stat-label">Transactions</div><div class="stat-change up"><i class="fas fa-arrow-up"></i>Live</div></div>
+    <div class="stat-card info"><div class="stat-icon"><i class="fas fa-network-wired"></i></div><div class="stat-value">58</div><div class="stat-label">Peer Nodes</div><div class="stat-change up"><i class="fas fa-check"></i>All Online</div></div>
+    <div class="stat-card warning"><div class="stat-icon"><i class="fas fa-tachometer-alt"></i></div><div class="stat-value">142ms</div><div class="stat-label">Avg Latency</div><div class="stat-change up"><i class="fas fa-arrow-down"></i>Low</div></div>
+    <div class="stat-card secondary"><div class="stat-icon"><i class="fas fa-shield-halved"></i></div><div class="stat-value">99.9%</div><div class="stat-label">Uptime</div><div class="stat-change up"><i class="fas fa-check"></i>SLA Met</div></div>
+    <div class="stat-card danger"><div class="stat-icon"><i class="fas fa-lock"></i></div><div class="stat-value">3</div><div class="stat-label">Orderers</div><div class="stat-change up"><i class="fas fa-check"></i>Operational</div></div>
+  </div>
+
+  <!-- Chart + Live Log -->
+  <div class="row g-4 mb-4">
+    <div class="col-lg-8">
+      <div class="mc-card h-100">
+        <div class="card-header"><span><i class="fas fa-chart-area text-success me-2"></i>Transaction Rate (Last 24h)</span><span class="badge badge-success-soft">Live</span></div>
+        <div class="card-body"><div class="chart-container" style="height:280px;"><canvas id="blockchainChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="mc-card h-100">
+        <div class="card-header"><span><i class="fas fa-terminal text-success me-2"></i>Live Log</span><span id="log-blink" class="badge badge-success-soft">● LIVE</span></div>
+        <div class="card-body p-0">
+          <div class="bc-terminal" id="bc-terminal">
+            <div><span class="bc-ok">✓</span> Block #18,432 — COMMITTED</div>
+            <div class="mt-1"><span class="bc-key">txId:</span> <span class="bc-val">Tx-94218</span></div>
+            <div><span class="bc-key">type:</span> <span class="bc-val">CREATE_RECORD</span></div>
+            <div><span class="bc-key">endorsers:</span> <span class="bc-val">3/3</span></div>
+            <div class="mt-2 bc-comment">--- 22:14:08 ---</div>
+            <div><span class="bc-ok">✓</span> Block #18,431 — COMMITTED</div>
+            <div><span class="bc-key">type:</span> <span class="bc-val">UPDATE_RECORD</span></div>
+            <div class="mt-2 bc-comment">--- 22:13:52 ---</div>
+            <div><span class="bc-ok">✓</span> Block #18,430 — COMMITTED</div>
+            <div><span class="bc-key">type:</span> <span class="bc-val">READ_RECORD</span></div>
+            <div class="mt-2 bc-comment">--- 22:13:35 ---</div>
+            <div><span class="bc-ok">✓</span> Block #18,429 — COMMITTED</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Blocks -->
+  <div class="mc-card mb-4">
+    <div class="card-header"><span><i class="fas fa-cubes text-primary me-2"></i>Recent Blocks</span></div>
+    <div class="card-body p-0">
+      <div class="tx-row tx-row-header"><span>Block #</span><span>Data Hash</span><span>Timestamp</span><span>Txs</span><span>Status</span></div>
+      {# Flask Dynamic: {% for block in recent_blocks %} #}
+      <div class="tx-row"><span class="fw-700 text-primary">#18,432</span><span class="font-monospace fs-11 text-muted">0xa9f2b7d1c4e8...</span><span>2026-06-30 22:14</span><span>3</span><span><span class="badge badge-success-soft">Valid</span></span></div>
+      <div class="tx-row"><span class="fw-700 text-primary">#18,431</span><span class="font-monospace fs-11 text-muted">0x3c7a9e2f1b4d...</span><span>2026-06-30 22:13</span><span>1</span><span><span class="badge badge-success-soft">Valid</span></span></div>
+      <div class="tx-row"><span class="fw-700 text-primary">#18,430</span><span class="font-monospace fs-11 text-muted">0xf8a2c6d4e1b9...</span><span>2026-06-30 22:12</span><span>5</span><span><span class="badge badge-success-soft">Valid</span></span></div>
+      <div class="tx-row"><span class="fw-700 text-primary">#18,429</span><span class="font-monospace fs-11 text-muted">0x1e4f8b2a7c5d...</span><span>2026-06-30 22:11</span><span>2</span><span><span class="badge badge-success-soft">Valid</span></span></div>
+      <div class="tx-row"><span class="fw-700 text-primary">#18,428</span><span class="font-monospace fs-11 text-muted">0x6d2a9f4c1b7e...</span><span>2026-06-30 22:10</span><span>4</span><span><span class="badge badge-success-soft">Valid</span></span></div>
+      {# Flask: {% endfor %} #}
+    </div>
+  </div>
+
+  <!-- Peer Nodes -->
+  <div class="mc-card">
+    <div class="card-header"><span><i class="fas fa-server text-info me-2"></i>Peer Nodes Status</span></div>
+    <div class="card-body">
+      {# Flask Dynamic: {{ peer_nodes }} #}
+      <div class="row g-3">
+        <div class="col-md-4"><div class="peer-card"><div class="d-flex justify-content-between align-items-start mb-2"><div><div class="fw-600 fs-13">peer0.hkl.medichain.net</div><div class="fs-11 text-muted">Hospital Kuala Lumpur</div></div><span class="peer-status-dot" style="background:var(--success);box-shadow:0 0 6px rgba(0,200,83,.5);"></span></div><div class="row g-2 fs-11"><div class="col-6"><span class="text-muted">Blocks:</span> <strong>18,432</strong></div><div class="col-6"><span class="text-muted">Latency:</span> <strong>98ms</strong></div><div class="col-6"><span class="text-muted">TPS:</span> <strong>12.4</strong></div><div class="col-6"><span class="text-muted">Uptime:</span> <strong>99.9%</strong></div></div></div></div>
+        <div class="col-md-4"><div class="peer-card"><div class="d-flex justify-content-between align-items-start mb-2"><div><div class="fw-600 fs-13">peer0.glenKL.medichain.net</div><div class="fs-11 text-muted">Gleneagles Hospital KL</div></div><span class="peer-status-dot" style="background:var(--success);box-shadow:0 0 6px rgba(0,200,83,.5);"></span></div><div class="row g-2 fs-11"><div class="col-6"><span class="text-muted">Blocks:</span> <strong>18,432</strong></div><div class="col-6"><span class="text-muted">Latency:</span> <strong>115ms</strong></div><div class="col-6"><span class="text-muted">TPS:</span> <strong>10.8</strong></div><div class="col-6"><span class="text-muted">Uptime:</span> <strong>99.8%</strong></div></div></div></div>
+        <div class="col-md-4"><div class="peer-card"><div class="d-flex justify-content-between align-items-start mb-2"><div><div class="fw-600 fs-13">peer0.penang.medichain.net</div><div class="fs-11 text-muted">Penang General Hospital</div></div><span class="peer-status-dot" style="background:var(--success);box-shadow:0 0 6px rgba(0,200,83,.5);"></span></div><div class="row g-2 fs-11"><div class="col-6"><span class="text-muted">Blocks:</span> <strong>18,432</strong></div><div class="col-6"><span class="text-muted">Latency:</span> <strong>148ms</strong></div><div class="col-6"><span class="text-muted">TPS:</span> <strong>9.2</strong></div><div class="col-6"><span class="text-muted">Uptime:</span> <strong>99.7%</strong></div></div></div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+  /* Flask Dynamic Route: WebSocket or /api/blockchain/live for real-time updates */
+  let blockNum=18432, txNum=94218;
+  const terminal=document.getElementById('bc-terminal');
+  const types=['CREATE_RECORD','UPDATE_RECORD','READ_RECORD','GRANT_ACCESS','REVOKE_ACCESS'];
+  setInterval(()=>{
+    const tx=Math.floor(Math.random()*3)+1;
+    txNum+=tx; if(Math.random()>.6)blockNum++;
+    document.getElementById('live-block-count').textContent=blockNum.toLocaleString();
+    document.getElementById('live-tx-count').textContent=txNum.toLocaleString();
+    const type=types[Math.floor(Math.random()*types.length)];
+    terminal.innerHTML=`<div><span style="color:#69f0ae">✓</span> Block #${blockNum.toLocaleString()} — COMMITTED</div><div style="color:#80cbc4">type: <span style="color:#f48fb1">${type}</span></div><div style="color:#546e7a">--- ${new Date().toLocaleTimeString()} ---</div>`+terminal.innerHTML;
+    if(terminal.children.length>40)terminal.lastChild.remove();
+  },4000);
+</script>
+</body>
+</html>

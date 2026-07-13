@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+{# Flask Dynamic Route: /system-admin/hospital-requests #}
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Hospital Requests — MediChain</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}"/>
+</head>
+<body class="page-bg">
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
+<aside class="mc-sidebar" id="mc-sidebar">
+  <a href="dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-heartbeat"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Blockchain Health</span></div></a>
+  <div class="sidebar-user"><div class="user-avatar">SA</div><div class="user-info"><div class="user-name">System Admin</div><div class="user-role">Super Administrator</div></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="dashboard.html" class="nav-item-link"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
+    <a href="hospital_requests.html" class="nav-item-link active"><i class="fas fa-clock nav-icon"></i><span class="nav-text">Hospital Requests</span><span class="nav-badge danger">8</span></a>
+    <a href="hospitals.html" class="nav-item-link"><i class="fas fa-hospital nav-icon"></i><span class="nav-text">Manage Hospitals</span></a>
+    <div class="nav-section-label">Analytics</div>
+    <a href="analytics.html" class="nav-item-link"><i class="fas fa-chart-line nav-icon"></i><span class="nav-text">Analytics</span></a>
+    <a href="blockchain_monitor.html" class="nav-item-link"><i class="fas fa-cubes nav-icon"></i><span class="nav-text">Blockchain Monitor</span></a>
+    <div class="nav-section-label">System</div>
+    <a href="settings.html" class="nav-item-link"><i class="fas fa-cog nav-icon"></i><span class="nav-text">Settings</span></a>
+    <a href="/logout" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
+  </nav>
+  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>v1.0.0</span></div></div>
+</aside>
+<header class="mc-topbar">
+  <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><a href="dashboard.html" class="text-muted">Dashboard</a><span class="bc-sep">/</span><span class="bc-current">Hospital Requests</span></div></div>
+  <div class="topbar-right">
+    <div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar">SA</div><span class="ud-name">System Admin</span><i class="fas fa-chevron-down fs-11 text-muted"></i></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div>
+  </div>
+</header>
+<main class="mc-content">
+  <div class="page-header">
+    <div class="page-header-left"><h4><i class="fas fa-clock me-2 text-warning"></i>Hospital Registration Requests</h4><p>Review and approve or reject hospital applications to join MediChain</p></div>
+    <div class="page-header-right">
+      <button class="btn btn-outline-secondary btn-sm"><i class="fas fa-filter me-1"></i>Filter</button>
+      <button class="btn btn-success btn-sm" onclick="approveAll()"><i class="fas fa-check-double me-1"></i>Approve Selected</button>
+    </div>
+  </div>
+
+  <!-- Filter Tabs -->
+  <ul class="nav mc-tabs mb-4 border-bottom">
+    <li class="nav-item"><a class="nav-link active" href="#">All <span class="badge badge-primary-soft ms-1">8</span></a></li>
+    <li class="nav-item"><a class="nav-link" href="#">New <span class="badge badge-warning-soft ms-1">5</span></a></li>
+    <li class="nav-item"><a class="nav-link" href="#">Under Review <span class="badge badge-info-soft ms-1">3</span></a></li>
+  </ul>
+
+  {# Flask Dynamic: {% for req in requests %} #}
+  <div class="row g-4">
+    <!-- Request Card Template -->
+    <div class="col-12">
+      <div class="mc-card">
+        <div class="card-body">
+          <div class="row align-items-start">
+            <div class="col-md-8">
+              <div class="d-flex align-items-start gap-3 mb-3">
+                <div style="width:50px;height:50px;border-radius:12px;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;"><i class="fas fa-hospital"></i></div>
+                <div>
+                  <h5 class="fw-700 mb-1">General Hospital Penang</h5>
+                  <div class="d-flex flex-wrap gap-2">
+                    <span class="badge badge-primary-soft"><i class="fas fa-tag me-1"></i>Government</span>
+                    <span class="badge badge-warning-soft"><i class="fas fa-clock me-1"></i>Submitted 2 hrs ago</span>
+                    <span class="badge badge-info-soft"><i class="fas fa-map-marker-alt me-1"></i>Penang</span>
+                  </div>
+                </div>
+              </div>
+              <div class="row g-3 mb-3">
+                <div class="col-sm-4"><div class="fs-11 text-muted">Registration #</div><div class="fs-13 fw-600">HOS-2026-0048</div></div>
+                <div class="col-sm-4"><div class="fs-11 text-muted">Administrator</div><div class="fs-13 fw-600">Dr. Farah binti Malik</div></div>
+                <div class="col-sm-4"><div class="fs-11 text-muted">Contact</div><div class="fs-13 fw-600">04-222-3456</div></div>
+                <div class="col-sm-4"><div class="fs-11 text-muted">Email</div><div class="fs-13 fw-600">admin@ghpenang.gov.my</div></div>
+                <div class="col-sm-4"><div class="fs-11 text-muted">Bed Capacity</div><div class="fs-13 fw-600">850 Beds</div></div>
+                <div class="col-sm-4"><div class="fs-11 text-muted">Specialization</div><div class="fs-13 fw-600">Multi-Speciality</div></div>
+              </div>
+              <!-- Documents -->
+              <div class="d-flex flex-wrap gap-2">
+                <a href="#" class="btn btn-sm btn-outline-primary fs-11"><i class="fas fa-file-pdf me-1"></i>Reg. Certificate</a>
+                <a href="#" class="btn btn-sm btn-outline-primary fs-11"><i class="fas fa-file-pdf me-1"></i>MOH License</a>
+                <a href="#" class="btn btn-sm btn-outline-secondary fs-11"><i class="fas fa-file-pdf me-1"></i>Admin IC</a>
+              </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+              <div class="mb-3">
+                <div class="fs-11 text-muted mb-2">Verification Checklist</div>
+                <div class="d-flex flex-column gap-1">
+                  <div class="d-flex align-items-center gap-2 justify-content-md-end fs-12"><i class="fas fa-check-circle text-success"></i>Registration certificate valid</div>
+                  <div class="d-flex align-items-center gap-2 justify-content-md-end fs-12"><i class="fas fa-check-circle text-success"></i>MOH license current</div>
+                  <div class="d-flex align-items-center gap-2 justify-content-md-end fs-12"><i class="fas fa-exclamation-circle text-warning"></i>Admin IC pending review</div>
+                </div>
+              </div>
+              <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                  <i class="fas fa-eye me-1"></i>Full Review
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="rejectRequest('General Hospital Penang')">
+                  <i class="fas fa-times me-1"></i>Reject
+                </button>
+                <button class="btn btn-success btn-sm" onclick="approveRequest('General Hospital Penang')">
+                  <i class="fas fa-check me-1"></i>Approve
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="mc-card">
+        <div class="card-body">
+          <div class="row align-items-start">
+            <div class="col-md-8">
+              <div class="d-flex align-items-start gap-3 mb-3">
+                <div style="width:50px;height:50px;border-radius:12px;background:#e8f5e9;color:var(--success);display:flex;align-items:center;justify-content:font-size:1.3rem;flex-shrink:0;font-size:1.3rem;"><i class="fas fa-hospital"></i></div>
+                <div>
+                  <h5 class="fw-700 mb-1">KL Specialist Centre</h5>
+                  <div class="d-flex flex-wrap gap-2">
+                    <span class="badge badge-warning-soft">Private</span>
+                    <span class="badge" style="background:#e3f2fd;color:#1565c0;">Under Review</span>
+                    <span class="badge badge-info-soft"><i class="fas fa-map-marker-alt me-1"></i>Kuala Lumpur</span>
+                  </div>
+                </div>
+              </div>
+              <div class="row g-3 mb-3">
+                <div class="col-sm-4"><div class="fs-11 text-muted">Registration #</div><div class="fs-13 fw-600">HOS-2026-0047</div></div>
+                <div class="col-sm-4"><div class="fs-11 text-muted">Administrator</div><div class="fs-13 fw-600">Encik Rizal Hamid</div></div>
+                <div class="col-sm-4"><div class="fs-11 text-muted">Submitted</div><div class="fs-13 fw-600">5 hrs ago</div></div>
+              </div>
+              <div class="d-flex flex-wrap gap-2">
+                <a href="#" class="btn btn-sm btn-outline-primary fs-11"><i class="fas fa-file-pdf me-1"></i>Reg. Certificate</a>
+                <a href="#" class="btn btn-sm btn-outline-primary fs-11"><i class="fas fa-file-pdf me-1"></i>MOH License</a>
+              </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+              <div class="mb-3">
+                <textarea class="form-control fs-12" rows="2" placeholder="Add review notes…"></textarea>
+              </div>
+              <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#reviewModal"><i class="fas fa-eye me-1"></i>Review</button>
+                <button class="btn btn-danger btn-sm" onclick="rejectRequest('KL Specialist Centre')"><i class="fas fa-times me-1"></i>Reject</button>
+                <button class="btn btn-success btn-sm" onclick="approveRequest('KL Specialist Centre')"><i class="fas fa-check me-1"></i>Approve</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {# Flask: {% endfor %} #}
+</main>
+
+<!-- Full Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title"><i class="fas fa-hospital me-2"></i>Hospital Application Review — General Hospital Penang</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="section-title">Hospital Information</div>
+            <table class="table table-sm fs-13"><tbody>
+              <tr><td class="text-muted">Name</td><td class="fw-600">General Hospital Penang</td></tr>
+              <tr><td class="text-muted">Type</td><td>Government</td></tr>
+              <tr><td class="text-muted">Registration #</td><td>HOS-2026-0048</td></tr>
+              <tr><td class="text-muted">Address</td><td>Jalan Residensi, 10990 Penang</td></tr>
+              <tr><td class="text-muted">Bed Capacity</td><td>850</td></tr>
+              <tr><td class="text-muted">Website</td><td><a href="#">www.ghpenang.gov.my</a></td></tr>
+            </tbody></table>
+          </div>
+          <div class="col-md-6">
+            <div class="section-title">Administrator Details</div>
+            <table class="table table-sm fs-13"><tbody>
+              <tr><td class="text-muted">Name</td><td class="fw-600">Dr. Farah binti Malik</td></tr>
+              <tr><td class="text-muted">Designation</td><td>Hospital Director</td></tr>
+              <tr><td class="text-muted">Email</td><td>admin@ghpenang.gov.my</td></tr>
+              <tr><td class="text-muted">Phone</td><td>04-222-3456</td></tr>
+              <tr><td class="text-muted">IC Number</td><td>810415-07-XXXX</td></tr>
+            </tbody></table>
+          </div>
+          <div class="col-12">
+            <div class="section-title">Review Notes</div>
+            <textarea class="form-control" rows="3" placeholder="Enter review notes, conditions, or rejection reason…"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button class="btn btn-danger" onclick="rejectRequest('General Hospital Penang');bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide()"><i class="fas fa-times me-1"></i>Reject Application</button>
+        <button class="btn btn-success" onclick="approveRequest('General Hospital Penang');bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide()"><i class="fas fa-check me-1"></i>Approve &amp; Onboard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script>
+  function approveRequest(name) {
+    Swal.fire({icon:'question',title:'Approve Hospital?',html:`<strong>${name}</strong> will be added to MediChain network.`,showCancelButton:true,confirmButtonText:'Yes, Approve',confirmButtonColor:'var(--success)',cancelButtonColor:'#6c757d'}).then(r=>{if(r.isConfirmed)MediChain.showToast(`${name} approved successfully!`,'success');});
+  }
+  function rejectRequest(name) {
+    Swal.fire({icon:'warning',title:'Reject Application?',html:`<strong>${name}</strong>'s application will be rejected.`,showCancelButton:true,confirmButtonText:'Yes, Reject',confirmButtonColor:'var(--danger)',cancelButtonColor:'#6c757d',input:'textarea',inputPlaceholder:'Rejection reason (required)…'}).then(r=>{if(r.isConfirmed&&r.value)MediChain.showToast(`${name} rejected.`,'error');});
+  }
+  function approveAll() { MediChain.showToast('Select hospitals using checkboxes first','warning'); }
+</script>
+</body>
+</html>

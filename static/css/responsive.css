@@ -1,0 +1,182 @@
+/* ============================================================
+   MediChain - Responsive Stylesheet
+   ============================================================ */
+
+/* ---------- Large Screens (≥1400px) ---------- */
+@media (min-width: 1400px) {
+  .mc-content { padding: 2rem 2.5rem; }
+  .stats-grid { grid-template-columns: repeat(5, 1fr); }
+}
+
+/* ---------- Desktop (992px – 1399px) ---------- */
+@media (min-width: 992px) and (max-width: 1399px) {
+  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+  .topbar-search input { width: 180px; }
+  .topbar-search input:focus { width: 220px; }
+}
+
+/* ---------- Tablet Landscape (768px – 991px) ---------- */
+@media (max-width: 991px) {
+
+  :root { --sidebar-width: 240px; }
+
+  .mc-sidebar {
+    transform: translateX(-100%);
+    box-shadow: none;
+    z-index: 1050;
+  }
+
+  .mc-sidebar.show {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+  }
+
+  .mc-topbar {
+    left: 0;
+  }
+
+  .mc-content {
+    margin-left: 0;
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1040;
+    backdrop-filter: blur(2px);
+  }
+
+  .sidebar-overlay.show { display: block; }
+
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+  .topbar-search { display: none; }
+
+  .welcome-banner .row > div:last-child { display: none; }
+}
+
+/* ---------- Tablet Portrait (576px – 767px) ---------- */
+@media (max-width: 767px) {
+
+  .mc-content { padding: 1rem; }
+
+  .page-header { flex-direction: column; }
+  .page-header-right { width: 100%; }
+  .page-header-right .btn { flex: 1; }
+
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+
+  .stat-card { padding: 1rem; }
+  .stat-card .stat-value { font-size: 1.5rem; }
+
+  .search-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box { max-width: 100%; }
+
+  .notif-dropdown { width: 300px; }
+
+  .user-dropdown-btn .ud-name { display: none; }
+
+  .mc-table { display: block; overflow-x: auto; white-space: nowrap; }
+
+  .welcome-banner { padding: 1.25rem; }
+  .welcome-banner h3 { font-size: 1.1rem; }
+
+  .chain-block { font-size: 0.75rem; }
+
+  .timeline { padding-left: 1.5rem; }
+
+  .modal-dialog { margin: 0.5rem; }
+}
+
+/* ---------- Mobile (< 576px) ---------- */
+@media (max-width: 575px) {
+
+  :root { --navbar-height: 60px; }
+
+  .mc-content { padding: 0.75rem; }
+
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+
+  .stat-card { padding: 0.85rem; }
+  .stat-card .stat-icon { width: 40px; height: 40px; font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .stat-card .stat-value { font-size: 1.3rem; }
+
+  .mc-card .card-header { padding: 0.9rem 1rem; font-size: 0.85rem; }
+  .mc-card .card-body   { padding: 1rem; }
+
+  .mc-tabs .nav-link { padding: 0.5rem 0.65rem; font-size: 0.78rem; }
+
+  .topbar-btn { width: 34px; height: 34px; font-size: 0.9rem; }
+
+  .page-header-left h4 { font-size: 1.1rem; }
+
+  .profile-card { padding: 1.25rem; }
+
+  .quick-action { padding: 0.85rem 0.5rem; }
+  .quick-action .qa-icon { width: 36px; height: 36px; font-size: 1.1rem; }
+  .quick-action { font-size: 0.72rem; }
+
+  .activity-dot { width: 30px; height: 30px; font-size: 0.75rem; }
+
+  .notif-dropdown { width: 280px; }
+  .notif-dropdown { right: -40px; }
+
+  .table-actions { flex-wrap: wrap; }
+  .btn-icon { width: 30px; height: 30px; font-size: 0.8rem; }
+
+  /* Landing page mobile */
+  .hero-section { padding: 3rem 0 2rem; }
+  .hero-section h1 { font-size: 1.8rem; }
+  .feature-card { padding: 1.25rem; }
+}
+
+/* ---------- Print Styles ---------- */
+@media print {
+  .mc-sidebar, .mc-topbar, .sidebar-overlay { display: none !important; }
+  .mc-content { margin: 0 !important; padding: 0 !important; }
+  .mc-card, .stat-card { box-shadow: none !important; border: 1px solid #ddd !important; }
+  .btn { display: none !important; }
+  body { font-size: 12px; }
+}
+
+/* ---------- Dark Mode Prep (future Flask integration) ---------- */
+@media (prefers-color-scheme: dark) {
+  /* Respect system dark mode - kept minimal for Flask integration */
+}
+
+/* ---------- Sidebar Toggle Animation ---------- */
+.mc-sidebar {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---------- Landing Page Responsive ---------- */
+.hero-section { padding: 5rem 0 4rem; }
+
+@media (max-width: 991px) {
+  .hero-section { padding: 4rem 0 3rem; text-align: center; }
+  .hero-section .hero-visual { display: none; }
+  .feature-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 575px) {
+  .feature-grid { grid-template-columns: 1fr; }
+  .hero-section h1 { font-size: 2rem; }
+}
+
+/* ---------- Custom Scrollbar on Mobile ---------- */
+@media (max-width: 767px) {
+  ::-webkit-scrollbar { width: 0; height: 0; }
+}
+
+/* ---------- Accessibility Focus Ring ---------- */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
