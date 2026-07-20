@@ -122,10 +122,79 @@ def logout():
     return redirect(url_for("login"))
 
 # Hospital Registration
-@app.route("/hospital_registration")
+@app.route("/hospital_registration", methods=["GET", "POST"])
 def hospital_registration():
-    return render_template("hospital_registration.html")
 
+    if request.method == "GET":
+        return render_template("hospital_registration.html")
+
+    hospital_name = request.form.get("hospital_name")
+    registration_number = request.form.get("reg_number")
+    city = request.form.get("city")
+    address = request.form.get("address")
+    phone = request.form.get("phone")
+    hospital_email = request.form.get("hospital_email")
+
+    try:
+        db.ping(reconnect=True)
+
+        cursor = db.cursor()
+
+        # Check if email already exists
+        cursor.execute(
+            "SELECT hospital_id FROM hospitals WHERE hospital_email=%s",
+            (hospital_email,)
+        )
+
+        if cursor.fetchone():
+            flash("Hospital email already registered.", "danger")
+            return redirect(url_for("hospital_registration"))
+
+        # Check registration number
+        cursor.execute(
+            "SELECT hospital_id FROM hospitals WHERE registration_number=%s",
+            (registration_number,)
+        )
+
+        if cursor.fetchone():
+            flash("Registration number already exists.", "danger")
+            return redirect(url_for("hospital_registration"))
+
+        sql = """
+            INSERT INTO hospitals
+            (
+                hospital_name,
+                registration_number,
+                city,
+                address,
+                phone,
+                hospital_email
+            )
+            VALUES (%s,%s,%s,%s,%s,%s)
+        """
+
+        values = (
+            hospital_name,
+            registration_number,
+            city,
+            address,
+            phone,
+            hospital_email
+        )
+
+        cursor.execute(sql, values)
+        db.commit()
+
+        flash("Hospital registered successfully.", "success")
+        return redirect(url_for("hospital_registration"))
+
+    except mysql.connector.Error as err:
+        db.rollback()
+        flash(f"Database Error: {err}", "danger")
+        return redirect(url_for("hospital_registration"))
+
+    finally:
+        cursor.close()
 
 # Automatically create routes for every HTML file
 for html in templates_dir.rglob("*.html"):

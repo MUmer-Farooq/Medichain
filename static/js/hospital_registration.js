@@ -41,6 +41,50 @@ function goStep(step) {
     behavior: "smooth"
   });
 }
+// Validate Required Fields Before Moving to Next Step
+function validateStep(nextStep) {
+
+  const currentStepContent = document.getElementById(`step${currentStep}`);
+  const requiredFields = currentStepContent.querySelectorAll("[required]");
+
+  for (let field of requiredFields) {
+
+    // Skip hidden file inputs
+    if (field.type === "file") {
+      if (field.files.length === 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Required Fields Missing",
+          text: "Please fill all required fields before continuing."
+        });
+        return;
+      }
+    }
+    else if (field.type === "checkbox") {
+      if (!field.checked) {
+        Swal.fire({
+          icon: "warning",
+          title: "Required Fields Missing",
+          text: "Please fill all required fields before continuing."
+        });
+        field.focus();
+        return;
+      }
+    }
+    else if (field.value.trim() === "") {
+      Swal.fire({
+        icon: "warning",
+        title: "Required Fields Missing",
+        text: "Please fill all required fields before continuing."
+      });
+
+      field.focus();
+      return;
+    }
+  }
+
+  goStep(nextStep);
+}
 
 // Display Uploaded File Name
 function showFile(input, targetId) {
