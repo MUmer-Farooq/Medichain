@@ -90,19 +90,6 @@
               </select>
             </div>
             <div class="col-md-6">
-              <label class="form-label">Specialization</label>
-              <select class="form-select" name="specialization">
-                <option value="">Select Specialization</option>
-                <option>General Medicine</option>
-                <option>Cardiology</option>
-                <option>Oncology</option>
-                <option>Neurology</option>
-                <option>Pediatrics</option>
-                <option>Orthopedics</option>
-                <option>Multi-Speciality</option>
-              </select>
-            </div>
-            <div class="col-md-6">
               <label class="form-label">State</label>
               <select class="form-select" name="state" required>
                 <option value="">Select State</option>
@@ -268,50 +255,110 @@
 
         <!-- STEP 4: Review -->
         <div class="step-pane" id="step4">
-          <div class="section-title"><i class="fas fa-check-circle me-2"></i>Review &amp; Submit</div>
-          <div class="mc-alert mc-alert-warning mb-4"><i class="fas fa-triangle-exclamation alert-icon"></i>Please
-            review
-            all information before submitting. Your application will be reviewed within 2–3 business days.</div>
+          <div class="section-title">
+            <i class="fas fa-check-circle me-2"></i>Review &amp; Submit
+          </div>
+
+          <div class="mc-alert mc-alert-warning mb-4">
+            <i class="fas fa-triangle-exclamation alert-icon"></i>
+            Please review all information before submitting. Your application will be reviewed within 2–3 business days.
+          </div>
+
           <div class="row g-3 mb-4">
+
+            <!-- Hospital Information -->
             <div class="col-md-6">
               <div class="p-3 rounded-3" style="background:#f8faff;border:1px solid var(--border-color);">
                 <div class="fs-11 fw-700 text-uppercase text-muted mb-2">Hospital Info</div>
-                <div class="fs-13"><i class="fas fa-hospital text-primary me-2"></i>Hospital Kuala Lumpur</div>
-                <div class="fs-13 mt-1"><i class="fas fa-map-marker-alt text-muted me-2"></i>50200, Kuala Lumpur</div>
-                <div class="fs-13 mt-1"><i class="fas fa-tag text-muted me-2"></i>Government Hospital</div>
+
+                <div class="fs-13">
+                  <i class="fas fa-hospital text-primary me-2"></i>
+                  <span id="reviewHospitalName"></span>
+                </div>
+
+                <div class="fs-13 mt-1">
+                  <i class="fas fa-id-card text-muted me-2"></i>
+                  <span id="reviewRegNumber"></span>
+                </div>
+
+                <div class="fs-13 mt-1">
+                  <i class="fas fa-building text-muted me-2"></i>
+                  <span id="reviewHospitalType"></span>
+                </div>
+
+                <div class="fs-13 mt-1">
+                  <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                  <span id="reviewCity"></span>, <span id="reviewState"></span>
+                </div>
+
+                <div class="fs-13 mt-1">
+                  <i class="fas fa-location-dot text-muted me-2"></i>
+                  <span id="reviewAddress"></span>
+                </div>
+
+                <div class="fs-13 mt-1">
+                  <i class="fas fa-phone text-muted me-2"></i>
+                  <span id="reviewPhone"></span>
+                </div>
+
+                <div class="fs-13 mt-1">
+                  <i class="fas fa-envelope text-muted me-2"></i>
+                  <span id="reviewHospitalEmail"></span>
+                </div>
               </div>
             </div>
+
+            <!-- Administrator Information -->
             <div class="col-md-6">
               <div class="p-3 rounded-3" style="background:#f8faff;border:1px solid var(--border-color);">
                 <div class="fs-11 fw-700 text-uppercase text-muted mb-2">Admin Info</div>
-                <div class="fs-13"><i class="fas fa-user text-primary me-2"></i>Ahmad bin Ali</div>
-                <div class="fs-13 mt-1"><i class="fas fa-envelope text-muted me-2"></i>admin@hospital.com</div>
-                <div class="fs-13 mt-1"><i class="fas fa-briefcase text-muted me-2"></i>Hospital Director</div>
+
+                <div class="fs-13">
+                  <i class="fas fa-user text-primary me-2"></i>
+                  <span id="reviewAdminName"></span>
+                </div>
+
+                <div class="fs-13 mt-1">
+                  <i class="fas fa-envelope text-muted me-2"></i>
+                  <span id="reviewAdminEmail"></span>
+                </div>
+
+                <div class="fs-13 mt-1">
+                  <i class="fas fa-briefcase text-muted me-2"></i>
+                  <span id="reviewDesignation"></span>
+                </div>
+
+                <div class="fs-13 mt-1">
+                  <i class="fas fa-phone text-muted me-2"></i>
+                  <span id="reviewAdminPhone"></span>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" id="agreeTerms" required />
-            <label class="form-check-label fs-13" for="agreeTerms">I confirm that all information provided is accurate
-              and
-              I agree to the <a href="#" class="text-primary">Terms &amp; Conditions</a> and <a href="#"
-                class="text-primary">Data Processing Agreement</a>.</label>
-          </div>
-          <div class="form-check mb-4">
-            <input type="checkbox" class="form-check-input" id="agreeHipaa" required />
-            <label class="form-check-label fs-13" for="agreeHipaa">I understand that MediChain stores medical records on
-              a
-              blockchain and our hospital is responsible for data entered by our staff.</label>
-          </div>
-          <div class="d-flex justify-content-between">
-            <button type="button" class="btn btn-outline-secondary" onclick="goStep(3)"><i
-                class="fas fa-arrow-left me-2"></i>Back</button>
-            <button type="submit" class="btn btn-success px-5" id="submitBtn" onclick="submitForm(event)">
-              <i class="fas fa-paper-plane me-2"></i>Submit Application
-            </button>
+
           </div>
         </div>
-      </form>
+        <div class="form-check mb-3">
+          <input type="checkbox" class="form-check-input" id="agreeTerms" required />
+          <label class="form-check-label fs-13" for="agreeTerms">I confirm that all information provided is accurate
+            and
+            I agree to the <a href="#" class="text-primary">Terms &amp; Conditions</a> and <a href="#"
+              class="text-primary">Data Processing Agreement</a>.</label>
+        </div>
+        <div class="form-check mb-4">
+          <input type="checkbox" class="form-check-input" id="agreeHipaa" required />
+          <label class="form-check-label fs-13" for="agreeHipaa">I understand that MediChain stores medical records on
+            a
+            blockchain and our hospital is responsible for data entered by our staff.</label>
+        </div>
+        <div class="d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-secondary" onclick="goStep(3)"><i
+              class="fas fa-arrow-left me-2"></i>Back</button>
+          <button type="submit" class="btn btn-success px-5" id="submitBtn">
+            <i class="fas fa-paper-plane me-2"></i>Submit Application
+          </button>
+        </div>
+  </div>
+  </form>
   </div>
 
   <div class="text-center mt-3">
@@ -322,6 +369,19 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   <script src="{{ url_for('static', filename='js/hospital_registration.js') }}"></script>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  {% for category, message in messages %}
+  <script>
+    Swal.fire({
+      icon: "{{ category }}",
+      text: "{{ message }}",
+      confirmButtonText: "OK"
+    });
+  </script>
+  {% endfor %}
+  {% endif %}
+  {% endwith %}
 </body>
 
 </html>

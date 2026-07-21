@@ -194,7 +194,8 @@ def hospital_registration():
         return redirect(url_for("hospital_registration"))
 
     finally:
-        cursor.close()
+        if 'cursor' in locals():
+            cursor.close()
 
 # Automatically create routes for every HTML file
 for html in templates_dir.rglob("*.html"):

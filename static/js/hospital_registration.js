@@ -100,6 +100,24 @@ function showFile(input, targetId) {
 
 }
 
+//load review data from form to review step
+
+function loadReview() {
+  reviewHospitalName.textContent = hospital_name.value;
+  reviewRegNumber.textContent = reg_number.value;
+  reviewHospitalType.textContent = hospital_type.value;
+  reviewCity.textContent = city.value;
+  reviewState.textContent = state.value;
+  reviewAddress.textContent = address.value;
+  reviewPhone.textContent = phone.value;
+  reviewHospitalEmail.textContent = hospital_email.value;
+
+  reviewAdminName.textContent = admin_name.value;
+  reviewAdminEmail.textContent = admin_email.value;
+  reviewDesignation.textContent = designation.value;
+  reviewAdminPhone.textContent = admin_phone.value;
+}
+
 // Submit Hospital Registration
 function submitForm(event) {
 
