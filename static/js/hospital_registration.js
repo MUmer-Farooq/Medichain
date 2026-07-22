@@ -164,8 +164,6 @@ function reviewAndGo() {
 // Submit Hospital Registration
 function submitForm(event) {
 
-  event.preventDefault();
-
   const agreeTerms = document.getElementById("agreeTerms");
   const agreeHipaa = document.getElementById("agreeHipaa");
 
@@ -176,6 +174,7 @@ function submitForm(event) {
       "warning"
     );
 
+    event.preventDefault();
     return;
   }
 
@@ -186,32 +185,7 @@ function submitForm(event) {
 
   submitBtn.disabled = true;
 
-  // Demo Submission
-  setTimeout(() => {
-
-    Swal.fire({
-
-      icon: "success",
-
-      title: "Application Submitted!",
-
-      html:
-        "Your hospital registration has been submitted.<br><small class='text-muted'>You will receive an email within 2–3 business days.</small>",
-
-      confirmButtonText: "Back to Home",
-
-      confirmButtonColor: "var(--primary)",
-
-      customClass: {
-        popup: "rounded-4"
-      }
-
-    }).then(() => {
-
-      window.location.href = "/";
-
-    });
-
-  }, 1800);
+  // Allow the form to submit naturally to Flask backend
+  return true;
 
 }
