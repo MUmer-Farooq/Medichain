@@ -103,19 +103,62 @@ function showFile(input, targetId) {
 //load review data from form to review step
 
 function loadReview() {
-  reviewHospitalName.textContent = hospital_name.value;
-  reviewRegNumber.textContent = reg_number.value;
-  reviewHospitalType.textContent = hospital_type.value;
-  reviewCity.textContent = city.value;
-  reviewState.textContent = state.value;
-  reviewAddress.textContent = address.value;
-  reviewPhone.textContent = phone.value;
-  reviewHospitalEmail.textContent = hospital_email.value;
+  const f = (name) => {
+    const el = document.querySelector(`[name="${name}"]`);
+    return el ? el.value : '';
+  };
+  const selectText = (name) => {
+    const el = document.querySelector(`[name="${name}"]`);
+    return el ? el.options[el.selectedIndex].text : '';
+  };
 
-  reviewAdminName.textContent = admin_name.value;
-  reviewAdminEmail.textContent = admin_email.value;
-  reviewDesignation.textContent = designation.value;
-  reviewAdminPhone.textContent = admin_phone.value;
+  document.getElementById('reviewHospitalName').textContent = f('hospital_name');
+  document.getElementById('reviewRegNumber').textContent = f('reg_number');
+  document.getElementById('reviewHospitalType').textContent = selectText('hospital_type');
+  document.getElementById('reviewCity').textContent = f('city');
+  document.getElementById('reviewState').textContent = selectText('state');
+  document.getElementById('reviewAddress').textContent = f('address');
+  document.getElementById('reviewPhone').textContent = f('phone');
+  document.getElementById('reviewHospitalEmail').textContent = f('hospital_email');
+  document.getElementById('reviewPostcode').textContent = f('postcode');
+  document.getElementById('reviewWebsite').textContent = f('website') || "N/A";
+  document.getElementById('reviewBedCapacity').textContent = f('bed_capacity') || "N/A";
+
+  document.getElementById('reviewAdminName').textContent = f('admin_name');
+  document.getElementById('reviewAdminEmail').textContent = f('admin_email');
+  document.getElementById('reviewDesignation').textContent = f('designation');
+  document.getElementById('reviewAdminPhone').textContent = f('admin_phone');
+  document.getElementById('reviewAdminIc').textContent = f('admin_ic');
+  document.getElementById('reviewDepartment').textContent = f('department') || "N/A";
+
+  // Document names
+  const doc1 = document.getElementById('doc1');
+  const doc2 = document.getElementById('doc2');
+  const doc3 = document.getElementById('doc3');
+  const doc4 = document.getElementById('doc4');
+
+  document.getElementById('reviewDoc1').textContent = doc1 && doc1.files.length > 0 ? doc1.files[0].name : "Not uploaded";
+  document.getElementById('reviewDoc2').textContent = doc2 && doc2.files.length > 0 ? doc2.files[0].name : "Not uploaded";
+  document.getElementById('reviewDoc3').textContent = doc3 && doc3.files.length > 0 ? doc3.files[0].name : "Not uploaded";
+  document.getElementById('reviewDoc4').textContent = doc4 && doc4.files.length > 0 ? doc4.files[0].name : "Not uploaded";
+}
+
+function reviewAndGo() {
+  // Validate required fields in step 3 first (documents)
+  const step3 = document.getElementById('step3');
+  const requiredFields = step3.querySelectorAll("[required]");
+  for (let field of requiredFields) {
+    if (field.type === "file" && field.files.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Required Fields Missing",
+        text: "Please upload all required documents before reviewing."
+      });
+      return;
+    }
+  }
+  loadReview();
+  goStep(4);
 }
 
 // Submit Hospital Registration
