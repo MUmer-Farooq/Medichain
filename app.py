@@ -1,7 +1,7 @@
 from __future__ import annotations
-
+from werkzeug.security import generate_password_hash
 from pathlib import Path
-import os,mysql.connector
+import mysql.connector
 from flask import Flask, abort, render_template, request, redirect, url_for, flash, session
 
 
@@ -25,12 +25,7 @@ print("Database connection established successfully.")
 
 
 
-# Make sure includes can resolve from the repo-level `components/` directory.
-# Some templates use: {% include 'components/footer.html' %}
-# but `components/` is not under `templates/`.
-components_dir = os.path.join(os.path.dirname(__file__), "components")
-# Allow templates to include 'components/footer.html' etc.
-app.jinja_loader.searchpath.append(os.path.dirname(components_dir))
+
 
 
 
@@ -121,148 +116,172 @@ def logout():
     flash("You have been logged out.", "success")
     return redirect(url_for("login"))
 
+
+
 # Hospital Registration
 @app.route("/hospital_registration", methods=["GET", "POST"])
 def hospital_registration():
 
+    # Display Registration Page
     if request.method == "GET":
         return render_template("hospital_registration.html")
 
+    # ======================================================
+    # HOSPITAL DETAILS
+    # ======================================================
+
     hospital_name = request.form.get("hospital_name")
     registration_number = request.form.get("reg_number")
-    hospital_type = request.form.get("hospital_type")
-    state = request.form.get("state")
     city = request.form.get("city")
     address = request.form.get("address")
-    postcode = request.form.get("postcode")
     phone = request.form.get("phone")
     hospital_email = request.form.get("hospital_email")
-    website = request.form.get("website")
-    bed_capacity = request.form.get("bed_capacity")
+
+    # ======================================================
+    # HOSPITAL ADMIN DETAILS
+    # ======================================================
+
     admin_name = request.form.get("admin_name")
-    admin_ic = request.form.get("admin_ic")
     admin_email = request.form.get("admin_email")
-    admin_phone = request.form.get("admin_phone")
-    designation = request.form.get("designation")
-    department = request.form.get("department")
     password = request.form.get("password")
     confirm_password = request.form.get("confirm_password")
+
+    # ======================================================
+    # PASSWORD VALIDATION
+    # ======================================================
 
     if password != confirm_password:
         flash("Passwords do not match.", "danger")
         return redirect(url_for("hospital_registration"))
 
-    # Upload Folder
-    upload_dir = os.path.join(app.static_folder, "uploads")
-    os.makedirs(upload_dir, exist_ok=True)
-
-    def save_file(field):
-        file = request.files.get(field)
-        if file and file.filename:
-            filename = f"{registration_number}_{field}_{file.filename}"
-            file.save(os.path.join(upload_dir, filename))
-            return filename
-        return None
-
-    reg_certificate = save_file("reg_certificate")
-    moh_license = save_file("moh_license")
-    admin_ic_doc = save_file("admin_ic_doc")
-    auth_letter = save_file("auth_letter")
+    hashed_password = generate_password_hash(password)
 
     try:
-        db.ping(reconnect=True, attempts=1, delay=0)
+
+        db.ping(reconnect=True)
         cursor = db.cursor()
 
-        # Check Hospital Email
+        # ======================================================
+        # CHECK HOSPITAL EMAIL
+        # ======================================================
+
         cursor.execute(
             "SELECT hospital_id FROM hospitals WHERE hospital_email=%s",
             (hospital_email,)
         )
+
         if cursor.fetchone():
             flash("Hospital email already registered.", "danger")
             return redirect(url_for("hospital_registration"))
 
-        # Check Registration Number
+        # ======================================================
+        # CHECK REGISTRATION NUMBER
+        # ======================================================
+
         cursor.execute(
             "SELECT hospital_id FROM hospitals WHERE registration_number=%s",
             (registration_number,)
         )
+
         if cursor.fetchone():
             flash("Registration number already exists.", "danger")
             return redirect(url_for("hospital_registration"))
 
-        # Insert Hospital
-        sql = """
-        INSERT INTO hospitals (
+        # ======================================================
+        # INSERT HOSPITAL
+        # ======================================================
+
+        hospital_sql = """
+        INSERT INTO hospitals
+        (
             hospital_name,
             registration_number,
-            hospital_type,
-            state,
             city,
             address,
-            postcode,
             phone,
-            hospital_email,
-            website,
-            bed_capacity,
-            admin_name,
-            admin_ic,
-            admin_email,
-            admin_phone,
-            designation,
-            department,
-            password,
-            reg_certificate,
-            moh_license,
-            admin_ic_doc,
-            auth_letter
+            hospital_email
         )
-        VALUES (
-            %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-            %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+        VALUES
+        (
+            %s,%s,%s,%s,%s,%s
         )
         """
 
-        values = (
+        hospital_values = (
             hospital_name,
             registration_number,
-            hospital_type,
-            state,
             city,
             address,
-            postcode,
             phone,
-            hospital_email,
-            website,
-            bed_capacity,
-            admin_name,
-            admin_ic,
-            admin_email,
-            admin_phone,
-            designation,
-            department,
-            password,
-            reg_certificate,
-            moh_license,
-            admin_ic_doc,
-            auth_letter
+            hospital_email
         )
 
-        cursor.execute(sql, values)
+        cursor.execute(hospital_sql, hospital_values)
         db.commit()
 
-        flash("Hospital registered successfully!", "success")
-        return redirect(url_for("hospital_registration"))
+        # Get Hospital ID
+        hospital_id = cursor.lastrowid
+
+        # ======================================================
+        # CHECK ADMIN EMAIL
+        # ======================================================
+
+        cursor.execute(
+            "SELECT user_id FROM users WHERE email=%s",
+            (admin_email,)
+        )
+
+        if cursor.fetchone():
+            flash("Administrator email already exists.", "danger")
+            return redirect(url_for("hospital_registration"))
+
+        # ======================================================
+        # INSERT HOSPITAL ADMIN
+        # ======================================================
+
+        user_sql = """
+        INSERT INTO users
+        (
+            hospital_id,
+            full_name,
+            email,
+            password,
+            role
+        )
+        VALUES
+        (
+            %s,%s,%s,%s,%s
+        )
+        """
+
+        user_values = (
+            hospital_id,
+            admin_name,
+            admin_email,
+            hashed_password,
+            "hospital_admin"
+        )
+
+        cursor.execute(user_sql, user_values)
+        db.commit()
+
+        # ======================================================
+        # SUCCESS
+        # ======================================================
+
+        flash("Hospital registered successfully.", "success")
+        return redirect(url_for("login"))
 
     except mysql.connector.Error as err:
+
         db.rollback()
         flash(f"Database Error: {err}", "danger")
         return redirect(url_for("hospital_registration"))
 
     finally:
+
         if 'cursor' in locals():
             cursor.close()
-
 
 # Automatically create routes for every HTML file
 for html in templates_dir.rglob("*.html"):
