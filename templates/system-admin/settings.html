@@ -23,7 +23,6 @@
     <a href="hospitals.html" class="nav-item-link"><i class="fas fa-hospital nav-icon"></i><span class="nav-text">Manage Hospitals</span></a>
     <div class="nav-section-label">Analytics</div>
     <a href="analytics.html" class="nav-item-link"><i class="fas fa-chart-line nav-icon"></i><span class="nav-text">Analytics</span></a>
-    <a href="blockchain_monitor.html" class="nav-item-link"><i class="fas fa-cubes nav-icon"></i><span class="nav-text">Blockchain Monitor</span></a>
     <div class="nav-section-label">System</div>
     <a href="settings.html" class="nav-item-link active"><i class="fas fa-cog nav-icon"></i><span class="nav-text">Settings</span></a>
     <a href="/logout" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
@@ -49,7 +48,6 @@
             <a href="#security" class="nav-item-link" onclick="switchTab('security',this)"><i class="fas fa-shield-halved nav-icon"></i><span class="nav-text">Security</span></a>
             <a href="#notifications" class="nav-item-link" onclick="switchTab('notifications',this)"><i class="fas fa-bell nav-icon"></i><span class="nav-text">Notifications</span></a>
             <a href="#system" class="nav-item-link" onclick="switchTab('system',this)"><i class="fas fa-server nav-icon"></i><span class="nav-text">System Config</span></a>
-            <a href="#blockchain" class="nav-item-link" onclick="switchTab('blockchain',this)"><i class="fas fa-cubes nav-icon"></i><span class="nav-text">Blockchain</span></a>
             <a href="#email" class="nav-item-link" onclick="switchTab('email',this)"><i class="fas fa-envelope nav-icon"></i><span class="nav-text">Email Config</span></a>
           </div>
         </div>
@@ -126,24 +124,6 @@
         </div>
       </div>
 
-      <!-- Blockchain Tab -->
-      <div id="tab-blockchain" class="settings-tab d-none">
-        <div class="mc-card">
-          <div class="card-header"><span><i class="fas fa-cubes text-primary me-2"></i>Blockchain Configuration</span></div>
-          <div class="card-body">
-            {# Flask Dynamic: {{ blockchain_config }} #}
-            <div class="row g-3">
-              <div class="col-md-6"><label class="form-label">Fabric Network Name</label><input type="text" class="form-control" value="medichain-network" readonly/></div>
-              <div class="col-md-6"><label class="form-label">Channel Name</label><input type="text" class="form-control" value="medichain-channel" readonly/></div>
-              <div class="col-md-6"><label class="form-label">Orderer Endpoint</label><input type="text" class="form-control" value="orderer.medichain.com:7050" readonly/></div>
-              <div class="col-md-6"><label class="form-label">Block Time (seconds)</label><input type="number" class="form-control" value="2"/></div>
-              <div class="col-md-6"><label class="form-label">Max Transactions/Block</label><input type="number" class="form-control" value="500"/></div>
-              <div class="col-md-6"><label class="form-label">Endorsement Policy</label><select class="form-select"><option>Majority (2/3)</option><option>All</option><option>Any</option></select></div>
-            </div>
-            <div class="mc-alert mc-alert-warning mt-3"><i class="fas fa-triangle-exclamation alert-icon"></i>Blockchain configuration changes require network restart and consensus from all peer organizations.</div>
-          </div>
-        </div>
-      </div>
 
       <!-- Notifications Tab -->
       <div id="tab-notifications" class="settings-tab d-none">
@@ -152,8 +132,6 @@
           <div class="card-body">
             <div class="d-flex flex-column gap-3">
               <div class="d-flex justify-content-between align-items-center border-bottom pb-3"><div><div class="fw-500">New Hospital Registration Request</div><div class="fs-12 text-muted">Notify when a new hospital applies</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" checked/></div></div>
-              <div class="d-flex justify-content-between align-items-center border-bottom pb-3"><div><div class="fw-500">Blockchain Alert</div><div class="fs-12 text-muted">Notify on blockchain errors or forks</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" checked/></div></div>
-              <div class="d-flex justify-content-between align-items-center border-bottom pb-3"><div><div class="fw-500">Peer Node Offline</div><div class="fs-12 text-muted">Notify when a hospital peer goes offline</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" checked/></div></div>
               <div class="d-flex justify-content-between align-items-center"><div><div class="fw-500">Weekly Summary Report</div><div class="fs-12 text-muted">Receive weekly email with network statistics</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" checked/></div></div>
             </div>
           </div>

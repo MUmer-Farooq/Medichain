@@ -199,13 +199,39 @@ def hospital_registration():
             city,
             address,
             phone,
-            hospital_email
+            hospital_email,
+            reg_certificate,
+            moh_license,
+            admin_ic_doc,
+            auth_letter
         )
         VALUES
         (
-            %s,%s,%s,%s,%s,%s
+            %s,%s,%s,%s,%s,%s,%s,%s,%s,%s
         )
         """
+
+        import os
+        from werkzeug.utils import secure_filename
+        
+        upload_folder = os.path.join(app.root_path, 'static', 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        
+        def save_file(field_name):
+            if field_name not in request.files:
+                return None
+            file = request.files[field_name]
+            if file.filename == '':
+                return None
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(upload_folder, filename)
+            file.save(file_path)
+            return f"uploads/{filename}"
+
+        reg_cert_path = save_file("reg_certificate")
+        moh_license_path = save_file("moh_license")
+        admin_ic_path = save_file("admin_ic_doc")
+        auth_letter_path = save_file("auth_letter")
 
         hospital_values = (
             hospital_name,
@@ -213,7 +239,11 @@ def hospital_registration():
             city,
             address,
             phone,
-            hospital_email
+            hospital_email,
+            reg_cert_path,
+            moh_license_path,
+            admin_ic_path,
+            auth_letter_path
         )
 
         cursor.execute(hospital_sql, hospital_values)
@@ -283,6 +313,108 @@ def hospital_registration():
         if 'cursor' in locals():
             cursor.close()
 
+# System Admin Routes
+@app.route("/system-admin/dashboard")
+@app.route("/system-admin/dashboard.html")
+def system_admin_dashboard():
+    if session.get("user_role") != "system_admin":
+        return redirect(url_for("login"))
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='approved'")
+        active_hospitals = cursor.fetchone()["cnt"]
+        cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='pending'")
+        pending_requests_count = cursor.fetchone()["cnt"]
+        cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='suspended'")
+        suspended_count = cursor.fetchone()["cnt"]
+        cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='rejected'")
+        rejected_count = cursor.fetchone()["cnt"]
+        
+        cursor.execute("SELECT * FROM hospitals WHERE status='pending' ORDER BY created_at DESC LIMIT 5")
+        pending_requests = cursor.fetchall()
+        
+        cursor.execute("SELECT * FROM hospitals ORDER BY created_at DESC LIMIT 5")
+        recent_activities = cursor.fetchall()
+
+        return render_template("system-admin/dashboard.html", 
+                               active_hospitals=active_hospitals,
+                               pending_requests_count=pending_requests_count,
+                               suspended_count=suspended_count,
+                               rejected_count=rejected_count,
+                               pending_requests=pending_requests,
+                               recent_activities=recent_activities)
+    except Exception as e:
+        print("DB Error:", e)
+        return render_template("system-admin/dashboard.html", active_hospitals=0, pending_requests_count=0, suspended_count=0, rejected_count=0, pending_requests=[], recent_activities=[])
+
+@app.route("/system-admin/hospital_requests")
+@app.route("/system-admin/hospital_requests.html")
+def system_admin_hospital_requests():
+    if session.get("user_role") != "system_admin":
+        return redirect(url_for("login"))
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM hospitals WHERE status='pending' ORDER BY created_at DESC")
+        requests = cursor.fetchall()
+        pending_count = len(requests)
+        return render_template("system-admin/hospital_requests.html", requests=requests, pending_count=pending_count)
+    except Exception as e:
+        return render_template("system-admin/hospital_requests.html", requests=[], pending_count=0)
+
+@app.route("/system-admin/hospitals")
+@app.route("/system-admin/hospitals.html")
+def system_admin_hospitals():
+    if session.get("user_role") != "system_admin":
+        return redirect(url_for("login"))
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM hospitals ORDER BY created_at DESC")
+        hospitals = cursor.fetchall()
+        
+        cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='approved'")
+        active_count = cursor.fetchone()["cnt"]
+        cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='pending'")
+        pending_count = cursor.fetchone()["cnt"]
+        cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='suspended'")
+        suspended_count = cursor.fetchone()["cnt"]
+
+        return render_template("system-admin/hospitals.html", hospitals=hospitals, active_count=active_count, pending_count=pending_count, suspended_count=suspended_count)
+    except Exception as e:
+        return render_template("system-admin/hospitals.html", hospitals=[], active_count=0, pending_count=0, suspended_count=0)
+
+@app.route("/system-admin/approve_hospital/<int:hospital_id>", methods=["POST"])
+def approve_hospital(hospital_id):
+    if session.get("user_role") != "system_admin":
+        return abort(403)
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor()
+        cursor.execute("UPDATE hospitals SET status='approved' WHERE hospital_id=%s", (hospital_id,))
+        db.commit()
+        flash("Hospital approved successfully.", "success")
+    except Exception as e:
+        db.rollback()
+        flash("Error approving hospital.", "danger")
+    return redirect(url_for("system_admin_hospital_requests"))
+
+@app.route("/system-admin/reject_hospital/<int:hospital_id>", methods=["POST"])
+def reject_hospital(hospital_id):
+    if session.get("user_role") != "system_admin":
+        return abort(403)
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor()
+        cursor.execute("UPDATE hospitals SET status='rejected' WHERE hospital_id=%s", (hospital_id,))
+        db.commit()
+        flash("Hospital rejected.", "info")
+    except Exception as e:
+        db.rollback()
+        flash("Error rejecting hospital.", "danger")
+    return redirect(url_for("system_admin_hospital_requests"))
+
 # Automatically create routes for every HTML file
 for html in templates_dir.rglob("*.html"):
 
@@ -293,6 +425,9 @@ for html in templates_dir.rglob("*.html"):
         "index.html",
         "login.html",
         "hospital_registration.html",
+        "system-admin/dashboard.html",
+        "system-admin/hospital_requests.html",
+        "system-admin/hospitals.html"
     ]:
         continue
 

@@ -10,8 +10,8 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="../static/css/login.css" />
   <link rel="stylesheet" href="../static/css/style.css">
+  <link rel="stylesheet" href="../static/css/login.css" />
 
 </head>
 
@@ -70,7 +70,7 @@
 
       {# Flask Dynamic Route: POST /login with form data #}
 <!-- action="{{ url_for('login') }}" method="POST" -->
- <form id="loginForm" action="{{ url_for('login') }}" method="POST" novalidate>
+ <form id="loginForm" action="{{ url_for('login') }}" method="POST" class="needs-validation" novalidate>
 {# Flask: form.hidden_tag() removed: no WTForms form object is provided in this project #}
         <input type="hidden" id="roleInput" name="role" value="admin" />
 

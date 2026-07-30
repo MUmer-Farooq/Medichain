@@ -19,11 +19,10 @@
   <nav class="sidebar-nav">
     <div class="nav-section-label">Main</div>
     <a href="dashboard.html" class="nav-item-link"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
-    <a href="hospital_requests.html" class="nav-item-link"><i class="fas fa-clock nav-icon"></i><span class="nav-text">Hospital Requests</span><span class="nav-badge danger">8</span></a>
+<a href="hospital_requests.html" class="nav-item-link"><i class="fas fa-clock nav-icon"></i><span class="nav-text">Hospital Requests</span><span class="nav-badge danger">{{ pending_count }}</span></a>
     <a href="hospitals.html" class="nav-item-link active"><i class="fas fa-hospital nav-icon"></i><span class="nav-text">Manage Hospitals</span></a>
     <div class="nav-section-label">Analytics</div>
     <a href="analytics.html" class="nav-item-link"><i class="fas fa-chart-line nav-icon"></i><span class="nav-text">Analytics</span></a>
-    <a href="blockchain_monitor.html" class="nav-item-link"><i class="fas fa-cubes nav-icon"></i><span class="nav-text">Blockchain Monitor</span></a>
     <div class="nav-section-label">System</div>
     <a href="settings.html" class="nav-item-link"><i class="fas fa-cog nav-icon"></i><span class="nav-text">Settings</span></a>
     <a href="/logout" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
@@ -43,15 +42,15 @@
     <div class="page-header-left"><h4><i class="fas fa-hospital me-2 text-primary"></i>Manage Hospitals</h4><p>View and manage all registered hospitals on the MediChain network</p></div>
     <div class="page-header-right">
       <button class="btn btn-outline-secondary btn-sm"><i class="fas fa-download me-1"></i>Export CSV</button>
-      <a href="hospital_requests.html" class="btn btn-primary btn-sm"><i class="fas fa-clock me-1"></i>Pending Requests <span class="badge bg-danger ms-1">8</span></a>
+      <a href="hospital_requests.html" class="btn btn-primary btn-sm"><i class="fas fa-clock me-1"></i>Pending Requests <span class="badge bg-danger ms-1">{{ pending_count }}</span></a>
     </div>
   </div>
 
   <!-- Stats Row -->
   <div class="stats-grid mb-4">
-    <div class="stat-card primary"><div class="stat-icon"><i class="fas fa-hospital"></i></div><div class="stat-value">42</div><div class="stat-label">Active</div></div>
-    <div class="stat-card warning"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-value">8</div><div class="stat-label">Pending</div></div>
-    <div class="stat-card danger"><div class="stat-icon"><i class="fas fa-ban"></i></div><div class="stat-value">3</div><div class="stat-label">Suspended</div></div>
+    <div class="stat-card primary"><div class="stat-icon"><i class="fas fa-hospital"></i></div><div class="stat-value">{{ active_count }}</div><div class="stat-label">Active</div></div>
+    <div class="stat-card warning"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-value">{{ pending_count }}</div><div class="stat-label">Pending</div></div>
+    <div class="stat-card danger"><div class="stat-icon"><i class="fas fa-ban"></i></div><div class="stat-value">{{ suspended_count }}</div><div class="stat-label">Suspended</div></div>
     <div class="stat-card success"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value">1,240</div><div class="stat-label">Total Doctors</div></div>
     <div class="stat-card info"><div class="stat-icon"><i class="fas fa-file-medical"></i></div><div class="stat-value">410K</div><div class="stat-label">Records</div></div>
   </div>
@@ -76,7 +75,7 @@
 
   <!-- Hospitals Table -->
   <div class="mc-card">
-    <div class="card-header"><span><i class="fas fa-list text-primary me-2"></i>All Hospitals <span class="badge badge-primary-soft ms-2">58</span></span></div>
+    <div class="card-header"><span><i class="fas fa-list text-primary me-2"></i>All Hospitals <span class="badge badge-primary-soft ms-2">{{ hospitals|length }}</span></span></div>
     <div class="card-body p-0">
       <div class="table-responsive">
         {# Flask Dynamic: {% for hospital in hospitals %} #}
@@ -94,19 +93,36 @@
             </tr>
           </thead>
           <tbody>
-            <tr><td>#1</td><td><div class="fw-600">Hospital Kuala Lumpur</div><div class="text-muted fs-12">HOS-2024-0001</div></td><td>Kuala Lumpur</td><td><span class="badge badge-primary-soft">Government</span></td><td>218</td><td><span class="badge badge-success-soft">Active</span></td><td>Jan 2024</td><td><div class="table-actions"><a href="#" class="btn-icon" data-bs-toggle="modal" data-bs-target="#hospitalModal" title="View"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-warning" title="Suspend" data-bs-toggle="tooltip"><i class="fas fa-pause"></i></a><a href="#" class="btn-icon btn-danger" onclick="MediChain.confirmDelete({title:'Revoke Hospital?',text:'This will remove the hospital from the network.'})" title="Revoke"><i class="fas fa-trash"></i></a></div></td></tr>
-            <tr><td>#2</td><td><div class="fw-600">Gleneagles Hospital KL</div><div class="text-muted fs-12">HOS-2024-0002</div></td><td>Kuala Lumpur</td><td><span class="badge badge-warning-soft">Private</span></td><td>185</td><td><span class="badge badge-success-soft">Active</span></td><td>Jan 2024</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-warning"><i class="fas fa-pause"></i></a><a href="#" class="btn-icon btn-danger"><i class="fas fa-trash"></i></a></div></td></tr>
-            <tr><td>#3</td><td><div class="fw-600">Penang General Hospital</div><div class="text-muted fs-12">HOS-2024-0003</div></td><td>Penang</td><td><span class="badge badge-primary-soft">Government</span></td><td>142</td><td><span class="badge badge-success-soft">Active</span></td><td>Feb 2024</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-warning"><i class="fas fa-pause"></i></a><a href="#" class="btn-icon btn-danger"><i class="fas fa-trash"></i></a></div></td></tr>
-            <tr><td>#4</td><td><div class="fw-600">Johor Specialist Centre</div><div class="text-muted fs-12">HOS-2024-0004</div></td><td>Johor Bahru</td><td><span class="badge badge-info-soft">Specialist</span></td><td>98</td><td><span class="badge badge-success-soft">Active</span></td><td>Mar 2024</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-warning"><i class="fas fa-pause"></i></a><a href="#" class="btn-icon btn-danger"><i class="fas fa-trash"></i></a></div></td></tr>
-            <tr><td>#5</td><td><div class="fw-600">Pantai Hospital Ampang</div><div class="text-muted fs-12">HOS-2024-0005</div></td><td>Selangor</td><td><span class="badge badge-warning-soft">Private</span></td><td>0</td><td><span class="badge badge-warning-soft">Pending</span></td><td>Jun 2026</td><td><div class="table-actions"><a href="#" class="btn-icon" data-bs-toggle="modal" data-bs-target="#hospitalModal"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-success" title="Approve" onclick="approveRequest('Pantai Hospital Ampang')"><i class="fas fa-check"></i></a><a href="#" class="btn-icon btn-danger" title="Reject" onclick="rejectRequest('Pantai Hospital Ampang')"><i class="fas fa-times"></i></a></div></td></tr>
-            <tr><td>#6</td><td><div class="fw-600">Sabah Medical Centre</div><div class="text-muted fs-12">HOS-2024-0006</div></td><td>Kota Kinabalu</td><td><span class="badge badge-warning-soft">Private</span></td><td>64</td><td><span class="badge badge-danger-soft">Suspended</span></td><td>Apr 2024</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-success" title="Reinstate"><i class="fas fa-play"></i></a><a href="#" class="btn-icon btn-danger"><i class="fas fa-trash"></i></a></div></td></tr>
+            {% for hospital in hospitals %}
+            <tr>
+              <td>#{{ hospital.hospital_id }}</td>
+              <td><div class="fw-600">{{ hospital.hospital_name }}</div><div class="text-muted fs-12">{{ hospital.registration_number }}</div></td>
+              <td>{{ hospital.city }}</td>
+              <td><span class="badge badge-primary-soft">Hospital</span></td>
+              <td>-</td>
+              <td>
+                <span class="badge badge-{% if hospital.status == 'approved' %}success{% elif hospital.status == 'pending' %}warning{% else %}danger{% endif %}-soft">
+                  {{ hospital.status|capitalize }}
+                </span>
+              </td>
+              <td>{{ hospital.created_at.strftime('%b %Y') if hospital.created_at else '' }}</td>
+              <td>
+                <div class="table-actions">
+                  <a href="#" class="btn-icon" data-bs-toggle="modal" data-bs-target="#hospitalModal" title="View"><i class="fas fa-eye"></i></a>
+                  <a href="#" class="btn-icon btn-warning" title="Suspend" data-bs-toggle="tooltip"><i class="fas fa-pause"></i></a>
+                  <a href="#" class="btn-icon btn-danger" onclick="MediChain.confirmDelete({title:'Revoke Hospital?',text:'This will remove the hospital from the network.'})" title="Revoke"><i class="fas fa-trash"></i></a>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" class="text-center text-muted">No hospitals found</td></tr>
+            {% endfor %}
           </tbody>
         </table>
-        {# Flask: {% endfor %} #}
       </div>
     </div>
     <div class="card-footer d-flex justify-content-between align-items-center">
-      <small class="text-muted">Showing 6 of 58 hospitals</small>
+      <small class="text-muted">Showing {{ hospitals|length }} hospitals</small>
       <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
     </div>
   </div>

@@ -47,38 +47,67 @@ function closeSidebarMobile() {
 }
 
 // Hospital Requests actions
-function approveRequest(name) {
-    if (typeof Swal !== 'undefined' && typeof MediChain !== 'undefined') {
-        Swal.fire({
-            icon: 'question',
-            title: 'Approve Hospital?',
-            html: `<strong>${name}</strong> will be added to MediChain network.`,
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Approve',
-            confirmButtonColor: 'var(--success)',
-            cancelButtonColor: '#6c757d'
-        }).then(r => {
-            if (r.isConfirmed) MediChain.showToast(`${name} approved successfully!`, 'success');
-        });
-    }
-}
+function approveRequest(hospitalId, hospitalName) {
 
-function rejectRequest(name) {
-    if (typeof Swal !== 'undefined' && typeof MediChain !== 'undefined') {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Reject Application?',
-            html: `<strong>${name}</strong>'s application will be rejected.`,
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Reject',
-            confirmButtonColor: 'var(--danger)',
-            cancelButtonColor: '#6c757d',
-            input: 'textarea',
-            inputPlaceholder: 'Rejection reason (required)…'
-        }).then(r => {
-            if (r.isConfirmed && r.value) MediChain.showToast(`${name} rejected.`, 'error');
-        });
-    }
+    Swal.fire({
+        icon: "question",
+        title: "Approve Hospital?",
+        text: `Approve ${hospitalName}?`,
+        showCancelButton: true,
+        confirmButtonText: "Approve",
+        confirmButtonColor: "#198754"
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            fetch(`/system-admin/approve_hospital/${hospitalId}`, {
+                method: "POST"
+            })
+                .then(() => {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Approved",
+                        text: "Hospital approved successfully."
+                    }).then(() => {
+                        location.reload();
+                    });
+                });
+
+        }
+
+    });
+
+}
+function rejectRequest(hospitalId, hospitalName) {
+
+    Swal.fire({
+        icon: "warning",
+        title: "Reject Hospital?",
+        text: `Reject ${hospitalName}?`,
+        showCancelButton: true,
+        confirmButtonText: "Reject",
+        confirmButtonColor: "#dc3545"
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            fetch(`/system-admin/reject_hospital/${hospitalId}`, {
+                method: "POST"
+            })
+                .then(() => {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Rejected",
+                        text: "Hospital rejected."
+                    }).then(() => {
+                        location.reload();
+                    });
+                });
+
+        }
+
+    });
+
 }
 
 function approveAll() {

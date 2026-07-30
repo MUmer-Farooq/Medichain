@@ -27,11 +27,11 @@
   <nav class="sidebar-nav">
     <div class="nav-section-label">Main</div>
     <a href="dashboard.html" class="nav-item-link active"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
-    <a href="hospital_requests.html" class="nav-item-link"><i class="fas fa-clock nav-icon"></i><span class="nav-text">Hospital Requests</span><span class="nav-badge danger">8</span></a>
+    <a href="hospital_requests.html" class="nav-item-link"><i class="fas fa-clock nav-icon"></i><span class="nav-text">Hospital Requests</span><span class="nav-badge danger">{{ pending_requests_count }}</span></a>
     <a href="hospitals.html" class="nav-item-link"><i class="fas fa-hospital nav-icon"></i><span class="nav-text">Manage Hospitals</span></a>
     <div class="nav-section-label">Analytics</div>
     <a href="analytics.html" class="nav-item-link"><i class="fas fa-chart-line nav-icon"></i><span class="nav-text">Analytics</span></a>
-    <a href="blockchain_monitor.html" class="nav-item-link"><i class="fas fa-cubes nav-icon"></i><span class="nav-text">Blockchain Monitor</span></a>
+
     <div class="nav-section-label">System</div>
     <a href="settings.html" class="nav-item-link"><i class="fas fa-cog nav-icon"></i><span class="nav-text">Settings</span></a>
     <a href="/logout" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
@@ -58,7 +58,7 @@
         <div class="notif-header"><h6>Notifications</h6><a href="#" class="text-primary fs-12">Mark all read</a></div>
         <div class="notif-list">
           <div class="notif-item unread"><div class="notif-icon" style="background:#ffebee;color:var(--danger);"><i class="fas fa-hospital"></i></div><div><div class="notif-text"><strong>New hospital request</strong> — General Hospital Penang</div><div class="notif-time">5 mins ago</div></div></div>
-          <div class="notif-item unread"><div class="notif-icon" style="background:#e8f0fe;color:var(--primary);"><i class="fas fa-cubes"></i></div><div><div class="notif-text">Blockchain block #18,432 confirmed</div><div class="notif-time">12 mins ago</div></div></div>
+
           <div class="notif-item"><div class="notif-icon" style="background:#e8f5e9;color:var(--success);"><i class="fas fa-check-circle"></i></div><div><div class="notif-text">Hospital KL Specialist approved</div><div class="notif-time">1 hour ago</div></div></div>
         </div>
         <div class="notif-footer"><a href="#" class="text-primary fs-12">View all notifications</a></div>
@@ -89,20 +89,18 @@
     <div class="row align-items-center">
       <div class="col-lg-7">
         <h3><i class="fas fa-wave-square me-2"></i>Good Morning, Admin</h3>
-        <p>Here's what's happening in the MediChain network today — <strong>8 pending hospital requests</strong> require your attention.</p>
+        <p>Here's what's happening in the MediChain network today — <strong>{{ pending_requests_count }} pending hospital requests</strong> require your attention.</p>
         <div class="mt-3">
           <a href="hospital_requests.html" class="btn btn-sm me-2" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);">
-            <i class="fas fa-clock me-1"></i>Review Requests (8)
+            <i class="fas fa-clock me-1"></i>Review Requests ({{ pending_requests_count }})
           </a>
-          <a href="blockchain_monitor.html" class="btn btn-sm" style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.15);">
-            <i class="fas fa-cubes me-1"></i>Blockchain Status
-          </a>
+
         </div>
       </div>
       <div class="col-lg-5 d-none d-lg-flex justify-content-end gap-3">
         {# Flask Dynamic: {{ network_stats }} #}
-        <div class="banner-stat"><span class="val" data-count="58">58</span><span class="lbl">Hospitals</span></div>
-        <div class="banner-stat"><span class="val" data-count="18432">18,432</span><span class="lbl">Blocks</span></div>
+        <div class="banner-stat"><span class="val" data-count="{{ active_hospitals }}">{{ active_hospitals }}</span><span class="lbl">Hospitals</span></div>
+
         <div class="banner-stat"><span class="val" data-count="410">410K</span><span class="lbl">Records</span></div>
       </div>
     </div>
@@ -113,13 +111,13 @@
   <div class="stats-grid">
     <div class="stat-card primary" data-aos="fade-up">
       <div class="stat-icon"><i class="fas fa-hospital"></i></div>
-      <div class="stat-value" data-count="58">58</div>
+      <div class="stat-value" data-count="{{ active_hospitals }}">{{ active_hospitals }}</div>
       <div class="stat-label">Active Hospitals</div>
       <div class="stat-change up"><i class="fas fa-arrow-up"></i>+3 this month</div>
     </div>
     <div class="stat-card warning" data-aos="fade-up" data-aos-delay="50">
       <div class="stat-icon"><i class="fas fa-clock"></i></div>
-      <div class="stat-value" data-count="8">8</div>
+      <div class="stat-value" data-count="{{ pending_requests_count }}">{{ pending_requests_count }}</div>
       <div class="stat-label">Pending Requests</div>
       <div class="stat-change down"><i class="fas fa-arrow-up"></i>+2 today</div>
     </div>
@@ -135,12 +133,7 @@
       <div class="stat-label">Registered Doctors</div>
       <div class="stat-change up"><i class="fas fa-arrow-up"></i>+18 this week</div>
     </div>
-    <div class="stat-card secondary" data-aos="fade-up" data-aos-delay="200">
-      <div class="stat-icon"><i class="fas fa-cubes"></i></div>
-      <div class="stat-value" data-count="18432">18,432</div>
-      <div class="stat-label">Blockchain Blocks</div>
-      <div class="stat-change up"><i class="fas fa-arrow-up"></i>Live</div>
-    </div>
+
     <div class="stat-card danger" data-aos="fade-up" data-aos-delay="250">
       <div class="stat-icon"><i class="fas fa-users"></i></div>
       <div class="stat-value" data-count="94218">94,218</div>
@@ -165,12 +158,12 @@
     <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
       <div class="mc-card h-100">
         <div class="card-header"><span><i class="fas fa-hospital text-success me-2"></i>Hospital Status</span></div>
-        <div class="card-body">
-          <div class="chart-container" style="height:200px;"><canvas id="hospitalStatusChart"></canvas></div>
+<div class="card-body">
+          <div class="chart-container" style="height:200px;"><canvas id="hospitalStatusChart" data-active="{{ active_hospitals }}" data-pending="{{ pending_requests_count }}" data-suspended="{{ suspended_count }}" data-rejected="{{ rejected_count }}"></canvas></div>
           <div class="mt-3">
-            <div class="d-flex justify-content-between fs-12 mb-1"><span class="d-flex align-items-center gap-1"><span style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;"></span>Active</span><strong>42</strong></div>
-            <div class="d-flex justify-content-between fs-12 mb-1"><span class="d-flex align-items-center gap-1"><span style="width:8px;height:8px;border-radius:50%;background:var(--warning);display:inline-block;"></span>Pending</span><strong>8</strong></div>
-            <div class="d-flex justify-content-between fs-12"><span class="d-flex align-items-center gap-1"><span style="width:8px;height:8px;border-radius:50%;background:var(--danger);display:inline-block;"></span>Suspended</span><strong>3</strong></div>
+            <div class="d-flex justify-content-between fs-12 mb-1"><span class="d-flex align-items-center gap-1"><span style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;"></span>Active</span><strong>{{ active_hospitals }}</strong></div>
+            <div class="d-flex justify-content-between fs-12 mb-1"><span class="d-flex align-items-center gap-1"><span style="width:8px;height:8px;border-radius:50%;background:var(--warning);display:inline-block;"></span>Pending</span><strong>{{ pending_requests_count }}</strong></div>
+            <div class="d-flex justify-content-between fs-12"><span class="d-flex align-items-center gap-1"><span style="width:8px;height:8px;border-radius:50%;background:var(--danger);display:inline-block;"></span>Suspended</span><strong>{{ suspended_count }}</strong></div>
           </div>
         </div>
       </div>
@@ -188,7 +181,7 @@
             <div class="col-6"><a href="hospital_requests.html" class="quick-action"><div class="qa-icon"><i class="fas fa-check-circle"></i></div>Approve Hospital</a></div>
             <div class="col-6"><a href="hospitals.html" class="quick-action"><div class="qa-icon"><i class="fas fa-hospital"></i></div>Manage Hospitals</a></div>
             <div class="col-6"><a href="analytics.html" class="quick-action"><div class="qa-icon"><i class="fas fa-chart-bar"></i></div>View Analytics</a></div>
-            <div class="col-6"><a href="blockchain_monitor.html" class="quick-action"><div class="qa-icon"><i class="fas fa-cubes"></i></div>Blockchain</a></div>
+            <div class="col-6"><a href="settings.html" class="quick-action"><div class="qa-icon"><i class="fas fa-cog"></i></div>System Settings</a></div>
           </div>
         </div>
       </div>
@@ -204,27 +197,21 @@
         <div class="card-body p-0">
           {# Flask Dynamic: {% for req in pending_requests[:5] %} #}
           <div class="list-group list-group-flush">
+            {% for req in pending_requests %}
             <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-3 border-0 border-bottom">
-              <div><div class="fw-600 fs-13">General Hospital Penang</div><div class="text-muted fs-12"><i class="fas fa-map-marker-alt me-1"></i>Penang — 2 hrs ago</div></div>
+              <div><div class="fw-600 fs-13">{{ req.hospital_name }}</div><div class="text-muted fs-12"><i class="fas fa-map-marker-alt me-1"></i>{{ req.city }} — {{ req.created_at.strftime('%Y-%m-%d') if req.created_at else '' }}</div></div>
               <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-success btn-icon" title="Approve"><i class="fas fa-check fs-11"></i></button>
-                <button class="btn btn-sm btn-danger btn-icon" title="Reject"><i class="fas fa-times fs-11"></i></button>
+                <form action="/system-admin/approve_hospital/{{ req.hospital_id }}" method="POST" style="display:inline;">
+                  <button class="btn btn-sm btn-success btn-icon" title="Approve"><i class="fas fa-check fs-11"></i></button>
+                </form>
+                <form action="/system-admin/reject_hospital/{{ req.hospital_id }}" method="POST" style="display:inline;">
+                  <button class="btn btn-sm btn-danger btn-icon" title="Reject"><i class="fas fa-times fs-11"></i></button>
+                </form>
               </div>
             </div>
-            <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-3 border-0 border-bottom">
-              <div><div class="fw-600 fs-13">KL Specialist Centre</div><div class="text-muted fs-12"><i class="fas fa-map-marker-alt me-1"></i>Kuala Lumpur — 5 hrs ago</div></div>
-              <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-success btn-icon" title="Approve"><i class="fas fa-check fs-11"></i></button>
-                <button class="btn btn-sm btn-danger btn-icon" title="Reject"><i class="fas fa-times fs-11"></i></button>
-              </div>
-            </div>
-            <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-3 border-0">
-              <div><div class="fw-600 fs-13">Putrajaya Medical Centre</div><div class="text-muted fs-12"><i class="fas fa-map-marker-alt me-1"></i>Putrajaya — 1 day ago</div></div>
-              <div class="d-flex gap-1">
-                <button class="btn btn-sm btn-success btn-icon"><i class="fas fa-check fs-11"></i></button>
-                <button class="btn btn-sm btn-danger btn-icon"><i class="fas fa-times fs-11"></i></button>
-              </div>
-            </div>
+            {% else %}
+            <div class="p-3 text-center text-muted fs-13">No pending requests</div>
+            {% endfor %}
           </div>
           {# Flask: {% endfor %} #}
         </div>
@@ -236,30 +223,24 @@
       <div class="mc-card">
         <div class="card-header"><span><i class="fas fa-history text-info me-2"></i>Recent Activity</span></div>
         <div class="card-body">
-          {# Flask Dynamic: {% for activity in recent_activities %} #}
           <div class="activity-feed">
+            {% for activity in recent_activities %}
             <div class="activity-item">
+              {% if activity.status == 'approved' %}
               <div class="activity-dot" style="background:#e8f5e9;color:var(--success);"><i class="fas fa-check"></i></div>
-              <div class="activity-content"><div class="activity-text">Approved <strong>Gleneagles Hospital</strong></div><div class="activity-time">10 mins ago</div></div>
-            </div>
-            <div class="activity-item">
-              <div class="activity-dot" style="background:#e8f0fe;color:var(--primary);"><i class="fas fa-cubes"></i></div>
-              <div class="activity-content"><div class="activity-text">Block <strong>#18,432</strong> added to chain</div><div class="activity-time">22 mins ago</div></div>
-            </div>
-            <div class="activity-item">
+              <div class="activity-content"><div class="activity-text">Approved <strong>{{ activity.hospital_name }}</strong></div><div class="activity-time">{{ activity.created_at.strftime('%Y-%m-%d') if activity.created_at else '' }}</div></div>
+              {% elif activity.status == 'rejected' %}
               <div class="activity-dot" style="background:#ffebee;color:var(--danger);"><i class="fas fa-times"></i></div>
-              <div class="activity-content"><div class="activity-text">Rejected <strong>Fake Medical Centre</strong></div><div class="activity-time">1 hr ago</div></div>
-            </div>
-            <div class="activity-item">
+              <div class="activity-content"><div class="activity-text">Rejected <strong>{{ activity.hospital_name }}</strong></div><div class="activity-time">{{ activity.created_at.strftime('%Y-%m-%d') if activity.created_at else '' }}</div></div>
+              {% else %}
               <div class="activity-dot" style="background:#fff8e1;color:var(--warning);"><i class="fas fa-hospital"></i></div>
-              <div class="activity-content"><div class="activity-text">New request from <strong>Pantai Hospital</strong></div><div class="activity-time">2 hrs ago</div></div>
+              <div class="activity-content"><div class="activity-text">New request from <strong>{{ activity.hospital_name }}</strong></div><div class="activity-time">{{ activity.created_at.strftime('%Y-%m-%d') if activity.created_at else '' }}</div></div>
+              {% endif %}
             </div>
-            <div class="activity-item">
-              <div class="activity-dot" style="background:#e0f7fa;color:var(--secondary);"><i class="fas fa-user-cog"></i></div>
-              <div class="activity-content"><div class="activity-text">System settings updated</div><div class="activity-time">3 hrs ago</div></div>
-            </div>
+            {% else %}
+            <div class="p-3 text-center text-muted fs-13">No recent activities</div>
+            {% endfor %}
           </div>
-          {# Flask: {% endfor %} #}
         </div>
       </div>
     </div>
@@ -267,23 +248,10 @@
 
   <!-- Weekly Activity Chart -->
   <div class="row g-4">
-    <div class="col-lg-8" data-aos="fade-up">
+    <div class="col-lg-12" data-aos="fade-up">
       <div class="mc-card">
         <div class="card-header"><span><i class="fas fa-bar-chart text-primary me-2"></i>Weekly Activity</span></div>
         <div class="card-body"><div class="chart-container" style="height:240px;"><canvas id="weeklyActivityChart"></canvas></div></div>
-      </div>
-    </div>
-    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
-      <div class="mc-card">
-        <div class="card-header"><span><i class="fas fa-network-wired text-success me-2"></i>Blockchain Live</span></div>
-        <div class="card-body">
-          <div class="d-flex justify-content-between mb-3">
-            <div class="text-center"><div class="fw-700 fs-4 text-primary" id="live-block-count">18,432</div><div class="fs-11 text-muted">Blocks</div></div>
-            <div class="text-center"><div class="fw-700 fs-4 text-success" id="live-tx-count">94,218</div><div class="fs-11 text-muted">Transactions</div></div>
-          </div>
-          <div class="chart-container" style="height:120px;"><canvas id="blockchainChart"></canvas></div>
-          <div class="mt-3 d-flex align-items-center gap-2"><div class="node-status online"></div><span class="fs-12 fw-500">All 58 peers online</span></div>
-        </div>
       </div>
     </div>
   </div>

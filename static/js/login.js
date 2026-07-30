@@ -23,7 +23,14 @@ function selectRole(el, role) {
 
 // Initialize form validation for login
 document.addEventListener('DOMContentLoaded', function() {
-  if (typeof window.MediChain !== 'undefined' && window.MediChain.initFormValidation) {
-    window.MediChain.initFormValidation('loginForm');
+  const form = document.getElementById('loginForm');
+  if (form) {
+    form.addEventListener('submit', function(event) {
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.classList.add('was-validated');
+    }, false);
   }
 });

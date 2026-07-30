@@ -173,14 +173,35 @@ function initHospitalStatusChart(canvasId = 'hospitalStatusChart') {
   const ctx = document.getElementById(canvasId);
   if (!ctx || typeof Chart === 'undefined') return;
 
-  /* <!-- Flask Dynamic Route: /api/analytics/hospital-status --> */
+  // Read real data from data attributes set by Flask template
+  const active = parseInt(ctx.dataset.active) || 0;
+  const pending = parseInt(ctx.dataset.pending) || 0;
+  const suspended = parseInt(ctx.dataset.suspended) || 0;
+  const rejected = parseInt(ctx.dataset.rejected) || 0;
+
+  const labels = [];
+  const data = [];
+  const colors = [];
+
+  if (active > 0) { labels.push('Active'); data.push(active); colors.push(MC_COLORS.success); }
+  if (pending > 0) { labels.push('Pending'); data.push(pending); colors.push(MC_COLORS.warning); }
+  if (suspended > 0) { labels.push('Suspended'); data.push(suspended); colors.push(MC_COLORS.danger); }
+  if (rejected > 0) { labels.push('Rejected'); data.push(rejected); colors.push('#b0bec5'); }
+
+  // Fallback if no data
+  if (data.length === 0) {
+    labels.push('No Data');
+    data.push(1);
+    colors.push('#e0e0e0');
+  }
+
   return new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Active', 'Pending', 'Suspended', 'Inactive'],
+      labels: labels,
       datasets: [{
-        data: [42, 8, 3, 5],
-        backgroundColor: [MC_COLORS.success, MC_COLORS.warning, MC_COLORS.danger, '#b0bec5'],
+        data: data,
+        backgroundColor: colors,
         borderColor: '#fff',
         borderWidth: 3,
         hoverOffset: 6,
