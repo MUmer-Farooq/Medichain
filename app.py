@@ -363,6 +363,159 @@ def system_admin_hospital_requests():
     except Exception as e:
         return render_template("system-admin/hospital_requests.html", requests=[], pending_count=0)
 
+@app.route("/system-admin/analytics")
+@app.route("/system-admin/analytics.html")
+def system_admin_analytics():
+    if session.get("user_role") != "system_admin":
+        return redirect(url_for("login"))
+
+    # ---- Date-range filter (All Time / 12m / 6m / 30d) ----
+    period = request.args.get("period", "all")
+    if period not in ("all", "12m", "6m", "30d"):
+        period = "all"
+
+    # Build a SQL date filter based on the selected period
+    date_filter = ""
+    period_params = []
+    if period == "12m":
+        date_filter = "WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)"
+    elif period == "6m":
+        date_filter = "WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)"
+    elif period == "30d":
+        date_filter = "WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
+
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+
+        # ---- KPI Stats (always full-history counts) ----
+        cursor.execute("SELECT COUNT(*) as cnt FROM hospitals")
+        total_hospitals = cursor.fetchone()["cnt"]
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='approved'")
+        approved_count = cursor.fetchone()["cnt"]
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='pending'")
+        pending_count = cursor.fetchone()["cnt"]
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='rejected'")
+        rejected_count = cursor.fetchone()["cnt"]
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='suspended'")
+        suspended_count = cursor.fetchone()["cnt"]
+
+        # Doctors / Admins / Patients / System Admins from users table
+        cursor.execute("SELECT role, COUNT(*) as cnt FROM users GROUP BY role")
+        role_counts = {row["role"]: row["cnt"] for row in cursor.fetchall()}
+        doctor_count = role_counts.get("doctor", 0)
+        hospital_admin_count = role_counts.get("hospital_admin", 0)
+        patient_count = role_counts.get("patient", 0)
+        system_admin_count = role_counts.get("system_admin", 0)
+
+        # ---- Registrations over time (monthly) ----
+        # If a period is selected, restrict to registrations within that window.
+        if period == "all":
+            cursor.execute(
+                """
+                SELECT DATE_FORMAT(created_at, %s) as month,
+                       COUNT(*) as cnt
+                FROM hospitals
+                GROUP BY DATE_FORMAT(created_at, %s)
+                ORDER BY MIN(created_at) ASC
+                """,
+                ("%b %Y", "%b %Y"),
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT DATE_FORMAT(created_at, %s) as month,
+                       COUNT(*) as cnt
+                FROM hospitals
+                {date_filter}
+                GROUP BY DATE_FORMAT(created_at, %s)
+                ORDER BY MIN(created_at) ASC
+                """.format(date_filter=date_filter),
+                ("%b %Y", "%b %Y"),
+            )
+        registrations_by_month = cursor.fetchall()
+        reg_months = [r["month"] for r in registrations_by_month]
+        reg_counts = [r["cnt"] for r in registrations_by_month]
+
+        # ---- Status distribution ----
+        status_distribution = [
+            {"label": "Approved", "value": approved_count, "color": "#00c853"},
+            {"label": "Pending", "value": pending_count, "color": "#ffab00"},
+            {"label": "Rejected", "value": rejected_count, "color": "#f44336"},
+            {"label": "Suspended", "value": suspended_count, "color": "#90a4ae"},
+        ]
+
+        # ---- City distribution ----
+        cursor.execute(
+            """
+            SELECT city, COUNT(*) as cnt
+            FROM hospitals
+            {date_filter}
+            GROUP BY city
+            ORDER BY cnt DESC
+            LIMIT 10
+            """.format(date_filter=date_filter)
+        )
+        city_rows = cursor.fetchall()
+        cities = [r["city"] for r in city_rows]
+        city_counts = [r["cnt"] for r in city_rows]
+
+        # ---- Recent hospitals ----
+        cursor.execute(
+            "SELECT hospital_id, hospital_name, registration_number, city, phone, hospital_email, status, created_at "
+            "FROM hospitals {date_filter} ORDER BY created_at DESC LIMIT 10".format(date_filter=date_filter)
+        )
+        recent_hospitals = cursor.fetchall()
+
+        return render_template(
+            "system-admin/analytics.html",
+            total_hospitals=total_hospitals,
+            approved_count=approved_count,
+            pending_count=pending_count,
+            pending_requests_count=pending_count,
+            rejected_count=rejected_count,
+            suspended_count=suspended_count,
+            doctor_count=doctor_count,
+            hospital_admin_count=hospital_admin_count,
+            patient_count=patient_count,
+            system_admin_count=system_admin_count,
+            reg_months=reg_months,
+            reg_counts=reg_counts,
+            status_distribution=status_distribution,
+            cities=cities,
+            city_counts=city_counts,
+            recent_hospitals=recent_hospitals,
+            selected_period=period,
+            period=period,
+        )
+    except Exception as e:
+        print("DB Error in analytics:", e)
+        return render_template(
+            "system-admin/analytics.html",
+            total_hospitals=0,
+            approved_count=0,
+            pending_count=0,
+            rejected_count=0,
+            suspended_count=0,
+            doctor_count=0,
+            hospital_admin_count=0,
+            patient_count=0,
+            system_admin_count=0,
+            reg_months=[],
+            reg_counts=[],
+            status_distribution=[],
+            cities=[],
+            city_counts=[],
+            recent_hospitals=[],
+            selected_period=period,
+            period=period,
+        )
+
+
 @app.route("/system-admin/hospitals")
 @app.route("/system-admin/hospitals.html")
 def system_admin_hospitals():
@@ -380,10 +533,31 @@ def system_admin_hospitals():
         pending_count = cursor.fetchone()["cnt"]
         cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='suspended'")
         suspended_count = cursor.fetchone()["cnt"]
+        cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='rejected'")
+        rejected_count = cursor.fetchone()["cnt"]
 
-        return render_template("system-admin/hospitals.html", hospitals=hospitals, active_count=active_count, pending_count=pending_count, suspended_count=suspended_count)
+        # Count doctors per hospital
+        cursor.execute("SELECT hospital_id, COUNT(*) as cnt FROM users WHERE role='doctor' GROUP BY hospital_id")
+        doctor_counts = {row["hospital_id"]: row["cnt"] for row in cursor.fetchall()}
+        for h in hospitals:
+            h["doctor_count"] = doctor_counts.get(h["hospital_id"], 0)
+            if h.get("created_at"):
+                h["created_at_str"] = h["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+                h["joined_display"] = h["created_at"].strftime("%b %Y")
+            else:
+                h["created_at_str"] = ""
+                h["joined_display"] = ""
+            # Convert to string so the embedded JSON cache serializes cleanly
+            h["created_at"] = h["created_at_str"]
+
+        return render_template("system-admin/hospitals.html",
+                               hospitals=hospitals,
+                               active_count=active_count,
+                               pending_count=pending_count,
+                               suspended_count=suspended_count,
+                               rejected_count=rejected_count)
     except Exception as e:
-        return render_template("system-admin/hospitals.html", hospitals=[], active_count=0, pending_count=0, suspended_count=0)
+        return render_template("system-admin/hospitals.html", hospitals=[], active_count=0, pending_count=0, suspended_count=0, rejected_count=0)
 
 @app.route("/system-admin/approve_hospital/<int:hospital_id>", methods=["POST"])
 def approve_hospital(hospital_id):
@@ -415,6 +589,143 @@ def reject_hospital(hospital_id):
         flash("Error rejecting hospital.", "danger")
     return redirect(url_for("system_admin_hospital_requests"))
 
+
+from flask import jsonify
+
+# ---- JSON API for Manage Hospitals ----
+
+@app.route("/system-admin/api/hospitals", methods=["GET"])
+def system_admin_hospitals_api():
+    if session.get("user_role") != "system_admin":
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM hospitals ORDER BY created_at DESC")
+        hospitals = cursor.fetchall()
+
+        cursor.execute("SELECT hospital_id, COUNT(*) as cnt FROM users WHERE role='doctor' GROUP BY hospital_id")
+        doctor_counts = {row["hospital_id"]: row["cnt"] for row in cursor.fetchall()}
+
+        data = []
+        for h in hospitals:
+            h["doctor_count"] = doctor_counts.get(h["hospital_id"], 0)
+            h["created_at_str"] = h["created_at"].strftime("%Y-%m-%d %H:%M:%S") if h["created_at"] else ""
+            h["joined_display"] = h["created_at"].strftime("%b %Y") if h["created_at"] else ""
+            data.append(h)
+
+        return jsonify({"success": True, "hospitals": data})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/system-admin/hospitals/update", methods=["POST"])
+def system_admin_hospital_update():
+    if session.get("user_role") != "system_admin":
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+    try:
+        data = request.get_json(silent=True) or request.form
+        hospital_id = data.get("hospital_id")
+        if not hospital_id:
+            return jsonify({"success": False, "error": "Missing hospital id"}), 400
+
+        hospital_name = (data.get("hospital_name") or "").strip()
+        registration_number = (data.get("registration_number") or "").strip()
+        city = (data.get("city") or "").strip()
+        address = (data.get("address") or "").strip()
+        phone = (data.get("phone") or "").strip()
+        hospital_email = (data.get("hospital_email") or "").strip()
+        status = (data.get("status") or "").strip()
+
+        if not hospital_name or not registration_number or not city or not hospital_email:
+            return jsonify({"success": False, "error": "Required fields cannot be empty"}), 400
+
+        allowed_statuses = {"pending", "approved", "rejected", "suspended"}
+        if status and status not in allowed_statuses:
+            return jsonify({"success": False, "error": "Invalid status value"}), 400
+
+        db.ping(reconnect=True)
+        cursor = db.cursor()
+
+        cursor.execute(
+            "SELECT hospital_id FROM hospitals WHERE hospital_email=%s AND hospital_id!=%s",
+            (hospital_email, hospital_id)
+        )
+        if cursor.fetchone():
+            return jsonify({"success": False, "error": "Hospital email already registered"}), 400
+
+        cursor.execute(
+            "SELECT hospital_id FROM hospitals WHERE registration_number=%s AND hospital_id!=%s",
+            (registration_number, hospital_id)
+        )
+        if cursor.fetchone():
+            return jsonify({"success": False, "error": "Registration number already exists"}), 400
+
+        cursor.execute(
+            """UPDATE hospitals
+               SET hospital_name=%s, registration_number=%s, city=%s,
+                   address=%s, phone=%s, hospital_email=%s
+                   {status_set}
+               WHERE hospital_id=%s""".format(
+                status_set=", status=%s" if status else ""
+            ),
+            (
+                hospital_name, registration_number, city, address, phone, hospital_email,
+                *([status] if status else []),
+                hospital_id
+            )
+        )
+        db.commit()
+        return jsonify({"success": True, "message": "Hospital updated successfully."})
+    except Exception as e:
+        db.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/system-admin/hospitals/<int:hospital_id>/status", methods=["POST"])
+def system_admin_hospital_status(hospital_id):
+    if session.get("user_role") != "system_admin":
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+    try:
+        data = request.get_json(silent=True) or request.form
+        status = (data.get("status") or "").strip()
+        allowed_statuses = {"pending", "approved", "rejected", "suspended"}
+        if status not in allowed_statuses:
+            return jsonify({"success": False, "error": "Invalid status"}), 400
+
+        db.ping(reconnect=True)
+        cursor = db.cursor()
+        cursor.execute("UPDATE hospitals SET status=%s WHERE hospital_id=%s", (status, hospital_id))
+        db.commit()
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "error": "Hospital not found"}), 404
+
+        return jsonify({"success": True, "message": f"Hospital status set to {status}.", "status": status})
+    except Exception as e:
+        db.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/system-admin/hospitals/<int:hospital_id>/delete", methods=["POST"])
+def system_admin_hospital_delete(hospital_id):
+    if session.get("user_role") != "system_admin":
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor()
+
+        # Remove linked users first to satisfy FK constraint
+        cursor.execute("DELETE FROM users WHERE hospital_id=%s", (hospital_id,))
+        cursor.execute("DELETE FROM hospitals WHERE hospital_id=%s", (hospital_id,))
+        db.commit()
+        if cursor.rowcount == 0:
+            return jsonify({"success": False, "error": "Hospital not found"}), 404
+
+        return jsonify({"success": True, "message": "Hospital deleted successfully."})
+    except Exception as e:
+        db.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
 # Automatically create routes for every HTML file
 for html in templates_dir.rglob("*.html"):
 
@@ -427,7 +738,8 @@ for html in templates_dir.rglob("*.html"):
         "hospital_registration.html",
         "system-admin/dashboard.html",
         "system-admin/hospital_requests.html",
-        "system-admin/hospitals.html"
+        "system-admin/hospitals.html",
+        "system-admin/analytics.html"
     ]:
         continue
 

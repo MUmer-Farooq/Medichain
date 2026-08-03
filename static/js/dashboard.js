@@ -570,6 +570,295 @@ function initBlockchainLiveUpdate() {
   }, 3000);
 }
 
+/* ---------- Analytics Data Reader ---------- */
+function getAnalyticsData() {
+  const el = document.getElementById('analytics-data');
+  if (!el) return null;
+  try {
+    return JSON.parse(el.textContent);
+  } catch (e) {
+    return null;
+  }
+}
+
+/* ---------- Hospital Registrations Over Time (Line) ---------- */
+function initRegistrationChart(canvasId = 'registrationChart') {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx || typeof Chart === 'undefined') return;
+
+  const data = getAnalyticsData();
+  const labels = (data && data.reg_months) || [];
+  const values = (data && data.reg_counts) || [];
+
+  if (labels.length === 0) {
+    labels.push('No Data');
+    values.push(0);
+  }
+
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Hospitals Registered',
+        data: values,
+        borderColor: MC_COLORS.primary,
+        backgroundColor: createGradient(ctx, MC_COLORS.primary),
+        borderWidth: 2.5,
+        pointBackgroundColor: MC_COLORS.primary,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        tension: 0.4,
+        fill: true,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { font: { size: 11 } },
+        },
+        y: {
+          grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
+          border: { display: false, dash: [4, 4] },
+          ticks: { font: { size: 11 }, padding: 8 },
+          beginAtZero: true,
+        },
+      },
+      plugins: { legend: { position: 'top', align: 'end' } },
+    },
+  });
+}
+
+/* ---------- Hospital Status Distribution (Doughnut) ---------- */
+function initStatusChart(canvasId = 'statusChart') {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx || typeof Chart === 'undefined') return;
+
+  const data = getAnalyticsData();
+  const dist = (data && data.status_distribution) || [];
+
+  let labels = [];
+  let values = [];
+  let colors = [];
+
+  dist.forEach(item => {
+    if (item.value > 0) {
+      labels.push(item.label);
+      values.push(item.value);
+      colors.push(item.color);
+    }
+  });
+
+  if (values.length === 0) {
+    labels.push('No Data');
+    values.push(1);
+    colors.push('#e0e0e0');
+  }
+
+  return new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors,
+        borderColor: '#fff',
+        borderWidth: 3,
+        hoverOffset: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '70%',
+      plugins: {
+        legend: { position: 'right', labels: { padding: 12 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ${ctx.parsed} hospitals`,
+          },
+        },
+      },
+    },
+  });
+}
+
+/* ---------- Hospitals by City (Bar) ---------- */
+function initCityChart(canvasId = 'cityChart') {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx || typeof Chart === 'undefined') return;
+
+  const data = getAnalyticsData();
+  const labels = (data && data.cities) || [];
+  const values = (data && data.city_counts) || [];
+
+  if (labels.length === 0) {
+    labels.push('No Data');
+    values.push(0);
+  }
+
+  return new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Hospitals',
+        data: values,
+        backgroundColor: MC_COLORS.info + 'CC',
+        borderColor: MC_COLORS.info,
+        borderWidth: 2,
+        borderRadius: 6,
+        borderSkipped: false,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { grid: { display: false }, border: { display: false } },
+        y: { grid: { color: 'rgba(0,0,0,0.04)' }, border: { display: false }, beginAtZero: true },
+      },
+      plugins: { legend: { display: false } },
+    },
+  });
+}
+
+/* ---------- Registered Users by Role (Doughnut) ---------- */
+function initRoleChart(canvasId = 'roleChart') {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx || typeof Chart === 'undefined') return;
+
+  const data = getAnalyticsData();
+  const roles = (data && data.roles) || [];
+  const labels = roles.map(r => r[0]);
+  const values = roles.map(r => r[1]);
+  const roleColors = [MC_COLORS.primary, MC_COLORS.warning, MC_COLORS.pink, MC_COLORS.success];
+
+  if (values.length === 0 || values.every(v => v === 0)) {
+    labels.push('No Data');
+    values.push(1);
+  }
+
+  return new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: roleColors.slice(0, labels.length),
+        borderColor: '#fff',
+        borderWidth: 3,
+        hoverOffset: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 12 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ${ctx.parsed} users`,
+          },
+        },
+      },
+    },
+  });
+}
+
+/* ---------- Analytics Period Filter ---------- */
+function onAnalyticsPeriodChange(select) {
+  const value = select ? select.value : 'all';
+  const url = new URL(window.location.href);
+  if (value === 'all') {
+    url.searchParams.delete('period');
+  } else {
+    url.searchParams.set('period', value);
+  }
+  window.location.href = url.toString();
+}
+
+/* ---------- Export Analytics Report (CSV) ---------- */
+function exportAnalyticsReport() {
+  const data = getAnalyticsData() || {};
+  const rows = [];
+
+  // Header
+  rows.push(['MediChain System Analytics Report']);
+  rows.push(['Generated', new Date().toLocaleString()]);
+  rows.push([]);
+
+  // KPI summary
+  rows.push(['Metric', 'Value']);
+  rows.push(['Total Hospitals', document.querySelector('.stat-card.primary .stat-value')?.textContent || '0']);
+  rows.push(['Approved Hospitals', document.querySelector('.stat-card.success .stat-value')?.textContent || '0']);
+  rows.push(['Pending Hospitals', document.querySelector('.stat-card.warning .stat-value')?.textContent || '0']);
+  rows.push(['Rejected Hospitals', document.querySelector('.stat-card.danger .stat-value')?.textContent || '0']);
+  rows.push(['Doctors', data.roles ? (data.roles.find(r => r[0] === 'Doctors') || [0, 0])[1] : 0]);
+  rows.push(['Hospital Admins', data.roles ? (data.roles.find(r => r[0] === 'Hospital Admins') || [0, 0])[1] : 0]);
+  rows.push(['Patients', data.roles ? (data.roles.find(r => r[0] === 'Patients') || [0, 0])[1] : 0]);
+  rows.push([]);
+
+  // Registrations over time
+  rows.push(['Registrations Over Time']);
+  rows.push(['Month', 'Hospitals']);
+  const months = data.reg_months || [];
+  const counts = data.reg_counts || [];
+  months.forEach((m, i) => rows.push([m, counts[i] ?? 0]));
+  rows.push([]);
+
+  // Status distribution
+  rows.push(['Hospital Status Distribution']);
+  rows.push(['Status', 'Count']);
+  (data.status_distribution || []).forEach(s => rows.push([s.label, s.value]));
+  rows.push([]);
+
+  // City distribution
+  rows.push(['Hospitals by City']);
+  rows.push(['City', 'Count']);
+  const cities = data.cities || [];
+  const cityCounts = data.city_counts || [];
+  cities.forEach((c, i) => rows.push([c, cityCounts[i] ?? 0]));
+  rows.push([]);
+
+  // Recent hospitals table
+  const table = document.getElementById('mc-table');
+  if (table) {
+    rows.push(['Recently Registered Hospitals']);
+    const headerCells = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+    rows.push(headerCells);
+    table.querySelectorAll('tbody tr').forEach(tr => {
+      const cells = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim().replace(/\s+/g, ' '));
+      rows.push(cells);
+    });
+  }
+
+  // Build CSV string
+  const csv = rows
+    .map(row => row.map(cell => {
+      const s = String(cell ?? '');
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }).join(','))
+    .join('\r\n');
+
+  // Trigger download
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `medichain-analytics-report-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
 /* ---------- Dashboard Init ---------- */
 document.addEventListener('DOMContentLoaded', function () {
   initChartDefaults();
@@ -584,6 +873,12 @@ document.addEventListener('DOMContentLoaded', function () {
   initAgeDistributionChart();
   initAppointmentsChart();
   initAccessRadarChart();
+
+  // Analytics charts (only on analytics page)
+  initRegistrationChart();
+  initStatusChart();
+  initCityChart();
+  initRoleChart();
 
   // Counter animations
   initCounterAnimations();

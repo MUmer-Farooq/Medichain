@@ -1,178 +1,480 @@
-<!DOCTYPE html>
+<!doctype html>
 {# Flask Dynamic Route: /system-admin/hospitals #}
 <html lang="en">
-<head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Manage Hospitals — MediChain</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}"/>
-</head>
-<body class="page-bg">
-<div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
-<aside class="mc-sidebar" id="mc-sidebar">
-  <a href="dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-heartbeat"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Blockchain Health</span></div></a>
-  <div class="sidebar-user"><div class="user-avatar">SA</div><div class="user-info"><div class="user-name">System Admin</div><div class="user-role">Super Administrator</div></div></div>
-  <nav class="sidebar-nav">
-    <div class="nav-section-label">Main</div>
-    <a href="dashboard.html" class="nav-item-link"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
-<a href="hospital_requests.html" class="nav-item-link"><i class="fas fa-clock nav-icon"></i><span class="nav-text">Hospital Requests</span><span class="nav-badge danger">{{ pending_count }}</span></a>
-    <a href="hospitals.html" class="nav-item-link active"><i class="fas fa-hospital nav-icon"></i><span class="nav-text">Manage Hospitals</span></a>
-    <div class="nav-section-label">Analytics</div>
-    <a href="analytics.html" class="nav-item-link"><i class="fas fa-chart-line nav-icon"></i><span class="nav-text">Analytics</span></a>
-    <div class="nav-section-label">System</div>
-    <a href="settings.html" class="nav-item-link"><i class="fas fa-cog nav-icon"></i><span class="nav-text">Settings</span></a>
-    <a href="/logout" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
-  </nav>
-  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>v1.0.0</span></div></div>
-</aside>
-<header class="mc-topbar">
-  <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><a href="dashboard.html" class="text-muted">Dashboard</a><span class="bc-sep">/</span><span class="bc-current">Manage Hospitals</span></div></div>
-  <div class="topbar-right">
-    <div class="topbar-search"><i class="fas fa-search search-icon"></i><input type="search" id="table-search" placeholder="Search hospitals…"/></div>
-    <div class="dropdown"><a class="topbar-btn" data-bs-toggle="dropdown"><i class="fas fa-bell"></i><span class="notif-count">8</span></a></div>
-    <div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar">SA</div><span class="ud-name">System Admin</span><i class="fas fa-chevron-down fs-11 text-muted"></i></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="settings.html"><i class="fas fa-user-cog"></i>Profile</a></li><li><hr class="dropdown-divider"/></li><li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div>
-  </div>
-</header>
-<main class="mc-content">
-  <div class="page-header">
-    <div class="page-header-left"><h4><i class="fas fa-hospital me-2 text-primary"></i>Manage Hospitals</h4><p>View and manage all registered hospitals on the MediChain network</p></div>
-    <div class="page-header-right">
-      <button class="btn btn-outline-secondary btn-sm"><i class="fas fa-download me-1"></i>Export CSV</button>
-      <a href="hospital_requests.html" class="btn btn-primary btn-sm"><i class="fas fa-clock me-1"></i>Pending Requests <span class="badge bg-danger ms-1">{{ pending_count }}</span></a>
-    </div>
-  </div>
-
-  <!-- Stats Row -->
-  <div class="stats-grid mb-4">
-    <div class="stat-card primary"><div class="stat-icon"><i class="fas fa-hospital"></i></div><div class="stat-value">{{ active_count }}</div><div class="stat-label">Active</div></div>
-    <div class="stat-card warning"><div class="stat-icon"><i class="fas fa-clock"></i></div><div class="stat-value">{{ pending_count }}</div><div class="stat-label">Pending</div></div>
-    <div class="stat-card danger"><div class="stat-icon"><i class="fas fa-ban"></i></div><div class="stat-value">{{ suspended_count }}</div><div class="stat-label">Suspended</div></div>
-    <div class="stat-card success"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value">1,240</div><div class="stat-label">Total Doctors</div></div>
-    <div class="stat-card info"><div class="stat-icon"><i class="fas fa-file-medical"></i></div><div class="stat-value">410K</div><div class="stat-label">Records</div></div>
-  </div>
-
-  <!-- Filter Bar -->
-  <div class="mc-card mb-4">
-    <div class="card-body py-3">
-      <div class="search-filter-bar">
-        <div class="search-box"><i class="fas fa-search"></i><input type="text" id="table-search" placeholder="Search by name, city, registration…"/></div>
-        <select class="form-select form-select-sm" style="width:auto;" onchange="MediChain.filterTable(this)" data-col="5">
-          <option value="">All Status</option><option value="active">Active</option><option value="pending">Pending</option><option value="suspended">Suspended</option>
-        </select>
-        <select class="form-select form-select-sm" style="width:auto;" onchange="MediChain.filterTable(this)" data-col="3">
-          <option value="">All Types</option><option value="government">Government</option><option value="private">Private</option><option value="specialist">Specialist</option>
-        </select>
-        <select class="form-select form-select-sm" style="width:auto;">
-          <option value="">All States</option><option>Kuala Lumpur</option><option>Selangor</option><option>Penang</option><option>Johor</option><option>Perak</option>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <!-- Hospitals Table -->
-  <div class="mc-card">
-    <div class="card-header"><span><i class="fas fa-list text-primary me-2"></i>All Hospitals <span class="badge badge-primary-soft ms-2">{{ hospitals|length }}</span></span></div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        {# Flask Dynamic: {% for hospital in hospitals %} #}
-        <table class="mc-table" id="mc-table">
-          <thead>
-            <tr>
-              <th data-sort="id">#</th>
-              <th data-sort="name">Hospital Name</th>
-              <th data-sort="city">City</th>
-              <th data-sort="type">Type</th>
-              <th data-sort="doctors">Doctors</th>
-              <th data-sort="status">Status</th>
-              <th data-sort="joined">Joined</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for hospital in hospitals %}
-            <tr>
-              <td>#{{ hospital.hospital_id }}</td>
-              <td><div class="fw-600">{{ hospital.hospital_name }}</div><div class="text-muted fs-12">{{ hospital.registration_number }}</div></td>
-              <td>{{ hospital.city }}</td>
-              <td><span class="badge badge-primary-soft">Hospital</span></td>
-              <td>-</td>
-              <td>
-                <span class="badge badge-{% if hospital.status == 'approved' %}success{% elif hospital.status == 'pending' %}warning{% else %}danger{% endif %}-soft">
-                  {{ hospital.status|capitalize }}
-                </span>
-              </td>
-              <td>{{ hospital.created_at.strftime('%b %Y') if hospital.created_at else '' }}</td>
-              <td>
-                <div class="table-actions">
-                  <a href="#" class="btn-icon" data-bs-toggle="modal" data-bs-target="#hospitalModal" title="View"><i class="fas fa-eye"></i></a>
-                  <a href="#" class="btn-icon btn-warning" title="Suspend" data-bs-toggle="tooltip"><i class="fas fa-pause"></i></a>
-                  <a href="#" class="btn-icon btn-danger" onclick="MediChain.confirmDelete({title:'Revoke Hospital?',text:'This will remove the hospital from the network.'})" title="Revoke"><i class="fas fa-trash"></i></a>
-                </div>
-              </td>
-            </tr>
-            {% else %}
-            <tr><td colspan="8" class="text-center text-muted">No hospitals found</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card-footer d-flex justify-content-between align-items-center">
-      <small class="text-muted">Showing {{ hospitals|length }} hospitals</small>
-      <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
-    </div>
-  </div>
-</main>
-
-<!-- Hospital Detail Modal -->
-<div class="modal fade" id="hospitalModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">Hospital Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body">
-        {# Flask Dynamic: {{ hospital details }} #}
-        <div class="row g-3">
-          <div class="col-md-6"><label class="form-label">Hospital Name</label><input type="text" class="form-control" value="Hospital Kuala Lumpur" readonly/></div>
-          <div class="col-md-6"><label class="form-label">Registration #</label><input type="text" class="form-control" value="HOS-2024-0001" readonly/></div>
-          <div class="col-md-6"><label class="form-label">Status</label><select class="form-select"><option>Active</option><option>Suspended</option><option>Pending</option></select></div>
-          <div class="col-md-6"><label class="form-label">Type</label><input type="text" class="form-control" value="Government" readonly/></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Manage Hospitals — MediChain</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/dashboard.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/responsive.css') }}"
+    />
+  </head>
+  <body class="page-bg">
+    <div
+      id="sidebar-overlay"
+      class="sidebar-overlay"
+      onclick="
+        this.classList.remove('show');
+        document.getElementById('mc-sidebar').classList.remove('show');
+      "
+    ></div>
+    <aside class="mc-sidebar" id="mc-sidebar">
+      <a href="dashboard.html" class="sidebar-brand"
+        ><div class="brand-icon"><i class="fas fa-heartbeat"></i></div>
+        <div class="brand-text">
+          <span class="brand-name">MediChain</span
+          ><span class="brand-tagline">Blockchain Health</span>
+        </div></a
+      >
+      <div class="sidebar-user">
+        <div class="user-avatar">SA</div>
+        <div class="user-info">
+          <div class="user-name">System Admin</div>
+          <div class="user-role">Super Administrator</div>
         </div>
       </div>
-      <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button class="btn btn-primary" onclick="saveHospitalChanges()">Save Changes</button></div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a href="dashboard.html" class="nav-item-link"
+          ><i class="fas fa-chart-pie nav-icon"></i
+          ><span class="nav-text">Dashboard</span></a
+        >
+        <a href="hospital_requests.html" class="nav-item-link"
+          ><i class="fas fa-clock nav-icon"></i
+          ><span class="nav-text">Hospital Requests</span
+          ><span class="nav-badge danger">{{ pending_count }}</span></a
+        >
+        <a href="hospitals.html" class="nav-item-link active"
+          ><i class="fas fa-hospital nav-icon"></i
+          ><span class="nav-text">Manage Hospitals</span></a
+        >
+        <div class="nav-section-label">Analytics</div>
+        <a href="analytics.html" class="nav-item-link"
+          ><i class="fas fa-chart-line nav-icon"></i
+          ><span class="nav-text">Analytics</span></a
+        >
+        <div class="nav-section-label">System</div>
+        <a href="settings.html" class="nav-item-link"
+          ><i class="fas fa-cog nav-icon"></i
+          ><span class="nav-text">Settings</span></a
+        >
+        <a href="/logout" class="nav-item-link"
+          ><i class="fas fa-sign-out-alt nav-icon"></i
+          ><span class="nav-text">Sign Out</span></a
+        >
+      </nav>
+      <div class="sidebar-footer">
+        <div class="version-badge">
+          <div class="version-dot"></div>
+          <span>v1.0.0</span>
+        </div>
+      </div>
+    </aside>
+    <header class="mc-topbar">
+      <div class="topbar-left">
+        <div class="sidebar-toggle" id="sidebar-toggle">
+          <i class="fas fa-bars"></i>
+        </div>
+        <div class="topbar-breadcrumb">
+          <a href="dashboard.html" class="text-muted">Dashboard</a
+          ><span class="bc-sep">/</span
+          ><span class="bc-current">Manage Hospitals</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-search">
+          <i class="fas fa-search search-icon"></i
+          ><input
+            type="search"
+            id="table-search"
+            placeholder="Search hospitals…"
+          />
+        </div>
+        <div class="dropdown">
+          <a class="topbar-btn" data-bs-toggle="dropdown"
+            ><i class="fas fa-bell"></i><span class="notif-count">8</span></a
+          >
+        </div>
+        <div class="dropdown">
+          <div class="user-dropdown-btn" data-bs-toggle="dropdown">
+            <div class="ud-avatar">SA</div>
+            <span class="ud-name">System Admin</span
+            ><i class="fas fa-chevron-down fs-11 text-muted"></i>
+          </div>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <a class="dropdown-item" href="settings.html"
+                ><i class="fas fa-user-cog"></i>Profile</a
+              >
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li>
+              <a class="dropdown-item text-danger" href="/logout"
+                ><i class="fas fa-sign-out-alt"></i>Sign Out</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+    </header>
+    <main class="mc-content">
+      <div class="page-header">
+        <div class="page-header-left">
+          <h4>
+            <i class="fas fa-hospital me-2 text-primary"></i>Manage Hospitals
+          </h4>
+          <p>
+            View and manage all registered hospitals on the MediChain network
+          </p>
+        </div>
+        <div class="page-header-right">
+          <button class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-download me-1"></i>Export CSV
+          </button>
+          <a href="hospital_requests.html" class="btn btn-primary btn-sm"
+            ><i class="fas fa-clock me-1"></i>Pending Requests
+            <span class="badge bg-danger ms-1">{{ pending_count }}</span></a
+          >
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-grid mb-4">
+        <div class="stat-card primary">
+          <div class="stat-icon"><i class="fas fa-hospital"></i></div>
+          <div class="stat-value" id="stat-active">{{ active_count }}</div>
+          <div class="stat-label">Active</div>
+        </div>
+        <div class="stat-card warning">
+          <div class="stat-icon"><i class="fas fa-clock"></i></div>
+          <div class="stat-value" id="stat-pending">{{ pending_count }}</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-icon"><i class="fas fa-ban"></i></div>
+          <div class="stat-value" id="stat-suspended">
+            {{ suspended_count }}
+          </div>
+          <div class="stat-label">Suspended</div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-icon"><i class="fas fa-users"></i></div>
+          <div class="stat-value" id="stat-rejected">{{ rejected_count }}</div>
+          <div class="stat-label">Rejected</div>
+        </div>
+        <div class="stat-card info">
+          <div class="stat-icon"><i class="fas fa-hospital-user"></i></div>
+          <div class="stat-value" id="stat-total">{{ hospitals|length }}</div>
+          <div class="stat-label">Total Hospitals</div>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="mc-card mb-4">
+        <div class="card-body py-3">
+          <div class="search-filter-bar">
+            <div class="search-box">
+              <i class="fas fa-search"></i
+              ><input
+                type="text"
+                id="table-search"
+                placeholder="Search by name, city, registration…"
+              />
+            </div>
+            <select
+              class="form-select form-select-sm"
+              style="width: auto"
+              onchange="MediChain.filterTable(this)"
+              data-col="5"
+            >
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="pending">Pending</option>
+              <option value="suspended">Suspended</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <select
+              class="form-select form-select-sm"
+              style="width: auto"
+              onchange="MediChain.filterTable(this)"
+              data-col="3"
+            >
+              <option value="">All Types</option>
+              <option value="government">Government</option>
+              <option value="private">Private</option>
+              <option value="specialist">Specialist</option>
+            </select>
+            <select class="form-select form-select-sm" style="width: auto">
+              <option value="">All States</option>
+              <option>Kuala Lumpur</option>
+              <option>Selangor</option>
+              <option>Penang</option>
+              <option>Johor</option>
+              <option>Perak</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hospitals Table -->
+      <div class="mc-card">
+        <div class="card-header">
+          <span
+            ><i class="fas fa-list text-primary me-2"></i>All Hospitals
+            <span class="badge badge-primary-soft ms-2"
+              >{{ hospitals|length }}</span
+            ></span
+          >
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            {# Flask Dynamic: {% for hospital in hospitals %} #}
+            <table class="mc-table" id="mc-table">
+              <thead>
+                <tr>
+                  <th data-sort="id">#</th>
+                  <th data-sort="name">Hospital Name</th>
+                  <th data-sort="city">City</th>
+                  <th data-sort="type">Type</th>
+                  <th data-sort="doctors">Doctors</th>
+                  <th data-sort="status">Status</th>
+                  <th data-sort="joined">Joined</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for hospital in hospitals %}
+                <tr
+                  data-hospital-id="{{ hospital.hospital_id }}"
+                  data-status="{{ hospital.status }}"
+                >
+                  <td>#{{ hospital.hospital_id }}</td>
+                  <td>
+                    <div class="fw-600">{{ hospital.hospital_name }}</div>
+                    <div class="text-muted fs-12">
+                      {{ hospital.registration_number }}
+                    </div>
+                  </td>
+                  <td>{{ hospital.city }}</td>
+                  <td>
+                    <span class="badge badge-primary-soft">Hospital</span>
+                  </td>
+                  <td>{{ hospital.doctor_count }}</td>
+                  <td>
+                    <span
+                      class="badge badge-{% if hospital.status == 'approved' %}success{% elif hospital.status == 'pending' %}warning{% elif hospital.status == 'suspended' %}secondary{% else %}danger{% endif %}-soft status-badge"
+                    >
+                      {{ hospital.status|capitalize }}
+                    </span>
+                  </td>
+                  <td>
+                    {{ hospital.joined_display if
+                    hospital.joined_display else '' }}
+                  </td>
+                  <td>
+                    <div class="table-actions">
+                      <a
+                        href="#"
+                        class="btn-icon btn-view"
+                        data-hospital-id="{{ hospital.hospital_id }}"
+                        title="View"
+                        data-bs-toggle="tooltip"
+                        ><i class="fas fa-eye"></i
+                      ></a>
+                      <a
+                        href="#"
+                        class="btn-icon btn-edit"
+                        data-hospital-id="{{ hospital.hospital_id }}"
+                        title="Edit"
+                        data-bs-toggle="tooltip"
+                        ><i class="fas fa-pen"></i
+                      ></a>
+                      {% if hospital.status == 'pending' %}
+                      <a
+                        href="#"
+                        class="btn-icon btn-success btn-approve"
+                        data-hospital-id="{{ hospital.hospital_id }}"
+                        title="Approve"
+                        data-bs-toggle="tooltip"
+                        ><i class="fas fa-check"></i
+                      ></a>
+                      <a
+                        href="#"
+                        class="btn-icon btn-danger btn-reject"
+                        data-hospital-id="{{ hospital.hospital_id }}"
+                        title="Reject"
+                        data-bs-toggle="tooltip"
+                        ><i class="fas fa-times"></i
+                      ></a>
+                      {% elif hospital.status == 'suspended' %}
+                      <a
+                        href="#"
+                        class="btn-icon btn-success btn-toggle-status"
+                        data-hospital-id="{{ hospital.hospital_id }}"
+                        data-action="activate"
+                        title="Activate"
+                        data-bs-toggle="tooltip"
+                        ><i class="fas fa-play"></i
+                      ></a>
+                      {% else %}
+                      <a
+                        href="#"
+                        class="btn-icon btn-warning btn-toggle-status"
+                        data-hospital-id="{{ hospital.hospital_id }}"
+                        data-action="suspend"
+                        title="Suspend"
+                        data-bs-toggle="tooltip"
+                        ><i class="fas fa-pause"></i
+                      ></a>
+                      {% endif %}
+                      <a
+                        href="#"
+                        class="btn-icon btn-danger btn-delete"
+                        data-hospital-id="{{ hospital.hospital_id }}"
+                        title="Delete"
+                        data-bs-toggle="tooltip"
+                        ><i class="fas fa-trash"></i
+                      ></a>
+                    </div>
+                  </td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="8" class="text-center text-muted">
+                    No hospitals found
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div
+          class="card-footer d-flex justify-content-between align-items-center"
+        >
+          <small class="text-muted"
+            >Showing {{ hospitals|length }} hospitals</small
+          >
+          <nav>
+            <ul class="pagination pagination-sm mb-0" id="pagination"></ul>
+          </nav>
+        </div>
+      </div>
+    </main>
+
+    <!-- Hospital data cache for JS actions -->
+    <script id="hospitals-data" type="application/json">{{ hospitals|tojson }}</script>
+
+    <!-- Hospital Detail Modal -->
+    <div class="modal fade" id="hospitalModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Hospital Details</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            {# Flask Dynamic: {{ hospital details }} #}
+            <input type="hidden" id="modal-hospital-id" />
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Hospital Name</label
+                ><input
+                  type="text"
+                  class="form-control"
+                  id="modal-hospital-name"
+                />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Registration #</label
+                ><input
+                  type="text"
+                  class="form-control"
+                  id="modal-reg-number"
+                />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">City</label
+                ><input type="text" class="form-control" id="modal-city" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Status</label
+                ><select class="form-select" id="modal-status">
+                  <option value="approved">Approved</option>
+                  <option value="pending">Pending</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="suspended">Suspended</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Address</label
+                ><textarea
+                  class="form-control"
+                  id="modal-address"
+                  rows="2"
+                ></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone</label
+                ><input type="text" class="form-control" id="modal-phone" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email</label
+                ><input type="email" class="form-control" id="modal-email" />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+              Close</button
+            ><button class="btn btn-primary" onclick="saveHospitalChanges()">
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
-<script src="{{ url_for('static', filename='js/system-admin.js') }}"></script>
-<script>
-  document.addEventListener('DOMContentLoaded',()=>{
-    if(typeof MediChain !== 'undefined') {
-      MediChain.initTableSort();
-      MediChain.initPagination({pageSize:10});
-    }
-  });
-
-  function saveHospitalChanges() {
-    if(typeof Swal !== 'undefined') {
-      Swal.fire({
-        icon: 'success',
-        title: 'Changes Saved',
-        text: 'Hospital details have been updated successfully.',
-        timer: 1500,
-        showConfirmButton: false
-      }).then(() => {
-        const modal = bootstrap.Modal.getInstance(document.getElementById('hospitalModal'));
-        if(modal) modal.hide();
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/system-admin.js') }}"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        if (typeof MediChain !== "undefined") {
+          MediChain.initTableSort();
+          MediChain.initPagination({ pageSize: 10 });
+        }
+        // Bind action buttons
+        if (typeof MediChainHospitals !== "undefined") {
+          MediChainHospitals.bindActions();
+        }
       });
-    }
-  }
-</script>
-</body>
+    </script>
+  </body>
 </html>

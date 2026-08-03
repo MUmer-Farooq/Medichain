@@ -36,7 +36,7 @@
       <a href="dashboard.html" class="nav-item-link"><i class="fas fa-chart-pie nav-icon"></i><span
           class="nav-text">Dashboard</span></a>
       <a href="hospital_requests.html" class="nav-item-link"><i class="fas fa-clock nav-icon"></i><span
-          class="nav-text">Hospital Requests</span><span class="nav-badge danger">8</span></a>
+          class="nav-text">Hospital Requests</span><span class="nav-badge danger">{{ pending_count }}</span></a>
       <a href="hospitals.html" class="nav-item-link"><i class="fas fa-hospital nav-icon"></i><span
           class="nav-text">Manage Hospitals</span></a>
       <div class="nav-section-label">Analytics</div>
@@ -77,16 +77,16 @@
     <div class="page-header">
       <div class="page-header-left">
         <h4><i class="fas fa-chart-line me-2 text-primary"></i>System Analytics</h4>
-        <p>Network-wide statistics and trends across all hospitals</p>
+        <p>Network-wide hospital registration statistics and trends</p>
       </div>
       <div class="page-header-right">
-        <select class="form-select form-select-sm" style="width:auto;">
-          <option>Last 12 Months</option>
-          <option>Last 6 Months</option>
-          <option>Last 30 Days</option>
-          <option>This Week</option>
+        <select class="form-select form-select-sm" style="width:auto;" id="analytics-period" onchange="onAnalyticsPeriodChange(this)">
+          <option value="all" {% if period == 'all' %}selected{% endif %}>All Time</option>
+          <option value="12m" {% if period == '12m' %}selected{% endif %}>Last 12 Months</option>
+          <option value="6m" {% if period == '6m' %}selected{% endif %}>Last 6 Months</option>
+          <option value="30d" {% if period == '30d' %}selected{% endif %}>Last 30 Days</option>
         </select>
-        <button class="btn btn-outline-secondary btn-sm"><i class="fas fa-download me-1"></i>Export Report</button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="exportAnalyticsReport()"><i class="fas fa-download me-1"></i>Export Report</button>
       </div>
     </div>
 
@@ -94,34 +94,34 @@
     {# Flask Dynamic: {{ kpi_stats }} #}
     <div class="stats-grid mb-4">
       <div class="stat-card primary">
-        <div class="stat-icon"><i class="fas fa-users"></i></div>
-        <div class="stat-value">94,218</div>
-        <div class="stat-label">Total Patients</div>
-        <div class="stat-change up"><i class="fas fa-arrow-up"></i>+8.4% vs last period</div>
+        <div class="stat-icon"><i class="fas fa-hospital"></i></div>
+        <div class="stat-value">{{ total_hospitals }}</div>
+        <div class="stat-label">Total Hospitals</div>
+        <div class="stat-change up"><i class="fas fa-hospital"></i>registered on network</div>
       </div>
       <div class="stat-card success">
-        <div class="stat-icon"><i class="fas fa-file-medical"></i></div>
-        <div class="stat-value">410,542</div>
-        <div class="stat-label">Total Records</div>
-        <div class="stat-change up"><i class="fas fa-arrow-up"></i>+12.1% vs last period</div>
-      </div>
-      <div class="stat-card info">
-        <div class="stat-icon"><i class="fas fa-hospital"></i></div>
-        <div class="stat-value">58</div>
-        <div class="stat-label">Active Hospitals</div>
-        <div class="stat-change up"><i class="fas fa-arrow-up"></i>+3 this month</div>
+        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-value">{{ approved_count }}</div>
+        <div class="stat-label">Approved Hospitals</div>
+        <div class="stat-change up"><i class="fas fa-arrow-up"></i>active on network</div>
       </div>
       <div class="stat-card warning">
-        <div class="stat-icon"><i class="fas fa-user-md"></i></div>
-        <div class="stat-value">1,240</div>
-        <div class="stat-label">Doctors</div>
-        <div class="stat-change up"><i class="fas fa-arrow-up"></i>+18 this week</div>
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-value">{{ pending_count }}</div>
+        <div class="stat-label">Pending Hospitals</div>
+        <div class="stat-change down"><i class="fas fa-fire"></i>awaiting review</div>
       </div>
       <div class="stat-card danger">
-        <div class="stat-icon"><i class="fas fa-exchange-alt"></i></div>
-        <div class="stat-value">94,218</div>
-        <div class="stat-label">Transactions</div>
-        <div class="stat-change up"><i class="fas fa-arrow-up"></i>+5.2% vs last period</div>
+        <div class="stat-icon"><i class="fas fa-ban"></i></div>
+        <div class="stat-value">{{ rejected_count }}</div>
+        <div class="stat-label">Rejected Hospitals</div>
+        <div class="stat-change down"><i class="fas fa-times-circle"></i>not approved</div>
+      </div>
+      <div class="stat-card info">
+        <div class="stat-icon"><i class="fas fa-user-md"></i></div>
+        <div class="stat-value">{{ doctor_count }}</div>
+        <div class="stat-label">Doctors</div>
+        <div class="stat-change up"><i class="fas fa-users"></i>registered users</div>
       </div>
     </div>
 
@@ -129,18 +129,18 @@
     <div class="row g-4 mb-4">
       <div class="col-lg-8">
         <div class="mc-card h-100">
-          <div class="card-header"><span><i class="fas fa-chart-line text-primary me-2"></i>Patient Growth Trend</span>
+          <div class="card-header"><span><i class="fas fa-chart-line text-primary me-2"></i>Hospital Registrations Over Time</span>
           </div>
           <div class="card-body">
-            <div class="chart-container" style="height:300px;"><canvas id="patientGrowthChart"></canvas></div>
+            <div class="chart-container" style="height:300px;"><canvas id="registrationChart"></canvas></div>
           </div>
         </div>
       </div>
       <div class="col-lg-4">
         <div class="mc-card h-100">
-          <div class="card-header"><span><i class="fas fa-chart-pie text-success me-2"></i>Records by Type</span></div>
+          <div class="card-header"><span><i class="fas fa-chart-pie text-success me-2"></i>Hospital Status Distribution</span></div>
           <div class="card-body">
-            <div class="chart-container" style="height:300px;"><canvas id="recordsByTypeChart"></canvas></div>
+            <div class="chart-container" style="height:300px;"><canvas id="statusChart"></canvas></div>
           </div>
         </div>
       </div>
@@ -149,86 +149,95 @@
     <div class="row g-4 mb-4">
       <div class="col-lg-6">
         <div class="mc-card">
-          <div class="card-header"><span><i class="fas fa-chart-bar text-info me-2"></i>Weekly Records Activity</span>
+          <div class="card-header"><span><i class="fas fa-chart-bar text-info me-2"></i>Hospitals by City</span>
           </div>
           <div class="card-body">
-            <div class="chart-container" style="height:240px;"><canvas id="weeklyActivityChart"></canvas></div>
+            <div class="chart-container" style="height:240px;"><canvas id="cityChart"></canvas></div>
           </div>
         </div>
       </div>
       <div class="col-lg-6">
         <div class="mc-card">
-          <div class="card-header"><span><i class="fas fa-radar-chart text-purple me-2"></i>Access Patterns</span></div>
+          <div class="card-header"><span><i class="fas fa-users text-purple me-2"></i>Registered Users by Role</span></div>
           <div class="card-body">
-            <div class="chart-container" style="height:240px;"><canvas id="accessRadarChart"></canvas></div>
+            <div class="chart-container" style="height:240px;"><canvas id="roleChart"></canvas></div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="row g-4">
-      <div class="col-lg-4">
-        <div class="mc-card">
-          <div class="card-header"><span><i class="fas fa-venus-mars text-pink me-2"></i>Gender Distribution</span>
-          </div>
-          <div class="card-body">
-            <div class="chart-container" style="height:200px;"><canvas id="genderChart"></canvas></div>
-          </div>
-        </div>
+    <!-- Recent Hospitals Table -->
+    <div class="mc-card">
+      <div class="card-header">
+        <span><i class="fas fa-list text-primary me-2"></i>Recently Registered Hospitals</span>
+        <a href="hospitals.html" class="btn btn-sm btn-outline-primary">View All</a>
       </div>
-      <div class="col-lg-8">
-        <div class="mc-card">
-          <div class="card-header"><span><i class="fas fa-chart-bar text-warning me-2"></i>Age Distribution</span></div>
-          <div class="card-body">
-            <div class="chart-container" style="height:200px;"><canvas id="ageDistributionChart"></canvas></div>
-          </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="mc-table" id="mc-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Hospital Name</th>
+                <th>Registration #</th>
+                <th>City</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if recent_hospitals %}
+              {% for hospital in recent_hospitals %}
+              <tr>
+                <td>
+                  {% if loop.index == 1 %}
+                  <span class="badge" style="background:#ffd700;color:#000;">🥇 1</span>
+                  {% elif loop.index == 2 %}
+                  <span class="badge" style="background:#c0c0c0;color:#000;">🥈 2</span>
+                  {% elif loop.index == 3 %}
+                  <span class="badge" style="background:#cd7f32;color:#fff;">🥉 3</span>
+                  {% else %}
+                  {{ loop.index }}
+                  {% endif %}
+                </td>
+                <td class="fw-600">{{ hospital.hospital_name }}</td>
+                <td>{{ hospital.registration_number }}</td>
+                <td>{{ hospital.city }}</td>
+                <td>{{ hospital.phone }}</td>
+                <td>{{ hospital.hospital_email }}</td>
+                <td>
+                  <span class="badge badge-{% if hospital.status == 'approved' %}success{% elif hospital.status == 'pending' %}warning{% elif hospital.status == 'suspended' %}secondary{% else %}danger{% endif %}-soft">
+                    {{ hospital.status|capitalize }}
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+              {% else %}
+              <tr>
+                <td colspan="7" class="text-center text-muted">
+                  No hospitals registered.
+                </td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-
-    <!-- Top Hospitals Table -->
-    <tbody>
-
-      {% if recent_activities %}
-
-      {% for hospital in recent_activities %}
-
-      <tr>
-
-        <td>
-          {% if loop.index == 1 %}
-          <span class="badge" style="background:#ffd700;color:#000;">🥇 1</span>
-          {% elif loop.index == 2 %}
-          <span class="badge" style="background:#c0c0c0;color:#000;">🥈 2</span>
-          {% elif loop.index == 3 %}
-          <span class="badge" style="background:#cd7f32;color:#fff;">🥉 3</span>
-          {% else %}
-          {{ loop.index }}
-          {% endif %}
-        </td>
-
-        <td class="fw-600">{{ hospital.hospital_name }}</td>
-        <td>{{ hospital.registration_number }}</td>
-        <td>{{ hospital.city }}</td>
-        <td>{{ hospital.phone }}</td>
-        <td>{{ hospital.hospital_email }}</td>
-
-      </tr>
-
-      {% endfor %}
-
-      {% else %}
-
-      <tr>
-        <td colspan="6" class="text-center">
-          No hospitals registered.
-        </td>
-      </tr>
-
-      {% endif %}
-
-    </tbody>
   </main>
+
+  <!-- Analytics Data for Charts -->
+  <script id="analytics-data" type="application/json">
+    {
+      "reg_months": {{ reg_months|tojson }},
+      "reg_counts": {{ reg_counts|tojson }},
+      "status_distribution": {{ status_distribution|tojson }},
+      "cities": {{ cities|tojson }},
+      "city_counts": {{ city_counts|tojson }},
+"roles": {{ [["Doctors", doctor_count], ["Hospital Admins", hospital_admin_count], ["Patients", patient_count], ["System Admins", system_admin_count]]|tojson }}
+    }
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
