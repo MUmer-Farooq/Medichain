@@ -228,26 +228,47 @@ function initWeeklyActivityChart(canvasId = 'weeklyActivityChart') {
   const ctx = document.getElementById(canvasId);
   if (!ctx || typeof Chart === 'undefined') return;
 
-  /* <!-- Flask Dynamic Route: /api/analytics/weekly-activity --> */
+  // Read real patient/doctor activity data injected by the Flask template
+  const dataEl = document.getElementById('weekly-activity-data');
+  let activityData = null;
+  if (dataEl) {
+    try {
+      activityData = JSON.parse(dataEl.textContent);
+    } catch (e) {
+      activityData = null;
+    }
+  }
+
+  const labels   = (activityData && activityData.labels)   || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const patients = (activityData && activityData.patients) || [];
+  const doctors  = (activityData && activityData.doctors)  || [];
+
+  // Normalize to 7 values; missing/empty -> 0
+  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const norm = (arr) => weekDays.map((d, i) => {
+    const v = parseInt(arr[i], 10);
+    return isNaN(v) ? 0 : v;
+  });
+
   return new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      labels: labels,
       datasets: [
         {
-          label: 'Records Added',
-          data: [42, 58, 51, 67, 72, 28, 15],
-          backgroundColor: MC_COLORS.primary + 'CC',
-          borderColor:     MC_COLORS.primary,
+          label: 'Patients Registered',
+          data: norm(patients),
+          backgroundColor: MC_COLORS.danger + 'CC',
+          borderColor:     MC_COLORS.danger,
           borderWidth: 2,
           borderRadius: 6,
           borderSkipped: false,
         },
         {
-          label: 'Access Requests',
-          data: [18, 24, 22, 30, 28, 10, 5],
-          backgroundColor: MC_COLORS.secondary + 'CC',
-          borderColor:     MC_COLORS.secondary,
+          label: 'Doctors Registered',
+          data: norm(doctors),
+          backgroundColor: MC_COLORS.info + 'CC',
+          borderColor:     MC_COLORS.info,
           borderWidth: 2,
           borderRadius: 6,
           borderSkipped: false,

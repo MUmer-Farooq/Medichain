@@ -20,7 +20,6 @@ db = mysql.connector.connect(
     database="registration"
 )
 
-cursor = db.cursor()
 print("Database connection established successfully.")
 
 
@@ -330,7 +329,55 @@ def system_admin_dashboard():
         suspended_count = cursor.fetchone()["cnt"]
         cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='rejected'")
         rejected_count = cursor.fetchone()["cnt"]
-        
+
+# ---- Total Records KPI (real DB count, only if medical_records table exists) ----
+        cursor.execute(
+            "SELECT COUNT(*) as cnt FROM information_schema.tables "
+            "WHERE table_schema = DATABASE() AND table_name = 'medical_records'"
+        )
+        records_table_exists = cursor.fetchone()["cnt"] > 0
+        if records_table_exists:
+            cursor.execute("SELECT COUNT(*) as cnt FROM medical_records")
+            total_records = cursor.fetchone()["cnt"]
+        else:
+            total_records = None
+
+        # ---- Patient / Doctor KPIs (real DB counts) ----
+        cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE role='patient'")
+        total_patients = cursor.fetchone()["cnt"]
+        cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE role='doctor'")
+        total_doctors = cursor.fetchone()["cnt"]
+
+        # Patients / doctors registered in the last 7 days (for stat change badges)
+        cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE role='patient' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)")
+        patients_this_week = cursor.fetchone()["cnt"]
+        cursor.execute("SELECT COUNT(*) as cnt FROM users WHERE role='doctor' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)")
+        doctors_this_week = cursor.fetchone()["cnt"]
+
+        # ---- Weekly Activity: patients/doctors registered per weekday (Mon-Sun) ----
+        weekday_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        # MySQL WEEKDAY: 0=Mon ... 6=Sun
+        cursor.execute(
+            "SELECT WEEKDAY(created_at) as wd, role, COUNT(*) as cnt "
+            "FROM users "
+            "WHERE role IN ('patient','doctor') "
+            "GROUP BY WEEKDAY(created_at), role"
+        )
+        weekly_rows = cursor.fetchall()
+        new_patients_week = [0] * 7
+        new_doctors_week = [0] * 7
+        for row in weekly_rows:
+            idx = int(row["wd"])
+            if row["role"] == "patient":
+                new_patients_week[idx] = int(row["cnt"])
+            elif row["role"] == "doctor":
+                new_doctors_week[idx] = int(row["cnt"])
+        weekly_activity = {
+            "labels": weekday_labels,
+            "patients": new_patients_week,
+            "doctors": new_doctors_week,
+        }
+
         cursor.execute("SELECT * FROM hospitals WHERE status='pending' ORDER BY created_at DESC LIMIT 5")
         pending_requests = cursor.fetchall()
         
@@ -342,11 +389,18 @@ def system_admin_dashboard():
                                pending_requests_count=pending_requests_count,
                                suspended_count=suspended_count,
                                rejected_count=rejected_count,
+                               total_patients=total_patients,
+                               total_doctors=total_doctors,
+                               total_records=total_records,
+                               patients_this_week=patients_this_week,
+                               doctors_this_week=doctors_this_week,
+                               weekly_activity=weekly_activity,
                                pending_requests=pending_requests,
                                recent_activities=recent_activities)
     except Exception as e:
         print("DB Error:", e)
-        return render_template("system-admin/dashboard.html", active_hospitals=0, pending_requests_count=0, suspended_count=0, rejected_count=0, pending_requests=[], recent_activities=[])
+        weekly_activity = {"labels": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "patients": [0]*7, "doctors": [0]*7}
+        return render_template("system-admin/dashboard.html", active_hospitals=0, pending_requests_count=0, suspended_count=0, rejected_count=0, total_patients=0, total_doctors=0, total_records=None, patients_this_week=0, doctors_this_week=0, weekly_activity=weekly_activity, pending_requests=[], recent_activities=[])
 
 @app.route("/system-admin/hospital_requests")
 @app.route("/system-admin/hospital_requests.html")
@@ -374,9 +428,8 @@ def system_admin_analytics():
     if period not in ("all", "12m", "6m", "30d"):
         period = "all"
 
-    # Build a SQL date filter based on the selected period
+# Build a SQL date filter based on the selected period
     date_filter = ""
-    period_params = []
     if period == "12m":
         date_filter = "WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)"
     elif period == "6m":
@@ -590,6 +643,20 @@ def reject_hospital(hospital_id):
     return redirect(url_for("system_admin_hospital_requests"))
 
 
+@app.route("/system-admin/settings")
+@app.route("/system-admin/settings.html")
+def system_admin_settings():
+    if session.get("user_role") != "system_admin":
+        return redirect(url_for("login"))
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT COUNT(*) as cnt FROM hospitals WHERE status='pending'")
+        pending_requests_count = cursor.fetchone()["cnt"]
+        return render_template("system-admin/settings.html", pending_requests_count=pending_requests_count)
+    except Exception as e:
+        return render_template("system-admin/settings.html", pending_requests_count=0)
+
 from flask import jsonify
 
 # ---- JSON API for Manage Hospitals ----
@@ -739,7 +806,8 @@ for html in templates_dir.rglob("*.html"):
         "system-admin/dashboard.html",
         "system-admin/hospital_requests.html",
         "system-admin/hospitals.html",
-        "system-admin/analytics.html"
+        "system-admin/analytics.html",
+        "system-admin/settings.html"
     ]:
         continue
 

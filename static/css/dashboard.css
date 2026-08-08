@@ -466,6 +466,8 @@
 .chart-container {
   position: relative;
   width: 100%;
+  background-color: #ffffff;
+  border-radius: var(--radius-sm);
 }
 
 .chart-legend {

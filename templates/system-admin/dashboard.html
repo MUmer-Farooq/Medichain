@@ -1,269 +1,332 @@
 <!DOCTYPE html>
 {# Flask Dynamic Route: /system-admin/dashboard #}
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>System Admin Dashboard — MediChain</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="/static/css/dashboard.css" />
+  <link rel="stylesheet" href="/static/css/responsive.css" />
 </head>
+
 <body class="page-bg">
-<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebarMobile()"></div>
+  <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebarMobile()"></div>
 
-<!-- ===== SIDEBAR ===== -->
-<aside class="mc-sidebar" id="mc-sidebar">
-  <a href="dashboard.html" class="sidebar-brand">
-    <div class="brand-icon"><i class="fas fa-heartbeat"></i></div>
-    <div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Blockchain Health</span></div>
-  </a>
-  <div class="sidebar-user">
-    <div class="user-avatar">SA</div>
-    <div class="user-info"><div class="user-name">System Admin</div><div class="user-role">Super Administrator</div></div>
-  </div>
-  <nav class="sidebar-nav">
-    <div class="nav-section-label">Main</div>
-    <a href="dashboard.html" class="nav-item-link active"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
-    <a href="hospital_requests.html" class="nav-item-link"><i class="fas fa-clock nav-icon"></i><span class="nav-text">Hospital Requests</span><span class="nav-badge danger">{{ pending_requests_count }}</span></a>
-    <a href="hospitals.html" class="nav-item-link"><i class="fas fa-hospital nav-icon"></i><span class="nav-text">Manage Hospitals</span></a>
-    <div class="nav-section-label">Analytics</div>
-    <a href="analytics.html" class="nav-item-link"><i class="fas fa-chart-line nav-icon"></i><span class="nav-text">Analytics</span></a>
-
-    <div class="nav-section-label">System</div>
-    <a href="settings.html" class="nav-item-link"><i class="fas fa-cog nav-icon"></i><span class="nav-text">Settings</span></a>
-    <a href="/logout" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
-  </nav>
-  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>v1.0.0 — Network Online</span></div></div>
-</aside>
-
-<!-- ===== TOPBAR ===== -->
-<header class="mc-topbar" id="mc-topbar">
-  <div class="topbar-left">
-    <div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div>
-    <div class="topbar-breadcrumb">
-      <span>MediChain</span><span class="bc-sep">/</span><span class="bc-current">Dashboard</span>
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="mc-sidebar" id="mc-sidebar">
+    <a href="dashboard.html" class="sidebar-brand">
+      <div class="brand-icon"><i class="fas fa-heartbeat"></i></div>
+      <div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Blockchain
+          Health</span></div>
+    </a>
+    <div class="sidebar-user">
+      <div class="user-avatar">SA</div>
+      <div class="user-info">
+        <div class="user-name">System Admin</div>
+        <div class="user-role">Super Administrator</div>
+      </div>
     </div>
-  </div>
-  <div class="topbar-right">
-    <div class="topbar-search">
-      <i class="fas fa-search search-icon"></i>
-      <input type="search" placeholder="Search hospitals, records…"/>
-    </div>
-    <div class="dropdown">
-      <a class="topbar-btn" data-bs-toggle="dropdown"><i class="fas fa-bell"></i><span class="notif-count">8</span></a>
-      <div class="dropdown-menu dropdown-menu-end notif-dropdown p-0">
-        <div class="notif-header"><h6>Notifications</h6><a href="#" class="text-primary fs-12">Mark all read</a></div>
-        <div class="notif-list">
-          <div class="notif-item unread"><div class="notif-icon" style="background:#ffebee;color:var(--danger);"><i class="fas fa-hospital"></i></div><div><div class="notif-text"><strong>New hospital request</strong> — General Hospital Penang</div><div class="notif-time">5 mins ago</div></div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a href="dashboard.html" class="nav-item-link active"><i class="fas fa-chart-pie nav-icon"></i><span
+          class="nav-text">Dashboard</span></a>
+      <a href="hospital_requests.html" class="nav-item-link"><i class="fas fa-clock nav-icon"></i><span
+          class="nav-text">Hospital Requests</span><span class="nav-badge danger">{{ pending_requests_count
+          }}</span></a>
+      <a href="hospitals.html" class="nav-item-link"><i class="fas fa-hospital nav-icon"></i><span
+          class="nav-text">Manage Hospitals</span></a>
+      <div class="nav-section-label">Analytics</div>
+      <a href="analytics.html" class="nav-item-link"><i class="fas fa-chart-line nav-icon"></i><span
+          class="nav-text">Analytics</span></a>
 
-          <div class="notif-item"><div class="notif-icon" style="background:#e8f5e9;color:var(--success);"><i class="fas fa-check-circle"></i></div><div><div class="notif-text">Hospital KL Specialist approved</div><div class="notif-time">1 hour ago</div></div></div>
+      <div class="nav-section-label">System</div>
+      <a href="/logout" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign
+          Out</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="version-badge">
+        <div class="version-dot"></div><span>v1.0.0 — Network Online</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== TOPBAR ===== -->
+  <header class="mc-topbar" id="mc-topbar">
+    <div class="topbar-left">
+      <div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div>
+      <div class="topbar-breadcrumb">
+        <span>MediChain</span><span class="bc-sep">/</span><span class="bc-current">Dashboard</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+
+
+
+      <div class="dropdown">
+        <div class="user-dropdown-btn" data-bs-toggle="dropdown">
+          <div class="ud-avatar">SA</div>
+          <span class="ud-name">System Admin</span>
+          <i class="fas fa-chevron-down fs-11 text-muted"></i>
         </div>
-        <div class="notif-footer"><a href="#" class="text-primary fs-12">View all notifications</a></div>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="settings.html"><i class="fas fa-user-cog"></i>Profile Settings</a></li>
+          <li>
+            <hr class="dropdown-divider" />
+          </li>
+          <li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li>
+        </ul>
       </div>
     </div>
-    <a class="topbar-btn" href="settings.html" data-bs-toggle="tooltip" title="Settings"><i class="fas fa-cog"></i></a>
-    <div class="dropdown">
-      <div class="user-dropdown-btn" data-bs-toggle="dropdown">
-        <div class="ud-avatar">SA</div>
-        <span class="ud-name">System Admin</span>
-        <i class="fas fa-chevron-down fs-11 text-muted"></i>
-      </div>
-      <ul class="dropdown-menu dropdown-menu-end">
-        <li><a class="dropdown-item" href="settings.html"><i class="fas fa-user-cog"></i>Profile Settings</a></li>
-        <li><hr class="dropdown-divider"/></li>
-        <li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li>
-      </ul>
-    </div>
-  </div>
-</header>
+  </header>
 
-<!-- ===== MAIN CONTENT ===== -->
-<main class="mc-content">
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="mc-content">
 
-  <!-- Welcome Banner -->
-  {# Flask: Dynamic greeting: Good {{ time_of_day }}, {{ current_user.name }} #}
-  <div class="welcome-banner">
-    <div class="row align-items-center">
-      <div class="col-lg-7">
-        <h3><i class="fas fa-wave-square me-2"></i>Good Morning, Admin</h3>
-        <p>Here's what's happening in the MediChain network today — <strong>{{ pending_requests_count }} pending hospital requests</strong> require your attention.</p>
-        <div class="mt-3">
-          <a href="hospital_requests.html" class="btn btn-sm me-2" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);">
-            <i class="fas fa-clock me-1"></i>Review Requests ({{ pending_requests_count }})
-          </a>
-
-        </div>
-      </div>
-      <div class="col-lg-5 d-none d-lg-flex justify-content-end gap-3">
-        {# Flask Dynamic: {{ network_stats }} #}
-        <div class="banner-stat"><span class="val" data-count="{{ active_hospitals }}">{{ active_hospitals }}</span><span class="lbl">Hospitals</span></div>
-
-        <div class="banner-stat"><span class="val" data-count="410">410K</span><span class="lbl">Records</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Stats Grid -->
-  {# Flask Dynamic: {{ stats }} #}
-  <div class="stats-grid">
-    <div class="stat-card primary" data-aos="fade-up">
-      <div class="stat-icon"><i class="fas fa-hospital"></i></div>
-      <div class="stat-value" data-count="{{ active_hospitals }}">{{ active_hospitals }}</div>
-      <div class="stat-label">Active Hospitals</div>
-      <div class="stat-change up"><i class="fas fa-arrow-up"></i>+3 this month</div>
-    </div>
-    <div class="stat-card warning" data-aos="fade-up" data-aos-delay="50">
-      <div class="stat-icon"><i class="fas fa-clock"></i></div>
-      <div class="stat-value" data-count="{{ pending_requests_count }}">{{ pending_requests_count }}</div>
-      <div class="stat-label">Pending Requests</div>
-      <div class="stat-change down"><i class="fas fa-arrow-up"></i>+2 today</div>
-    </div>
-    <div class="stat-card success" data-aos="fade-up" data-aos-delay="100">
-      <div class="stat-icon"><i class="fas fa-file-medical"></i></div>
-      <div class="stat-value" data-count="410">410K</div>
-      <div class="stat-label">Total Records</div>
-      <div class="stat-change up"><i class="fas fa-arrow-up"></i>+1.2K today</div>
-    </div>
-    <div class="stat-card info" data-aos="fade-up" data-aos-delay="150">
-      <div class="stat-icon"><i class="fas fa-user-md"></i></div>
-      <div class="stat-value" data-count="1240">1,240</div>
-      <div class="stat-label">Registered Doctors</div>
-      <div class="stat-change up"><i class="fas fa-arrow-up"></i>+18 this week</div>
-    </div>
-
-    <div class="stat-card danger" data-aos="fade-up" data-aos-delay="250">
-      <div class="stat-icon"><i class="fas fa-users"></i></div>
-      <div class="stat-value" data-count="94218">94,218</div>
-      <div class="stat-label">Total Patients</div>
-      <div class="stat-change up"><i class="fas fa-arrow-up"></i>+285 today</div>
-    </div>
-  </div>
-
-  <!-- Charts Row -->
-  <div class="row g-4 mb-4">
-    <div class="col-lg-8" data-aos="fade-up">
-      <div class="mc-card h-100">
-        <div class="card-header">
-          <span><i class="fas fa-chart-line text-primary me-2"></i>Patient Growth</span>
-          <select class="form-select form-select-sm" style="width:auto;" onchange="/* Flask Dynamic Route: /api/analytics/patient-growth?period= */">
-            <option>This Year</option><option>Last Year</option><option>Last 6 Months</option>
-          </select>
-        </div>
-        <div class="card-body"><div class="chart-container" style="height:280px;"><canvas id="patientGrowthChart"></canvas></div></div>
-      </div>
-    </div>
-    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
-      <div class="mc-card h-100">
-        <div class="card-header"><span><i class="fas fa-hospital text-success me-2"></i>Hospital Status</span></div>
-<div class="card-body">
-          <div class="chart-container" style="height:200px;"><canvas id="hospitalStatusChart" data-active="{{ active_hospitals }}" data-pending="{{ pending_requests_count }}" data-suspended="{{ suspended_count }}" data-rejected="{{ rejected_count }}"></canvas></div>
+    <!-- Welcome Banner -->
+    {# Flask: Dynamic greeting: Good {{ time_of_day }}, {{ current_user.name }} #}
+    <div class="welcome-banner">
+      <div class="row align-items-center">
+        <div class="col-lg-7">
+          <h3><i class="fas fa-wave-square me-2"></i>Good Morning, Admin</h3>
+          <p>Here's what's happening in the MediChain network today — <strong>{{ pending_requests_count }} pending
+              hospital requests</strong> require your attention.</p>
           <div class="mt-3">
-            <div class="d-flex justify-content-between fs-12 mb-1"><span class="d-flex align-items-center gap-1"><span style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;"></span>Active</span><strong>{{ active_hospitals }}</strong></div>
-            <div class="d-flex justify-content-between fs-12 mb-1"><span class="d-flex align-items-center gap-1"><span style="width:8px;height:8px;border-radius:50%;background:var(--warning);display:inline-block;"></span>Pending</span><strong>{{ pending_requests_count }}</strong></div>
-            <div class="d-flex justify-content-between fs-12"><span class="d-flex align-items-center gap-1"><span style="width:8px;height:8px;border-radius:50%;background:var(--danger);display:inline-block;"></span>Suspended</span><strong>{{ suspended_count }}</strong></div>
+            <a href="hospital_requests.html" class="btn btn-sm me-2"
+              style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);">
+              <i class="fas fa-clock me-1"></i>Review Requests ({{ pending_requests_count }})
+            </a>
+
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+        <div class="col-lg-5 d-none d-lg-flex justify-content-end gap-3">
+          {# Flask Dynamic: {{ network_stats }} #}
+          <div class="banner-stat"><span class="val" data-count="{{ active_hospitals }}">{{ active_hospitals
+              }}</span><span class="lbl">Hospitals</span></div>
 
-  <!-- Quick Actions + Recent Activity + Pending Requests -->
-  <div class="row g-4 mb-4">
-    <!-- Quick Actions -->
-    <div class="col-lg-3" data-aos="fade-up">
-      <div class="mc-card">
-        <div class="card-header"><span><i class="fas fa-bolt text-warning me-2"></i>Quick Actions</span></div>
-        <div class="card-body">
-          <div class="row g-2">
-            <div class="col-6"><a href="hospital_requests.html" class="quick-action"><div class="qa-icon"><i class="fas fa-check-circle"></i></div>Approve Hospital</a></div>
-            <div class="col-6"><a href="hospitals.html" class="quick-action"><div class="qa-icon"><i class="fas fa-hospital"></i></div>Manage Hospitals</a></div>
-            <div class="col-6"><a href="analytics.html" class="quick-action"><div class="qa-icon"><i class="fas fa-chart-bar"></i></div>View Analytics</a></div>
-            <div class="col-6"><a href="settings.html" class="quick-action"><div class="qa-icon"><i class="fas fa-cog"></i></div>System Settings</a></div>
-          </div>
+          {% if total_records is not none %}
+          <div class="banner-stat"><span class="val" data-count="{{ total_records }}">{{ total_records }}</span><span
+              class="lbl">Records</span></div>
+          {% else %}
+          <div class="banner-stat"><span class="val">N/A</span><span class="lbl">Records</span></div>
+          {% endif %}
         </div>
       </div>
     </div>
 
-    <!-- Pending Hospital Requests -->
-    <div class="col-lg-5" data-aos="fade-up" data-aos-delay="100">
-      <div class="mc-card">
-        <div class="card-header">
-          <span><i class="fas fa-clock text-warning me-2"></i>Pending Requests</span>
-          <a href="hospital_requests.html" class="btn btn-sm btn-outline-primary">View All</a>
+    <!-- Stats Grid -->
+    {# Flask Dynamic: {{ stats }} #}
+    <div class="stats-grid">
+      <div class="stat-card primary" data-aos="fade-up">
+        <div class="stat-icon"><i class="fas fa-hospital"></i></div>
+        <div class="stat-value" data-count="{{ active_hospitals }}">{{ active_hospitals }}</div>
+        <div class="stat-label">Active Hospitals</div>
+      </div>
+      <div class="stat-card warning" data-aos="fade-up" data-aos-delay="50">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-value" data-count="{{ pending_requests_count }}">{{ pending_requests_count }}</div>
+        <div class="stat-label">Pending Requests</div>
+      </div>
+      <div class="stat-card success" data-aos="fade-up" data-aos-delay="100">
+        <div class="stat-icon"><i class="fas fa-file-medical"></i></div>
+        {% if total_records is not none %}
+        <div class="stat-value" data-count="{{ total_records }}">{{ total_records }}</div>
+        {% else %}
+        <div class="stat-value">N/A</div>
+        {% endif %}
+        <div class="stat-label">Total Records</div>
+      </div>
+      <div class="stat-card info" data-aos="fade-up" data-aos-delay="150">
+        <div class="stat-icon"><i class="fas fa-user-md"></i></div>
+        <div class="stat-value" data-count="{{ total_doctors }}">{{ total_doctors }}</div>
+        <div class="stat-label">Registered Doctors</div>
+      </div>
+
+      <div class="stat-card danger" data-aos="fade-up" data-aos-delay="250">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-value" data-count="{{ total_patients }}">{{ total_patients }}</div>
+        <div class="stat-label">Total Patients</div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-8" data-aos="fade-up">
+        <div class="mc-card h-100">
+          <div class="card-header">
+            <span><i class="fas fa-chart-line text-primary me-2"></i>Patient Growth</span>
+            <select class="form-select form-select-sm" style="width:auto;"
+              onchange="/* Flask Dynamic Route: /api/analytics/patient-growth?period= */">
+              <option>This Year</option>
+              <option>Last Year</option>
+              <option>Last 6 Months</option>
+            </select>
+          </div>
+          <div class="card-body">
+            <div class="chart-container" style="height:280px;"><canvas id="patientGrowthChart"></canvas></div>
+          </div>
         </div>
-        <div class="card-body p-0">
-          {# Flask Dynamic: {% for req in pending_requests[:5] %} #}
-          <div class="list-group list-group-flush">
-            {% for req in pending_requests %}
-            <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-3 border-0 border-bottom">
-              <div><div class="fw-600 fs-13">{{ req.hospital_name }}</div><div class="text-muted fs-12"><i class="fas fa-map-marker-alt me-1"></i>{{ req.city }} — {{ req.created_at.strftime('%Y-%m-%d') if req.created_at else '' }}</div></div>
-              <div class="d-flex gap-1">
-                <form action="/system-admin/approve_hospital/{{ req.hospital_id }}" method="POST" style="display:inline;">
-                  <button class="btn btn-sm btn-success btn-icon" title="Approve"><i class="fas fa-check fs-11"></i></button>
-                </form>
-                <form action="/system-admin/reject_hospital/{{ req.hospital_id }}" method="POST" style="display:inline;">
-                  <button class="btn btn-sm btn-danger btn-icon" title="Reject"><i class="fas fa-times fs-11"></i></button>
-                </form>
+      </div>
+      <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+        <div class="mc-card h-100">
+          <div class="card-header"><span><i class="fas fa-hospital text-success me-2"></i>Hospital Status</span></div>
+          <div class="card-body">
+            <div class="chart-container" style="height:200px;"><canvas id="hospitalStatusChart"
+                data-active="{{ active_hospitals }}" data-pending="{{ pending_requests_count }}"
+                data-suspended="{{ suspended_count }}" data-rejected="{{ rejected_count }}"></canvas></div>
+            <div class="mt-3">
+              <div class="d-flex justify-content-between fs-12 mb-1"><span class="d-flex align-items-center gap-1"><span
+                    style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;"></span>Active</span><strong>{{
+                  active_hospitals }}</strong></div>
+              <div class="d-flex justify-content-between fs-12 mb-1"><span class="d-flex align-items-center gap-1"><span
+                    style="width:8px;height:8px;border-radius:50%;background:var(--warning);display:inline-block;"></span>Pending</span><strong>{{
+                  pending_requests_count }}</strong></div>
+              <div class="d-flex justify-content-between fs-12"><span class="d-flex align-items-center gap-1"><span
+                    style="width:8px;height:8px;border-radius:50%;background:var(--danger);display:inline-block;"></span>Suspended</span><strong>{{
+                  suspended_count }}</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions + Recent Activity + Pending Requests -->
+    <div class="row g-4 mb-4">
+      <!-- Quick Actions -->
+      <div class="col-lg-3" data-aos="fade-up">
+        <div class="mc-card">
+          <div class="card-header"><span><i class="fas fa-bolt text-warning me-2"></i>Quick Actions</span></div>
+          <div class="card-body">
+            <div class="row g-2">
+              <div class="col-6"><a href="hospital_requests.html" class="quick-action">
+                  <div class="qa-icon"><i class="fas fa-check-circle"></i></div>Approve Hospital
+                </a></div>
+              <div class="col-6"><a href="hospitals.html" class="quick-action">
+                  <div class="qa-icon"><i class="fas fa-hospital"></i></div>Manage Hospitals
+                </a></div>
+              <div class="col-6"><a href="analytics.html" class="quick-action">
+                  <div class="qa-icon"><i class="fas fa-chart-bar"></i></div>View Analytics
+                </a></div>
+              <div class="col-6"><a href="settings.html" class="quick-action">
+                  <div class="qa-icon"><i class="fas fa-cog"></i></div>System Settings
+                </a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Hospital Requests -->
+      <div class="col-lg-5" data-aos="fade-up" data-aos-delay="100">
+        <div class="mc-card">
+          <div class="card-header">
+            <span><i class="fas fa-clock text-warning me-2"></i>Pending Requests</span>
+            <a href="hospital_requests.html" class="btn btn-sm btn-outline-primary">View All</a>
+          </div>
+          <div class="card-body p-0">
+            {# Flask Dynamic: {% for req in pending_requests[:5] %} #}
+            <div class="list-group list-group-flush">
+              {% for req in pending_requests %}
+              <div
+                class="list-group-item d-flex justify-content-between align-items-center py-3 px-3 border-0 border-bottom">
+                <div>
+                  <div class="fw-600 fs-13">{{ req.hospital_name }}</div>
+                  <div class="text-muted fs-12"><i class="fas fa-map-marker-alt me-1"></i>{{ req.city }} — {{
+                    req.created_at.strftime('%Y-%m-%d') if req.created_at else '' }}</div>
+                </div>
+                <div class="d-flex gap-1">
+                  <form action="/system-admin/approve_hospital/{{ req.hospital_id }}" method="POST"
+                    style="display:inline;">
+                    <button class="btn btn-sm btn-success btn-icon" title="Approve"><i
+                        class="fas fa-check fs-11"></i></button>
+                  </form>
+                  <form action="/system-admin/reject_hospital/{{ req.hospital_id }}" method="POST"
+                    style="display:inline;">
+                    <button class="btn btn-sm btn-danger btn-icon" title="Reject"><i
+                        class="fas fa-times fs-11"></i></button>
+                  </form>
+                </div>
               </div>
-            </div>
-            {% else %}
-            <div class="p-3 text-center text-muted fs-13">No pending requests</div>
-            {% endfor %}
-          </div>
-          {# Flask: {% endfor %} #}
-        </div>
-      </div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="150">
-      <div class="mc-card">
-        <div class="card-header"><span><i class="fas fa-history text-info me-2"></i>Recent Activity</span></div>
-        <div class="card-body">
-          <div class="activity-feed">
-            {% for activity in recent_activities %}
-            <div class="activity-item">
-              {% if activity.status == 'approved' %}
-              <div class="activity-dot" style="background:#e8f5e9;color:var(--success);"><i class="fas fa-check"></i></div>
-              <div class="activity-content"><div class="activity-text">Approved <strong>{{ activity.hospital_name }}</strong></div><div class="activity-time">{{ activity.created_at.strftime('%Y-%m-%d') if activity.created_at else '' }}</div></div>
-              {% elif activity.status == 'rejected' %}
-              <div class="activity-dot" style="background:#ffebee;color:var(--danger);"><i class="fas fa-times"></i></div>
-              <div class="activity-content"><div class="activity-text">Rejected <strong>{{ activity.hospital_name }}</strong></div><div class="activity-time">{{ activity.created_at.strftime('%Y-%m-%d') if activity.created_at else '' }}</div></div>
               {% else %}
-              <div class="activity-dot" style="background:#fff8e1;color:var(--warning);"><i class="fas fa-hospital"></i></div>
-              <div class="activity-content"><div class="activity-text">New request from <strong>{{ activity.hospital_name }}</strong></div><div class="activity-time">{{ activity.created_at.strftime('%Y-%m-%d') if activity.created_at else '' }}</div></div>
-              {% endif %}
+              <div class="p-3 text-center text-muted fs-13">No pending requests</div>
+              {% endfor %}
             </div>
-            {% else %}
-            <div class="p-3 text-center text-muted fs-13">No recent activities</div>
-            {% endfor %}
+            {# Flask: {% endfor %} #}
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="col-lg-4" data-aos="fade-up" data-aos-delay="150">
+        <div class="mc-card">
+          <div class="card-header"><span><i class="fas fa-history text-info me-2"></i>Recent Activity</span></div>
+          <div class="card-body">
+            <div class="activity-feed">
+              {% for activity in recent_activities %}
+              <div class="activity-item">
+                {% if activity.status == 'approved' %}
+                <div class="activity-dot" style="background:#e8f5e9;color:var(--success);"><i class="fas fa-check"></i>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-text">Approved <strong>{{ activity.hospital_name }}</strong></div>
+                  <div class="activity-time">{{ activity.created_at.strftime('%Y-%m-%d') if activity.created_at else ''
+                    }}</div>
+                </div>
+                {% elif activity.status == 'rejected' %}
+                <div class="activity-dot" style="background:#ffebee;color:var(--danger);"><i class="fas fa-times"></i>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-text">Rejected <strong>{{ activity.hospital_name }}</strong></div>
+                  <div class="activity-time">{{ activity.created_at.strftime('%Y-%m-%d') if activity.created_at else ''
+                    }}</div>
+                </div>
+                {% else %}
+                <div class="activity-dot" style="background:#fff8e1;color:var(--warning);"><i
+                    class="fas fa-hospital"></i></div>
+                <div class="activity-content">
+                  <div class="activity-text">New request from <strong>{{ activity.hospital_name }}</strong></div>
+                  <div class="activity-time">{{ activity.created_at.strftime('%Y-%m-%d') if activity.created_at else ''
+                    }}</div>
+                </div>
+                {% endif %}
+              </div>
+              {% else %}
+              <div class="p-3 text-center text-muted fs-13">No recent activities</div>
+              {% endfor %}
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Weekly Activity Chart -->
-  <div class="row g-4">
-    <div class="col-lg-12" data-aos="fade-up">
-      <div class="mc-card">
-        <div class="card-header"><span><i class="fas fa-bar-chart text-primary me-2"></i>Weekly Activity</span></div>
-        <div class="card-body"><div class="chart-container" style="height:240px;"><canvas id="weeklyActivityChart"></canvas></div></div>
+    <!-- Weekly Activity Chart -->
+    <div class="row g-4">
+      <div class="col-lg-12" data-aos="fade-up">
+        <div class="mc-card">
+          <div class="card-header"><span><i class="fas fa-bar-chart text-primary me-2"></i>Weekly Activity</span></div>
+          <div class="card-body">
+            <div class="chart-container" style="height:240px;"><canvas id="weeklyActivityChart"></canvas></div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</main>
+  </main>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-<script src="{{ url_for('static', filename='js/app.js') }}"></script>
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-<script>
-  function closeSidebarMobile(){document.getElementById('mc-sidebar').classList.remove('show');document.getElementById('sidebar-overlay').classList.remove('show');}
-</script>
+  {# Real weekly patient/doctor activity data for the Weekly Activity chart #}
+  <script id="weekly-activity-data" type="application/json">{{ weekly_activity | tojson }}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+  <script src="/static/js/app.js"></script>
+  <script src="/static/js/dashboard.js"></script>
+  <script>
+    function closeSidebarMobile() { document.getElementById('mc-sidebar').classList.remove('show'); document.getElementById('sidebar-overlay').classList.remove('show'); }
+  </script>
 </body>
+
 </html>

@@ -19,15 +19,15 @@
     />
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
+      href="/static/css/style.css"
     />
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='css/dashboard.css') }}"
+      href="/static/css/dashboard.css"
     />
     <link
       rel="stylesheet"
-      href="{{ url_for('static', filename='css/responsive.css') }}"
+      href="/static/css/responsive.css"
     />
   </head>
   <body class="page-bg">
@@ -111,11 +111,7 @@
             placeholder="Search hospitals…"
           />
         </div>
-        <div class="dropdown">
-          <a class="topbar-btn" data-bs-toggle="dropdown"
-            ><i class="fas fa-bell"></i><span class="notif-count">8</span></a
-          >
-        </div>
+     
         <div class="dropdown">
           <div class="user-dropdown-btn" data-bs-toggle="dropdown">
             <div class="ud-avatar">SA</div>
@@ -462,8 +458,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/system-admin.js') }}"></script>
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/system-admin.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         if (typeof MediChain !== "undefined") {

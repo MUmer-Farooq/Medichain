@@ -4,7 +4,7 @@
    ============================================================ */
 
 /* ---------- Google Fonts ---------- */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap");
 
 /* ---------- CSS Variables ---------- */
 :root {
@@ -61,7 +61,7 @@ html {
 }
 
 body {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   background-color: var(--bg-main);
   color: var(--text-dark);
   font-size: 14px;
@@ -118,26 +118,34 @@ a:hover {
 }
 
 .page-bg::before {
-  content: '';
+  content: "";
   position: fixed;
   top: -30%;
   right: -10%;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(26, 115, 232, 0.08) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(26, 115, 232, 0.08) 0%,
+    transparent 70%
+  );
   border-radius: 50%;
   pointer-events: none;
   z-index: 0;
 }
 
 .page-bg::after {
-  content: '';
+  content: "";
   position: fixed;
   bottom: -20%;
   left: -10%;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(0, 188, 212, 0.08) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(0, 188, 212, 0.08) 0%,
+    transparent 70%
+  );
   border-radius: 50%;
   pointer-events: none;
   z-index: 0;
@@ -188,6 +196,8 @@ a:hover {
 
 .mc-card .card-body {
   padding: 1.5rem;
+  background-color: #ffffff;
+  color: var(--text-dark);
 }
 
 /* ---------- Stat Cards ---------- */
@@ -203,7 +213,7 @@ a:hover {
 }
 
 .stat-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   right: 0;
@@ -346,7 +356,7 @@ a:hover {
 
 /* ---------- Buttons ---------- */
 .btn {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-weight: 500;
   border-radius: var(--radius-sm);
   transition: var(--transition);
@@ -354,7 +364,11 @@ a:hover {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    var(--primary-dark) 100%
+  );
   border: none;
   color: #fff;
   box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
@@ -453,7 +467,7 @@ a:hover {
 
 /* ---------- Badge ---------- */
 .badge {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-weight: 500;
   font-size: 0.72rem;
   padding: 0.3em 0.75em;
@@ -499,7 +513,7 @@ a:hover {
 /* ---------- Forms ---------- */
 .form-control,
 .form-select {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 0.88rem;
   border: 1.5px solid #e2e8f0;
   border-radius: var(--radius-sm);
@@ -526,11 +540,11 @@ a:hover {
   letter-spacing: 0.5px;
 }
 
-.form-floating>.form-control {
+.form-floating > .form-control {
   padding: 1rem 0.75rem 0.25rem;
 }
 
-.form-floating>label {
+.form-floating > label {
   font-size: 0.85rem;
   color: var(--text-light);
 }
@@ -626,7 +640,7 @@ a:hover {
 
 /* ---------- Pagination ---------- */
 .pagination .page-link {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 0.82rem;
   font-weight: 500;
   border-color: var(--border-color);
@@ -691,7 +705,7 @@ a:hover {
   border-radius: var(--radius-lg);
   border: none;
   box-shadow: var(--shadow-lg);
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 .modal-header {
@@ -852,7 +866,11 @@ a:hover {
 
 /* ---------- Profile Card ---------- */
 .profile-card {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    var(--primary-dark) 100%
+  );
   border-radius: var(--radius-lg);
   padding: 2rem;
   color: #fff;
@@ -861,7 +879,7 @@ a:hover {
 }
 
 .profile-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -40px;
   right: -40px;
@@ -872,7 +890,7 @@ a:hover {
 }
 
 .profile-card::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -60px;
   left: -40px;
@@ -972,7 +990,7 @@ a:hover {
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-md);
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 0.85rem;
   padding: 0.5rem;
   animation: dropIn 0.2s ease;
@@ -1017,7 +1035,7 @@ a:hover {
 
 /* ---------- Tooltip ---------- */
 .tooltip-inner {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 0.78rem;
   border-radius: var(--radius-sm);
   padding: 0.4rem 0.75rem;
@@ -1062,7 +1080,6 @@ a:hover {
 }
 
 @keyframes pulse {
-
   0%,
   100% {
     opacity: 1;
