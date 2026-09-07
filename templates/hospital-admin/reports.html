@@ -16,7 +16,7 @@
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
 <aside class="mc-sidebar" id="mc-sidebar">
   <a href="dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-chain"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Hospital Admin</span></div></a>
-  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#00c853,#00bcd4);">HA</div><div class="user-info"><div class="user-name">Dr. Farah Malik</div><div class="user-role">Hospital Administrator</div></div></div>
+  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#00c853,#00bcd4);">HA</div><div class="user-info"><div class="user-name">{{ admin_name }}</div><div class="user-role">Hospital Administrator</div></div></div>
   <nav class="sidebar-nav">
     <div class="nav-section-label">Overview</div>
     <a href="dashboard.html" class="nav-item-link"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
@@ -30,19 +30,19 @@
     <a href="settings.html" class="nav-item-link"><i class="fas fa-cog nav-icon"></i><span class="nav-text">Settings</span></a>
     <a href="../login.html" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
   </nav>
-  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>General Hospital KL</span></div></div>
+  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>{{ hospital_name }}</span></div></div>
 </aside>
 <header class="mc-topbar">
   <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><a href="dashboard.html" class="text-muted">Dashboard</a><span class="bc-sep">/</span><span class="bc-current">Reports</span></div></div>
-  <div class="topbar-right"><div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#00c853,#00bcd4);">HA</div><span class="ud-name">Dr. Farah</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div></div>
+  <div class="topbar-right"><div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#00c853,#00bcd4);">HA</div><span class="ud-name">{{ admin_name }}</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div></div>
 </header>
 <main class="mc-content">
   <div class="page-header">
-    <div class="page-header-left"><h4><i class="fas fa-chart-bar me-2 text-success"></i>Hospital Reports &amp; Analytics</h4><p>Comprehensive reports and statistics for General Hospital Kuala Lumpur</p></div>
+    <div class="page-header-left"><h4><i class="fas fa-chart-bar me-2 text-success"></i>Hospital Reports &amp; Analytics</h4><p>Comprehensive reports and statistics for {{ hospital_name }}</p></div>
     <div class="page-header-right">
-      <select class="form-select form-select-sm" style="width:auto;"><option>June 2026</option><option>May 2026</option><option>Q2 2026</option><option>2026 YTD</option></select>
-      <button class="btn btn-outline-secondary btn-sm"><i class="fas fa-download me-1"></i>Export PDF</button>
-      <button class="btn btn-success btn-sm"><i class="fas fa-print me-1"></i>Print</button>
+      <select class="form-select form-select-sm" style="width:auto;"><option>{{ report_year }} YTD</option></select>
+      <button id="export-reports" class="btn btn-outline-secondary btn-sm"><i class="fas fa-download me-1"></i>Export PDF</button>
+      <button id="print-reports" class="btn btn-success btn-sm"><i class="fas fa-print me-1"></i>Print</button>
     </div>
   </div>
 
@@ -95,7 +95,7 @@
   <div class="row g-4 mb-4">
     <div class="col-lg-8">
       <div class="mc-card">
-        <div class="card-header"><span><i class="fas fa-chart-line text-success me-2"></i>Monthly Patient Registrations — 2026</span></div>
+        <div class="card-header"><span><i class="fas fa-chart-line text-success me-2"></i>Monthly Patient Registrations — {{ report_year }}</span></div>
         <div class="card-body"><div class="chart-container" style="height:260px;"><canvas id="patientGrowthChart"></canvas></div></div>
       </div>
     </div>
@@ -117,15 +117,11 @@
     <div class="col-lg-6">
       <div class="mc-card">
         <div class="card-header"><span><i class="fas fa-table text-warning me-2"></i>Top Doctors This Month</span></div>
-        <div class="card-body p-0">
-          {# Flask Dynamic: {{ top_doctors }} #}
+          <div class="card-body p-0">
           <table class="mc-table">
             <thead><tr><th>Doctor</th><th>Specialization</th><th>Records</th><th>Patients</th></tr></thead>
             <tbody>
-              <tr><td class="fw-600">Dr. Suresh Kumar</td><td>Neurology</td><td>312</td><td>55</td></tr>
-              <tr><td class="fw-600">Dr. Ahmad Azman</td><td>Cardiology</td><td>285</td><td>48</td></tr>
-              <tr><td class="fw-600">Dr. Nurul Ain</td><td>Pediatrics</td><td>198</td><td>32</td></tr>
-              <tr><td class="fw-600">Dr. Lim Wei Chong</td><td>Orthopedics</td><td>145</td><td>28</td></tr>
+              {% for doctor in report_data.top_doctors %}<tr><td class="fw-600">{{ doctor.full_name }}</td><td>{{ doctor.specialization or 'N/A' }}</td><td>{{ doctor.records }}</td><td>{{ doctor.patients }}</td></tr>{% else %}<tr><td colspan="4" class="text-center text-muted py-4">No data available</td></tr>{% endfor %}
             </tbody>
           </table>
         </div>
@@ -140,12 +136,45 @@
 <script src="/static/js/app.js"></script>
 <script src="/static/js/dashboard.js"></script>
 
+<script id="reports-data" type="application/json">{{ report_data | tojson }}</script>
 <script>
-  function loadReport(type) {
-    MediChain.showLoading('Generating ' + type + ' report…');
-    /* Flask Dynamic Route: /hospital-admin/reports/generate?type= */
-    setTimeout(() => { MediChain.hideLoading(); MediChain.showToast('Report generated successfully!', 'success'); }, 1500);
+  const reportData = JSON.parse(document.getElementById('reports-data').textContent);
+  const reportChartData = document.createElement('script');
+  reportChartData.id = 'weekly-activity-data';
+  reportChartData.type = 'application/json';
+  reportChartData.textContent = JSON.stringify(reportData.weekly);
+  document.body.appendChild(reportChartData);
+
+  function initPatientGrowthChart() {
+    const ctx = document.getElementById('patientGrowthChart');
+    if (!ctx || typeof Chart === 'undefined') return;
+    return new Chart(ctx, { type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], datasets: [{ label: 'Registered Patients', data: reportData.patient_growth, borderColor: MC_COLORS.primary, backgroundColor: createGradient(ctx, MC_COLORS.primary), borderWidth: 2.5, tension: 0.4, fill: true }, { label: 'Active Patients', data: reportData.active_patient_growth, borderColor: MC_COLORS.success, backgroundColor: createGradient(ctx, MC_COLORS.success, 0.08), borderWidth: 2.5, tension: 0.4, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
   }
+  function initRecordsByTypeChart() {
+    const ctx = document.getElementById('recordsByTypeChart');
+    if (!ctx || typeof Chart === 'undefined') return;
+    return new Chart(ctx, { type: 'bar', data: { labels: reportData.record_labels.length ? reportData.record_labels : ['No data available'], datasets: [{ label: 'Records', data: reportData.record_counts.length ? reportData.record_counts : [0], backgroundColor: MC_COLORS.success + 'CC', borderColor: MC_COLORS.success, borderWidth: 2, borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } } });
+  }
+  function initWeeklyActivityChart() {
+    const ctx = document.getElementById('weeklyActivityChart');
+    if (!ctx || typeof Chart === 'undefined') return;
+    return new Chart(ctx, { type: 'bar', data: { labels: reportData.weekly.labels, datasets: [{ label: 'Patients Registered', data: reportData.weekly.patients, backgroundColor: MC_COLORS.danger + 'CC', borderColor: MC_COLORS.danger, borderWidth: 2, borderRadius: 6 }, { label: 'Doctors Registered', data: reportData.weekly.doctors, backgroundColor: MC_COLORS.info + 'CC', borderColor: MC_COLORS.info, borderWidth: 2, borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
+  }
+  function loadReport(type) {
+    const totals = { patients: reportData.patient_total, records: reportData.record_total, doctors: reportData.doctor_total, blockchain: 'N/A' };
+    MediChain.showToast(type.charAt(0).toUpperCase() + type.slice(1) + ' report: ' + totals[type], 'success');
+  }
+  document.getElementById('print-reports').addEventListener('click', () => window.print());
+  document.getElementById('export-reports').addEventListener('click', () => {
+    const rows = [['Report', 'Value'], ['Patients', reportData.patient_total], ['Doctors', reportData.doctor_total], ['Medical Records', reportData.record_total], ['Appointments', reportData.appointment_total]];
+    reportData.record_labels.forEach((label, index) => rows.push(['Record: ' + label, reportData.record_counts[index]]));
+    const csv = rows.map(row => row.map(value => '"' + String(value ?? '').replace(/"/g, '""') + '"').join(',')).join('\r\n');
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    link.download = 'hospital-report-' + new Date().toISOString().slice(0, 10) + '.csv';
+    link.click();
+    URL.revokeObjectURL(link.href);
+  });
 </script>
 </body>
 </html>

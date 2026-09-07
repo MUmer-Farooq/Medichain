@@ -40,94 +40,168 @@
   </div>
 </header>
 <main class="mc-content">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
   <div class="page-header">
-    <div class="page-header-left"><h4><i class="fas fa-file-medical me-2 text-info"></i>Medical Records</h4><p>All medical records created by doctors at General Hospital KL</p></div>
+    <div class="page-header-left"><h4><i class="fas fa-file-medical me-2 text-info"></i>Medical Records</h4><p>All medical records created by doctors at {{ hospital_name }}</p></div>
     <div class="page-header-right">
-      <button class="btn btn-outline-secondary btn-sm"><i class="fas fa-download me-1"></i>Export</button>
-      <a href="../doctor/create_record.html" class="btn btn-info btn-sm text-white"><i class="fas fa-file-plus me-1"></i>New Record</a>
+      <button class="btn btn-outline-secondary btn-sm" onclick="window.location.reload()"><i class="fas fa-download me-1"></i>Refresh</button>
+      <a href="{{ url_for('hospital_admin_dashboard') }}" class="btn btn-info btn-sm text-white"><i class="fas fa-arrow-left me-1"></i>Back</a>
     </div>
   </div>
 
   <div class="stats-grid mb-4">
-    <div class="stat-card info"><div class="stat-icon"><i class="fas fa-file-medical"></i></div><div class="stat-value">12,400</div><div class="stat-label">Total Records</div></div>
-    <div class="stat-card primary"><div class="stat-icon"><i class="fas fa-stethoscope"></i></div><div class="stat-value">4,820</div><div class="stat-label">Consultations</div></div>
-    <div class="stat-card success"><div class="stat-icon"><i class="fas fa-flask"></i></div><div class="stat-value">3,240</div><div class="stat-label">Lab Results</div></div>
-    <div class="stat-card warning"><div class="stat-icon"><i class="fas fa-x-ray"></i></div><div class="stat-value">2,180</div><div class="stat-label">Radiology</div></div>
-    <div class="stat-card secondary"><div class="stat-icon"><i class="fas fa-pills"></i></div><div class="stat-value">2,160</div><div class="stat-label">Prescriptions</div></div>
+    <div class="stat-card info"><div class="stat-icon"><i class="fas fa-file-medical"></i></div><div class="stat-value">{{ stats.total_records if stats.total_records is number else 'N/A' }}</div><div class="stat-label">Total Records</div></div>
+    <div class="stat-card primary"><div class="stat-icon"><i class="fas fa-stethoscope"></i></div><div class="stat-value">{{ stats.consultations if stats.consultations is number else 'N/A' }}</div><div class="stat-label">Consultations</div></div>
+    <div class="stat-card success"><div class="stat-icon"><i class="fas fa-flask"></i></div><div class="stat-value">{{ stats.lab_results if stats.lab_results is number else 'N/A' }}</div><div class="stat-label">Lab Results</div></div>
+    <div class="stat-card warning"><div class="stat-icon"><i class="fas fa-x-ray"></i></div><div class="stat-value">{{ stats.radiology if stats.radiology is number else 'N/A' }}</div><div class="stat-label">Radiology</div></div>
+    <div class="stat-card secondary"><div class="stat-icon"><i class="fas fa-pills"></i></div><div class="stat-value">{{ stats.prescriptions if stats.prescriptions is number else 'N/A' }}</div><div class="stat-label">Prescriptions</div></div>
   </div>
 
   <div class="mc-card mb-3">
     <div class="card-body py-3">
       <div class="search-filter-bar">
         <div class="search-box"><i class="fas fa-search"></i><input type="text" id="table-search" placeholder="Search by patient, doctor, type, diagnosis…"/></div>
-        <select class="form-select form-select-sm" style="width:auto;" onchange="MediChain.filterTable(this)" data-col="3">
-          <option value="">All Types</option><option>Consultation</option><option>Lab Result</option><option>Radiology</option><option>Prescription</option><option>Surgery</option><option>Vaccination</option>
-        </select>
-        <select class="form-select form-select-sm" style="width:auto;">
-          <option value="">All Dates</option><option>Today</option><option>This Week</option><option>This Month</option><option>Last Month</option>
-        </select>
-        <select class="form-select form-select-sm" style="width:auto;">
-          <option value="">All Doctors</option><option>Dr. Ahmad Azman</option><option>Dr. Nurul Ain</option><option>Dr. Suresh Kumar</option>
+        <select class="form-select form-select-sm" id="filter-record-type" style="width:auto;">
+          <option value="">All Types</option>
+          <option value="consultation">Consultation</option>
+          <option value="lab result">Lab Result</option>
+          <option value="radiology">Radiology</option>
+          <option value="prescription">Prescription</option>
         </select>
       </div>
     </div>
   </div>
 
   <div class="mc-card">
-    <div class="card-header"><span><i class="fas fa-list text-info me-2"></i>All Records <span class="badge badge-info-soft ms-2">12,400</span></span></div>
+    <div class="card-header"><span><i class="fas fa-list text-info me-2"></i>All Records <span class="badge badge-info-soft ms-2" id="record-count-badge">{{ records|length if records else 0 }}</span></span></div>
     <div class="card-body p-0">
       <div class="table-responsive">
-        {# Flask Dynamic: {% for record in records.paginate(...) %} #}
         <table class="mc-table" id="mc-table">
-          <thead><tr><th>Record ID</th><th>Patient</th><th>Doctor</th><th>Type</th><th>Diagnosis</th><th>Blockchain</th><th>Date</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Record ID</th><th>Patient</th><th>Doctor</th><th>Type</th><th>Diagnosis</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
           <tbody>
-            <tr><td class="font-monospace fs-11">REC-2026-041892</td><td>Ahmad Bin Jalil</td><td>Dr. Ahmad Azman</td><td><span class="badge badge-primary-soft">Consultation</span></td><td>Type 2 Diabetes</td><td><span class="badge badge-success-soft"><i class="fas fa-lock me-1"></i>Verified</span></td><td>Jun 28, 2026</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-secondary" title="Blockchain Proof" onclick="MediChain.showToast('Block #18,432 — Hash: 0xa9f2...','info')"><i class="fas fa-cubes"></i></a></div></td></tr>
-            <tr><td class="font-monospace fs-11">REC-2026-041756</td><td>Siti Hajar Aziz</td><td>Dr. Nurul Ain</td><td><span class="badge badge-success-soft">Lab Result</span></td><td>Blood Panel — Normal</td><td><span class="badge badge-success-soft"><i class="fas fa-lock me-1"></i>Verified</span></td><td>Jun 25, 2026</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-secondary" onclick="MediChain.showToast('Block #18,421 — Hash: 0x3c7a...','info')"><i class="fas fa-cubes"></i></a></div></td></tr>
-            <tr><td class="font-monospace fs-11">REC-2026-041590</td><td>Robert Lee</td><td>Dr. Suresh Kumar</td><td><span class="badge badge-primary-soft" style="background:#e3f2fd;color:#1565c0;">Radiology</span></td><td>MRI Brain — Reviewed</td><td><span class="badge badge-success-soft"><i class="fas fa-lock me-1"></i>Verified</span></td><td>Jun 20, 2026</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-secondary"><i class="fas fa-cubes"></i></a></div></td></tr>
-            <tr><td class="font-monospace fs-11">REC-2026-041430</td><td>Aida Rahman</td><td>Dr. Ahmad Azman</td><td><span class="badge badge-warning-soft">Prescription</span></td><td>Metformin 500mg x 30</td><td><span class="badge badge-success-soft"><i class="fas fa-lock me-1"></i>Verified</span></td><td>Jun 15, 2026</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-secondary"><i class="fas fa-cubes"></i></a></div></td></tr>
-            <tr><td class="font-monospace fs-11">REC-2026-041200</td><td>Raj Kumar Pillai</td><td>Dr. Lim Wei</td><td><span class="badge badge-danger-soft">Surgery</span></td><td>Knee Replacement — L</td><td><span class="badge badge-success-soft"><i class="fas fa-lock me-1"></i>Verified</span></td><td>Jun 12, 2026</td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-secondary"><i class="fas fa-cubes"></i></a></div></td></tr>
+            {% if records %}
+              {% for record in records %}
+              <tr data-record-type="{{ (record.record_type or 'n/a')|lower }}" data-patient="{{ (record.patient_name or '')|lower }}" data-doctor="{{ (record.doctor_name or '')|lower }}" data-diagnosis="{{ (record.diagnosis or '')|lower }}">
+                <td class="font-monospace fs-11">{{ record.record_id_display }}</td>
+                <td>{{ record.patient_name }}</td>
+                <td>{{ record.doctor_name }}</td>
+                <td><span class="badge badge-primary-soft">{{ record.record_type }}</span></td>
+                <td>{{ record.diagnosis }}</td>
+                <td>
+                  {% if (record.status or '')|lower == 'verified' or (record.status or '')|lower == 'completed' %}
+                    <span class="badge badge-success-soft"><i class="fas fa-lock me-1"></i>{{ record.status }}</span>
+                  {% elif (record.status or '')|lower == 'pending' %}
+                    <span class="badge badge-warning-soft">{{ record.status }}</span>
+                  {% else %}
+                    <span class="badge badge-secondary-soft">{{ record.status or 'Unknown' }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ record.created_at_display }}</td>
+                <td>
+                  <div class="table-actions">
+                    <button type="button" class="btn-icon" title="View Details" data-bs-toggle="modal" data-bs-target="#viewRecordModal{{ record.record_id }}"><i class="fas fa-eye"></i></button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr id="table-empty-row">
+                <td colspan="8" class="text-center py-5 text-muted">
+                  <div class="empty-state">
+                    <i class="fas fa-file-medical fs-3 mb-2 d-block"></i>
+                    <div class="fw-600 mb-1">{% if table_exists %}No records found{% else %}N/A{% endif %}</div>
+                    <small>{% if table_exists %}There are no medical records for this hospital yet.{% else %}The medical records table is not available in the database.{% endif %}</small>
+                  </div>
+                </td>
+              </tr>
+            {% endif %}
           </tbody>
         </table>
-        {# Flask: {% endfor %} #}
       </div>
     </div>
     <div class="card-footer d-flex justify-content-between align-items-center">
-      <small class="text-muted">Showing 5 of 12,400 records</small>
+      <small class="text-muted">{% if records %}Showing {{ records|length }} record{% if records|length != 1 %}s{% endif %}{% else %}No records available{% endif %}</small>
       <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
     </div>
   </div>
 </main>
 
-<!-- Record View Modal -->
-<div class="modal fade" id="viewRecordModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">Medical Record — REC-2026-041892</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body">
-        {# Flask Dynamic: {{ record }} #}
-        <div class="row g-3 mb-3">
-          <div class="col-md-6"><span class="text-muted fs-12">Patient:</span><div class="fw-600">Ahmad Bin Jalil (MC-2024-008342)</div></div>
-          <div class="col-md-6"><span class="text-muted fs-12">Doctor:</span><div class="fw-600">Dr. Ahmad Azman — Cardiology</div></div>
-          <div class="col-md-6"><span class="text-muted fs-12">Record Type:</span><div><span class="badge badge-primary-soft">Consultation</span></div></div>
-          <div class="col-md-6"><span class="text-muted fs-12">Date:</span><div class="fw-600">28 June 2026, 14:30</div></div>
+{% if records %}
+  {% for record in records %}
+  <div class="modal fade" id="viewRecordModal{{ record.record_id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Medical Record — {{ record.record_id_display }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6"><span class="text-muted fs-12">Patient:</span><div class="fw-600">{{ record.patient_name }}{% if record.patient_id is not none %} (PAT-{{ '%04d'|format(record.patient_id) }}){% endif %}</div></div>
+            <div class="col-md-6"><span class="text-muted fs-12">Doctor:</span><div class="fw-600">{{ record.doctor_name }}{% if record.doctor_id is not none %} (DR-{{ '%04d'|format(record.doctor_id) }}){% endif %}</div></div>
+            <div class="col-md-6"><span class="text-muted fs-12">Record Type:</span><div><span class="badge badge-primary-soft">{{ record.record_type }}</span></div></div>
+            <div class="col-md-6"><span class="text-muted fs-12">Date:</span><div class="fw-600">{{ record.created_at_full }}</div></div>
+          </div>
+          <hr/>
+          <div class="mb-3"><div class="fw-600 mb-1">Title</div><div>{{ record.title }}</div></div>
+          <div class="mb-3"><div class="fw-600 mb-1">Diagnosis</div><div>{{ record.diagnosis }}</div></div>
+          <div class="mb-3"><div class="fw-600 mb-1">Notes</div><div class="fs-13">{{ record.notes }}</div></div>
+          <div class="p-2 rounded" style="background:#f8faff;border:1px solid var(--border-color);font-family:'Courier New',monospace;font-size:.75rem;">
+            <span style="color:#546e7a;">Blockchain Record — </span>
+            {{ record.status or 'Unknown' }} | Record ID: {{ record.record_id_display }} | Hospital: {{ hospital_name }}
+          </div>
         </div>
-        <hr/>
-        <div class="mb-3"><div class="fw-600 mb-1">Diagnosis</div><div>Type 2 Diabetes Mellitus (E11)</div></div>
-        <div class="mb-3"><div class="fw-600 mb-1">Notes</div><div class="fs-13">Patient presents with elevated blood glucose levels (HbA1c: 8.2%). Advised dietary changes and initiated Metformin therapy. Follow-up in 3 months.</div></div>
-        <div class="p-2 rounded" style="background:#f8faff;border:1px solid var(--border-color);font-family:'Courier New',monospace;font-size:.75rem;">
-          <span style="color:#546e7a;">Blockchain Record — </span>
-          Block #18,432 | Hash: 0xa9f2b7d1c4e8f3a2 | Tx: Tx-94218 | Status: COMMITTED
-        </div>
+        <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button class="btn btn-outline-primary" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button></div>
       </div>
-      <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button class="btn btn-outline-primary" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button></div>
     </div>
   </div>
-</div>
+  {% endfor %}
+{% endif %}
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 <script src="/static/js/app.js"></script>
 
-<script>document.addEventListener('DOMContentLoaded',()=>{MediChain.initTableSort();MediChain.initPagination({pageSize:10});});</script>
+<script>
+  function applyRecordFilters() {
+    const searchInput = document.getElementById('table-search');
+    const typeSelect = document.getElementById('filter-record-type');
+    const rows = Array.from(document.querySelectorAll('#mc-table tbody tr[data-record-type]'));
+    const searchTerm = (searchInput ? searchInput.value : '').trim().toLowerCase();
+    const typeTerm = (typeSelect ? typeSelect.value : '').toLowerCase();
+
+    rows.forEach(row => {
+      const patient = (row.dataset.patient || '').toLowerCase();
+      const doctor = (row.dataset.doctor || '').toLowerCase();
+      const diagnosis = (row.dataset.diagnosis || '').toLowerCase();
+      const rowType = (row.dataset.recordType || '').toLowerCase();
+      const text = `${patient} ${doctor} ${diagnosis} ${rowType}`;
+      const matchesSearch = !searchTerm || text.includes(searchTerm);
+      const matchesType = !typeTerm || rowType === typeTerm;
+      row.style.display = matchesSearch && matchesType ? '' : 'none';
+    });
+
+    const visibleRows = rows.filter(row => row.style.display !== 'none');
+    const badge = document.getElementById('record-count-badge');
+    if (badge) badge.textContent = visibleRows.length;
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('table-search');
+    const typeSelect = document.getElementById('filter-record-type');
+    if (searchInput) searchInput.addEventListener('input', applyRecordFilters);
+    if (typeSelect) typeSelect.addEventListener('change', applyRecordFilters);
+    MediChain.initTableSort();
+    MediChain.initPagination({ tableId: 'mc-table', pageSize: 10, paginationId: 'pagination' });
+    applyRecordFilters();
+  });
+</script>
 </body>
 </html>

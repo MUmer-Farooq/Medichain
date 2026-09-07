@@ -16,7 +16,7 @@
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
 <aside class="mc-sidebar" id="mc-sidebar">
   <a href="dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-chain"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Hospital Admin</span></div></a>
-  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#00c853,#00bcd4);">HA</div><div class="user-info"><div class="user-name">Dr. Farah Malik</div><div class="user-role">Hospital Administrator</div></div></div>
+  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#00c853,#00bcd4);">{{ settings.full_name[:2]|upper }}</div><div class="user-info"><div class="user-name">{{ settings.full_name }}</div><div class="user-role">Hospital Administrator</div></div></div>
   <nav class="sidebar-nav">
     <div class="nav-section-label">Overview</div>
     <a href="dashboard.html" class="nav-item-link"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
@@ -30,30 +30,36 @@
     <a href="settings.html" class="nav-item-link active"><i class="fas fa-cog nav-icon"></i><span class="nav-text">Settings</span></a>
     <a href="../login.html" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
   </nav>
-  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>General Hospital KL</span></div></div>
+  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>{{ settings.hospital_name }}</span></div></div>
 </aside>
 <header class="mc-topbar">
   <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><a href="dashboard.html" class="text-muted">Dashboard</a><span class="bc-sep">/</span><span class="bc-current">Settings</span></div></div>
-  <div class="topbar-right"><button class="btn btn-primary btn-sm" onclick="MediChain.showToast('Settings saved!','success')"><i class="fas fa-save me-1"></i>Save</button></div>
+  <div class="topbar-right"><button class="btn btn-primary btn-sm" type="submit" form="profile-form"><i class="fas fa-save me-1"></i>Save</button></div>
 </header>
 <main class="mc-content">
   <div class="page-header">
     <div class="page-header-left"><h4><i class="fas fa-cog me-2 text-success"></i>Hospital Settings</h4><p>Manage your hospital profile, administrators, and access settings</p></div>
   </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ 'danger' if category == 'error' else category }}" role="alert">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+  <form id="profile-form" method="post" novalidate>
+    <input type="hidden" name="action" value="profile"/>
   <div class="row g-4">
     <!-- Hospital Profile -->
     <div class="col-lg-6">
       <div class="mc-card mb-4">
         <div class="card-header"><span><i class="fas fa-hospital text-success me-2"></i>Hospital Profile</span></div>
         <div class="card-body">
-          {# Flask Dynamic: {{ current_hospital }} #}
           <div class="row g-3">
-            <div class="col-12"><label class="form-label">Hospital Name</label><input type="text" class="form-control" value="General Hospital Kuala Lumpur"/></div>
-            <div class="col-md-6"><label class="form-label">Registration #</label><input type="text" class="form-control" value="HOS-2024-0001" readonly/></div>
-            <div class="col-md-6"><label class="form-label">Type</label><input type="text" class="form-control" value="Government" readonly/></div>
-            <div class="col-md-6"><label class="form-label">Phone</label><input type="tel" class="form-control" value="03-2615 5555"/></div>
-            <div class="col-md-6"><label class="form-label">Email</label><input type="email" class="form-control" value="info@hkl.gov.my"/></div>
-            <div class="col-12"><label class="form-label">Address</label><textarea class="form-control" rows="2">Jalan Pahang, 50586 Kuala Lumpur</textarea></div>
+            <div class="col-12"><label class="form-label">Hospital Name</label><input name="hospital_name" type="text" class="form-control" value="{{ settings.hospital_name }}" required/></div>
+            <div class="col-md-6"><label class="form-label">Registration #</label><input type="text" class="form-control" value="{{ settings.registration_number }}" readonly/></div>
+            <div class="col-md-6"><label class="form-label">City</label><input type="text" class="form-control" value="{{ settings.city }}" readonly/></div>
+            <div class="col-md-6"><label class="form-label">Phone</label><input name="hospital_phone" type="tel" class="form-control" value="{{ settings.hospital_phone }}" required/></div>
+            <div class="col-md-6"><label class="form-label">Email</label><input name="hospital_email" type="email" class="form-control" value="{{ settings.hospital_email }}" required/></div>
+            <div class="col-12"><label class="form-label">Address</label><textarea name="address" class="form-control" rows="2" required>{{ settings.address }}</textarea></div>
           </div>
         </div>
       </div>
@@ -63,16 +69,15 @@
       <div class="mc-card mb-4">
         <div class="card-header"><span><i class="fas fa-user-cog text-success me-2"></i>My Profile</span></div>
         <div class="card-body">
-          {# Flask Dynamic: {{ current_user }} #}
           <div class="d-flex align-items-center gap-3 mb-4">
-            <div style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#00c853,#00bcd4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;font-weight:700;">FM</div>
-            <div><div class="fw-600">Dr. Farah binti Malik</div><div class="text-muted fs-13">Hospital Director — HKL</div><button class="btn btn-sm btn-outline-success mt-1"><i class="fas fa-camera me-1"></i>Change Photo</button></div>
+            <div style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#00c853,#00bcd4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;font-weight:700;">{{ settings.full_name[:2]|upper }}</div>
+            <div><div class="fw-600">{{ settings.full_name }}</div><div class="text-muted fs-13">{{ settings.designation }}</div></div>
           </div>
           <div class="row g-3">
-            <div class="col-md-6"><label class="form-label">Full Name</label><input type="text" class="form-control" value="Dr. Farah binti Malik"/></div>
-            <div class="col-md-6"><label class="form-label">Email</label><input type="email" class="form-control" value="farah@hkl.gov.my"/></div>
-            <div class="col-md-6"><label class="form-label">Phone</label><input type="tel" class="form-control" value="+60 12-XXXX XXXX"/></div>
-            <div class="col-md-6"><label class="form-label">Designation</label><input type="text" class="form-control" value="Hospital Director"/></div>
+            <div class="col-md-6"><label class="form-label">Full Name</label><input name="full_name" type="text" class="form-control" value="{{ settings.full_name }}" required/></div>
+            <div class="col-md-6"><label class="form-label">Email</label><input name="admin_email" type="email" class="form-control" value="{{ settings.email }}" required/></div>
+            <div class="col-md-6"><label class="form-label">Phone</label><input name="admin_phone" type="tel" class="form-control" value="{{ settings.admin_phone or '' }}" required/></div>
+            <div class="col-md-6"><label class="form-label">Designation</label><input name="designation" type="text" class="form-control" value="{{ settings.designation or '' }}" required/></div>
           </div>
         </div>
       </div>
@@ -83,10 +88,10 @@
         <div class="card-header"><span><i class="fas fa-shield-halved text-success me-2"></i>Change Password</span></div>
         <div class="card-body">
           <div class="row g-3">
-            <div class="col-12"><label class="form-label">Current Password</label><input type="password" class="form-control" placeholder="Enter current password"/></div>
-            <div class="col-md-6"><label class="form-label">New Password</label><input type="password" class="form-control" placeholder="Min 8 characters"/></div>
-            <div class="col-md-6"><label class="form-label">Confirm Password</label><input type="password" class="form-control" placeholder="Re-enter password"/></div>
-            <div class="col-12"><button class="btn btn-success btn-sm" onclick="MediChain.showToast('Password updated!','success')"><i class="fas fa-key me-1"></i>Update Password</button></div>
+            <div class="col-12"><label class="form-label">Current Password</label><input name="current_password" form="password-form" type="password" class="form-control" placeholder="Enter current password" required/></div>
+            <div class="col-md-6"><label class="form-label">New Password</label><input name="new_password" form="password-form" type="password" class="form-control" placeholder="Min 8 characters" minlength="8" required/></div>
+            <div class="col-md-6"><label class="form-label">Confirm Password</label><input name="confirm_password" form="password-form" type="password" class="form-control" placeholder="Re-enter password" minlength="8" required/></div>
+            <div class="col-12"><button class="btn btn-success btn-sm" type="submit" form="password-form"><i class="fas fa-key me-1"></i>Update Password</button></div>
           </div>
         </div>
       </div>
@@ -97,16 +102,21 @@
         <div class="card-header"><span><i class="fas fa-bell text-success me-2"></i>Notification Settings</span></div>
         <div class="card-body">
           <div class="d-flex flex-column gap-3">
-            <div class="d-flex justify-content-between align-items-center"><div><div class="fw-500 fs-13">New Patient Registration</div><div class="fs-12 text-muted">Get notified when a new patient registers</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" checked/></div></div>
-            <div class="d-flex justify-content-between align-items-center"><div><div class="fw-500 fs-13">Doctor Activity Alert</div><div class="fs-12 text-muted">Notify when doctor creates/edits records</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" checked/></div></div>
-            <div class="d-flex justify-content-between align-items-center"><div><div class="fw-500 fs-13">Blockchain Transaction</div><div class="fs-12 text-muted">Notify on each blockchain commit</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox"/></div></div>
-            <div class="d-flex justify-content-between align-items-center"><div><div class="fw-500 fs-13">Weekly Summary Email</div><div class="fs-12 text-muted">Receive weekly hospital statistics</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" checked/></div></div>
+            <div class="d-flex justify-content-between align-items-center"><div><div class="fw-500 fs-13">New Patient Registration</div><div class="fs-12 text-muted">Notification preference is not configured</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" disabled/></div></div>
+            <div class="d-flex justify-content-between align-items-center"><div><div class="fw-500 fs-13">Doctor Activity Alert</div><div class="fs-12 text-muted">Notification preference is not configured</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" disabled/></div></div>
+            <div class="d-flex justify-content-between align-items-center"><div><div class="fw-500 fs-13">Blockchain Transaction</div><div class="fs-12 text-muted">Notification preference is not configured</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" disabled/></div></div>
+            <div class="d-flex justify-content-between align-items-center"><div><div class="fw-500 fs-13">Weekly Summary Email</div><div class="fs-12 text-muted">Notification preference is not configured</div></div><div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" disabled/></div></div>
           </div>
         </div>
       </div>
     </div>
   </div>
+  </form>
 </main>
+
+<form id="password-form" method="post" class="d-none">
+  <input type="hidden" name="action" value="password"/>
+</form>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>

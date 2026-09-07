@@ -1,6 +1,7 @@
 from __future__ import annotations
-from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from pathlib import Path
+from datetime import date, timedelta
 import mysql.connector
 from flask import Flask, abort, render_template, request, redirect, url_for, flash, session
 
@@ -78,7 +79,12 @@ def login():
             return redirect(url_for("login"))
 
         # Password verification
-        if user["password"] != password:
+        password_matches = (
+            check_password_hash(user["password"], password)
+            if user["password"].startswith(("scrypt:", "pbkdf2:", "argon2:"))
+            else user["password"] == password
+        )
+        if not password_matches:
             flash("Incorrect password.", "danger")
             return redirect(url_for("login"))
 
@@ -934,6 +940,112 @@ def hospital_admin_dashboard():
         )
 
 # ====================================================================
+# Hospital Admin Settings Routes
+# ====================================================================
+@app.route("/hospital-admin/settings", methods=["GET", "POST"])
+@app.route("/hospital-admin/settings.html", methods=["GET", "POST"])
+def hospital_admin_settings():
+    if session.get("user_role") != "hospital_admin":
+        return redirect(url_for("login"))
+
+    cursor = None
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        user_id = session.get("user_id")
+
+        def load_settings():
+            cursor.execute(
+                "SELECT u.user_id, u.hospital_id, u.full_name, u.email, u.password, "
+                "u.phone AS admin_phone, u.designation, h.hospital_name, "
+                "h.registration_number, h.city, h.address, h.phone AS hospital_phone, "
+                "h.hospital_email, h.status FROM users u "
+                "JOIN hospitals h ON h.hospital_id=u.hospital_id "
+                "WHERE u.user_id=%s AND u.role='hospital_admin'",
+                (user_id,)
+            )
+            return cursor.fetchone()
+
+        settings = load_settings()
+        if not settings:
+            session.clear()
+            return redirect(url_for("login"))
+
+        if request.method == "POST":
+            action = request.form.get("action", "profile")
+            if action == "password":
+                current_password = request.form.get("current_password", "")
+                new_password = request.form.get("new_password", "")
+                confirm_password = request.form.get("confirm_password", "")
+                stored_password = settings["password"]
+                password_valid = (
+                    check_password_hash(stored_password, current_password)
+                    if stored_password.startswith(("scrypt:", "pbkdf2:", "argon2:"))
+                    else stored_password == current_password
+                )
+                if not password_valid:
+                    flash("Current password is incorrect.", "danger")
+                elif len(new_password) < 8:
+                    flash("New password must be at least 8 characters.", "danger")
+                elif new_password != confirm_password:
+                    flash("New passwords do not match.", "danger")
+                else:
+                    cursor.execute(
+                        "UPDATE users SET password=%s WHERE user_id=%s AND role='hospital_admin'",
+                        (generate_password_hash(new_password), user_id)
+                    )
+                    db.commit()
+                    flash("Password updated successfully.", "success")
+            else:
+                values = {field: request.form.get(field, "").strip() for field in (
+                    "hospital_name", "hospital_email", "hospital_phone", "address",
+                    "full_name", "admin_email", "admin_phone", "designation"
+                )}
+                if any(not value for value in values.values()):
+                    flash("All profile fields are required.", "danger")
+                elif any("@" not in values[field] for field in ("hospital_email", "admin_email")):
+                    flash("Enter valid email addresses.", "danger")
+                elif any(len(values[field]) < 7 for field in ("hospital_phone", "admin_phone")):
+                    flash("Enter valid phone numbers.", "danger")
+                else:
+                    cursor.execute(
+                        "SELECT user_id FROM users WHERE email=%s AND user_id!=%s",
+                        (values["admin_email"], user_id)
+                    )
+                    email_in_use = cursor.fetchone()
+                    cursor.execute(
+                        "SELECT hospital_id FROM hospitals WHERE hospital_email=%s AND hospital_id!=%s",
+                        (values["hospital_email"], settings["hospital_id"])
+                    )
+                    hospital_email_in_use = cursor.fetchone()
+                    if email_in_use:
+                        flash("Administrator email is already in use.", "danger")
+                    elif hospital_email_in_use:
+                        flash("Hospital email is already in use.", "danger")
+                    else:
+                        cursor.execute(
+                            "UPDATE hospitals SET hospital_name=%s, hospital_email=%s, phone=%s, address=%s WHERE hospital_id=%s",
+                            (values["hospital_name"], values["hospital_email"], values["hospital_phone"], values["address"], settings["hospital_id"])
+                        )
+                        cursor.execute(
+                            "UPDATE users SET full_name=%s, email=%s, phone=%s, designation=%s WHERE user_id=%s AND role='hospital_admin'",
+                            (values["full_name"], values["admin_email"], values["admin_phone"], values["designation"], user_id)
+                        )
+                        db.commit()
+                        session["user_name"] = values["full_name"]
+                        flash("Settings updated successfully.", "success")
+            return redirect(url_for("hospital_admin_settings"))
+
+        return render_template("hospital-admin/settings.html", settings=settings)
+    except mysql.connector.Error as err:
+        db.rollback()
+        flash(f"Database error: {err}", "danger")
+        return redirect(url_for("hospital_admin_settings"))
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+# ====================================================================
 # Hospital Admin Doctors Routes
 # ====================================================================
 @app.route("/hospital-admin/doctors")
@@ -1410,6 +1522,290 @@ def hospital_admin_patients_delete(patient_id):
             cursor.close()
     return redirect(url_for("hospital_admin_patients"))
 
+# ====================================================================
+# Hospital Admin Reports Route
+# ====================================================================
+@app.route("/hospital-admin/reports")
+@app.route("/hospital-admin/reports.html")
+def hospital_admin_reports():
+    if session.get("user_role") != "hospital_admin":
+        return redirect(url_for("login"))
+
+    cursor = None
+    empty_data = {
+        "patient_growth": [0] * 12,
+        "active_patient_growth": [0] * 12,
+        "record_labels": [],
+        "record_counts": [],
+        "weekly": {"labels": [], "patients": [0] * 7, "doctors": [0] * 7},
+        "top_doctors": [],
+        "doctor_total": "N/A",
+        "patient_total": "N/A",
+        "record_total": "N/A",
+        "appointment_total": "N/A"
+    }
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT hospital_id, full_name FROM users WHERE user_id=%s", (session.get("user_id"),))
+        user_row = cursor.fetchone()
+        if not user_row or user_row.get("hospital_id") is None:
+            return redirect(url_for("login"))
+
+        hospital_id = user_row["hospital_id"]
+        cursor.execute("SELECT hospital_name FROM hospitals WHERE hospital_id=%s", (hospital_id,))
+        hospital_row = cursor.fetchone()
+        hospital_name = hospital_row["hospital_name"] if hospital_row else "Hospital"
+        report_data = dict(empty_data)
+        report_data["patient_growth"] = [0] * 12
+        report_data["active_patient_growth"] = [0] * 12
+        report_data["record_labels"] = []
+        report_data["record_counts"] = []
+        report_data["top_doctors"] = []
+        report_data["weekly"] = dict(empty_data["weekly"])
+        report_data["weekly"]["labels"] = []
+        report_data["weekly"]["patients"] = [0] * 7
+        report_data["weekly"]["doctors"] = [0] * 7
+
+        cursor.execute("SELECT COUNT(*) AS count FROM doctors WHERE hospital_id=%s", (hospital_id,))
+        report_data["doctor_total"] = cursor.fetchone()["count"]
+
+        cursor.execute("SELECT MONTH(created_at) AS month, COUNT(*) AS count FROM patients WHERE hospital_id=%s AND YEAR(created_at)=YEAR(CURRENT_DATE()) GROUP BY MONTH(created_at)", (hospital_id,))
+        for row in cursor.fetchall():
+            report_data["patient_growth"][row["month"] - 1] = row["count"]
+        cursor.execute("SELECT MONTH(created_at) AS month, COUNT(*) AS count FROM patients WHERE hospital_id=%s AND status='active' AND YEAR(created_at)=YEAR(CURRENT_DATE()) GROUP BY MONTH(created_at)", (hospital_id,))
+        for row in cursor.fetchall():
+            report_data["active_patient_growth"][row["month"] - 1] = row["count"]
+        cursor.execute("SELECT COUNT(*) AS count FROM patients WHERE hospital_id=%s", (hospital_id,))
+        report_data["patient_total"] = cursor.fetchone()["count"]
+
+        today = date.today()
+        week_start = today - timedelta(days=today.weekday())
+        report_data["weekly"]["labels"] = [(week_start + timedelta(days=index)).strftime("%a %d") for index in range(7)]
+        for table, key in (("patients", "patients"), ("doctors", "doctors")):
+            cursor.execute(f"SELECT DAYOFWEEK(created_at) - 2 AS weekday, COUNT(*) AS count FROM {table} WHERE hospital_id=%s AND created_at >= %s AND created_at < %s GROUP BY DAYOFWEEK(created_at)", (hospital_id, week_start, today + timedelta(days=1)))
+            for row in cursor.fetchall():
+                if 0 <= row["weekday"] <= 6:
+                    report_data["weekly"][key][row["weekday"]] = row["count"]
+
+        cursor.execute("SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='medical_records'")
+        records_exist = cursor.fetchone()["count"] > 0
+        if records_exist:
+            cursor.execute("SHOW COLUMNS FROM medical_records")
+            record_columns = {column["Field"] for column in cursor.fetchall()}
+            type_field = next((field for field in ("record_type", "type", "category", "record_category") if field in record_columns), None)
+            date_field = next((field for field in ("created_at", "record_date", "date_created") if field in record_columns), None)
+            doctor_field = next((field for field in ("doctor_id", "doctor", "doctor_id_fk") if field in record_columns), None)
+            patient_field = next((field for field in ("patient_id", "patient", "patient_id_fk") if field in record_columns), None)
+            if "hospital_id" in record_columns:
+                cursor.execute("SELECT COUNT(*) AS count FROM medical_records WHERE hospital_id=%s", (hospital_id,))
+                report_data["record_total"] = cursor.fetchone()["count"]
+                if type_field:
+                    cursor.execute(f"SELECT COALESCE(NULLIF(TRIM({type_field}), ''), 'N/A') AS label, COUNT(*) AS count FROM medical_records WHERE hospital_id=%s GROUP BY {type_field} ORDER BY count DESC", (hospital_id,))
+                    type_rows = cursor.fetchall()
+                    report_data["record_labels"] = [row["label"] for row in type_rows]
+                    report_data["record_counts"] = [row["count"] for row in type_rows]
+                if doctor_field and patient_field:
+                    month_clause = f" AND mr.{date_field} >= DATE_FORMAT(CURRENT_DATE(), '%%Y-%%m-01')" if date_field else ""
+                    cursor.execute(f"SELECT d.full_name, d.specialization, COUNT(mr.{doctor_field}) AS records, COUNT(DISTINCT mr.{patient_field}) AS patients FROM medical_records mr INNER JOIN doctors d ON d.doctor_id=mr.{doctor_field} WHERE mr.hospital_id=%s{month_clause} GROUP BY d.doctor_id, d.full_name, d.specialization ORDER BY records DESC LIMIT 5", (hospital_id,))
+                    report_data["top_doctors"] = cursor.fetchall()
+
+        cursor.execute("SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='appointments'")
+        if cursor.fetchone()["count"] > 0:
+            cursor.execute("SHOW COLUMNS FROM appointments")
+            appointment_columns = {column["Field"] for column in cursor.fetchall()}
+            if "hospital_id" in appointment_columns:
+                cursor.execute("SELECT COUNT(*) AS count FROM appointments WHERE hospital_id=%s", (hospital_id,))
+                report_data["appointment_total"] = cursor.fetchone()["count"]
+
+        return render_template("hospital-admin/reports.html", hospital_name=hospital_name, admin_name=user_row.get("full_name") or "Hospital Admin", report_year=today.year, report_data=report_data)
+    except Exception as error:
+        print("DB Error Reports Page:", error)
+        return render_template("hospital-admin/reports.html", hospital_name="Hospital", admin_name="Hospital Admin", report_year=date.today().year, report_data=empty_data)
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+# ====================================================================
+# Hospital Admin Medical Records Route
+# ====================================================================
+@app.route("/hospital-admin/medical_records")
+@app.route("/hospital-admin/medical_records.html")
+def hospital_admin_medical_records():
+    if session.get("user_role") != "hospital_admin":
+        return redirect(url_for("login"))
+
+    cursor = None
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        user_id = session.get("user_id")
+
+        cursor.execute("SELECT hospital_id, full_name FROM users WHERE user_id=%s", (user_id,))
+        user_row = cursor.fetchone()
+        if not user_row:
+            return redirect(url_for("login"))
+
+        hospital_id = user_row.get("hospital_id")
+        admin_name = user_row.get("full_name") or "Hospital Admin"
+
+        if hospital_id is None:
+            return render_template(
+                "hospital-admin/medical_records.html",
+                records=[],
+                stats={
+                    "total_records": "N/A",
+                    "consultations": "N/A",
+                    "lab_results": "N/A",
+                    "radiology": "N/A",
+                    "prescriptions": "N/A"
+                },
+                hospital_name="Hospital",
+                admin_name=admin_name,
+                table_exists=False
+            )
+
+        cursor.execute("SELECT hospital_name FROM hospitals WHERE hospital_id=%s", (hospital_id,))
+        hospital_row = cursor.fetchone()
+        hospital_name = hospital_row["hospital_name"] if hospital_row else "Hospital"
+
+        cursor.execute(
+            "SELECT COUNT(*) as cnt FROM information_schema.tables "
+            "WHERE table_schema = DATABASE() AND table_name = 'medical_records'"
+        )
+        table_exists = cursor.fetchone()["cnt"] > 0
+
+        stats = {
+            "total_records": "N/A",
+            "consultations": "N/A",
+            "lab_results": "N/A",
+            "radiology": "N/A",
+            "prescriptions": "N/A"
+        }
+        records = []
+
+        if table_exists:
+            try:
+                cursor.execute("SHOW COLUMNS FROM medical_records")
+                columns = [col["Field"] for col in cursor.fetchall()]
+                if columns:
+                    id_field = next((name for name in ["medical_record_id", "record_id", "id"] if name in columns), "medical_record_id")
+                    patient_field = next((name for name in ["patient_id", "patient", "patient_id_fk"] if name in columns), "patient_id")
+                    doctor_field = next((name for name in ["doctor_id", "doctor", "doctor_id_fk"] if name in columns), "doctor_id")
+                    record_type_field = next((name for name in ["record_type", "type", "category", "record_category"] if name in columns), "record_type")
+                    title_field = next((name for name in ["title", "record_title", "name"] if name in columns), "title")
+                    diagnosis_field = next((name for name in ["diagnosis", "summary", "details", "notes"] if name in columns), "diagnosis")
+                    status_field = next((name for name in ["status", "record_status"] if name in columns), "status")
+                    date_field = next((name for name in ["created_at", "record_date", "date_created"] if name in columns), "created_at")
+                    notes_field = next((name for name in ["notes", "description", "details"] if name in columns), "notes")
+
+                    select_cols = [
+                        f"mr.{id_field} AS record_id",
+                        f"mr.{patient_field} AS patient_id",
+                        f"mr.{doctor_field} AS doctor_id",
+                        f"mr.{record_type_field} AS record_type",
+                        f"mr.{title_field} AS title",
+                        f"mr.{diagnosis_field} AS diagnosis",
+                        f"mr.{status_field} AS status",
+                        f"mr.{date_field} AS created_at",
+                        f"mr.{notes_field} AS notes"
+                    ]
+
+                    query = f"""
+                        SELECT {', '.join(select_cols)},
+                               p.full_name AS patient_name,
+                               d.full_name AS doctor_name
+                        FROM medical_records mr
+                        LEFT JOIN patients p ON p.patient_id = mr.{patient_field}
+                        LEFT JOIN doctors d ON d.doctor_id = mr.{doctor_field}
+                        WHERE mr.hospital_id = %s
+                        ORDER BY mr.{date_field} DESC
+                    """
+                    cursor.execute(query, (hospital_id,))
+                    records = cursor.fetchall()
+
+                    for record in records:
+                        record["patient_name"] = record.get("patient_name") or "Unknown Patient"
+                        record["doctor_name"] = record.get("doctor_name") or "Unknown Doctor"
+                        record["record_type"] = (record.get("record_type") or "N/A").strip() or "N/A"
+                        record["title"] = record.get("title") or record.get("record_type") or "Medical Record"
+                        record["diagnosis"] = record.get("diagnosis") or record.get("notes") or "No diagnosis recorded"
+                        record["status"] = (record.get("status") or "").strip() or "Unknown"
+                        record["notes"] = record.get("notes") or "No additional notes available."
+                        if record.get("created_at"):
+                            created_at = record["created_at"]
+                            if hasattr(created_at, "strftime"):
+                                record["created_at_display"] = created_at.strftime("%b %d, %Y")
+                                record["created_at_full"] = created_at.strftime("%d %b %Y, %H:%M")
+                            else:
+                                record["created_at_display"] = str(created_at)
+                                record["created_at_full"] = str(created_at)
+                        else:
+                            record["created_at_display"] = "N/A"
+                            record["created_at_full"] = "N/A"
+                        record["record_id_display"] = str(record.get("record_id") or "N/A")
+
+                    stats["total_records"] = len(records)
+                    type_counts = {
+                        "Consultation": 0,
+                        "Lab Result": 0,
+                        "Radiology": 0,
+                        "Prescription": 0
+                    }
+                    for rec in records:
+                        rtype = str(rec.get("record_type") or "").strip()
+                        rtype_lower = rtype.lower()
+                        if "consult" in rtype_lower:
+                            type_counts["Consultation"] += 1
+                        elif "lab" in rtype_lower:
+                            type_counts["Lab Result"] += 1
+                        elif "radi" in rtype_lower:
+                            type_counts["Radiology"] += 1
+                        elif "pres" in rtype_lower:
+                            type_counts["Prescription"] += 1
+                    stats["consultations"] = type_counts["Consultation"]
+                    stats["lab_results"] = type_counts["Lab Result"]
+                    stats["radiology"] = type_counts["Radiology"]
+                    stats["prescriptions"] = type_counts["Prescription"]
+            except Exception as e:
+                print("Medical record fetch error:", e)
+                records = []
+                stats = {
+                    "total_records": 0,
+                    "consultations": 0,
+                    "lab_results": 0,
+                    "radiology": 0,
+                    "prescriptions": 0
+                }
+
+        return render_template(
+            "hospital-admin/medical_records.html",
+            records=records,
+            stats=stats,
+            hospital_name=hospital_name,
+            admin_name=admin_name,
+            table_exists=table_exists
+        )
+    except Exception as e:
+        print("DB Error Medical Records Page:", e)
+        return render_template(
+            "hospital-admin/medical_records.html",
+            records=[],
+            stats={
+                "total_records": "N/A",
+                "consultations": "N/A",
+                "lab_results": "N/A",
+                "radiology": "N/A",
+                "prescriptions": "N/A"
+            },
+            hospital_name="Hospital",
+            admin_name="Hospital Admin",
+            table_exists=False
+        )
+    finally:
+        if cursor is not None:
+            cursor.close()
+
 # Automatically create routes for every HTML file
 for html in templates_dir.rglob("*.html"):
 
@@ -1427,7 +1823,9 @@ for html in templates_dir.rglob("*.html"):
         "system-admin/settings.html",
         "hospital-admin/dashboard.html",
         "hospital-admin/doctors.html",
-        "hospital-admin/patients.html"
+        "hospital-admin/patients.html",
+        "hospital-admin/reports.html",
+        "hospital-admin/settings.html"
     ]:
         continue
 
