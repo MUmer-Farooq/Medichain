@@ -10,12 +10,13 @@
   <link rel="stylesheet" href="/static/css/style.css">
 <link rel="stylesheet" href="/static/css/dashboard.css">
 <link rel="stylesheet" href="/static/css/responsive.css">
+  <link rel="stylesheet" href="/static/css/doctor-dashboard.css">
 </head>
 <body class="page-bg">
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
 <aside class="mc-sidebar" id="mc-sidebar">
   <a href="/doctor/dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-chain"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Doctor Portal</span></div></a>
-  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">AA</div><div class="user-info"><div class="user-name">Dr. Ahmad Azman</div><div class="user-role">Cardiologist</div></div></div>
+  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">{{ (doctor.full_name or 'N/A')[:2]|upper }}</div><div class="user-info"><div class="user-name">{{ doctor.full_name or 'N/A' }}</div><div class="user-role">{{ doctor.specialization or 'N/A' }}</div></div></div>
   <nav class="sidebar-nav">
     <div class="nav-section-label">Overview</div>
     <a href="/doctor/dashboard.html" class="nav-item-link active"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
@@ -28,34 +29,33 @@
     <a href="/doctor/profile.html" class="nav-item-link"><i class="fas fa-user-circle nav-icon"></i><span class="nav-text">My Profile</span></a>
     <a href="/login.html" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
   </nav>
-  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>General Hospital KL</span></div></div>
+  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>{{ doctor.hospital_name or 'N/A' }}</span></div></div>
 </aside>
 <header class="mc-topbar">
   <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><span>Doctor Portal</span><span class="bc-sep">/</span><span class="bc-current">Dashboard</span></div></div>
   <div class="topbar-right">
-    <div class="topbar-search"><i class="fas fa-search search-icon"></i><input type="search" placeholder="Search patients…"/></div>
-    <a class="topbar-btn" href="#"><i class="fas fa-bell"></i><span class="notif-count">3</span></a>
-    <div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">AA</div><span class="ud-name">Dr. Ahmad</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="profile.html"><i class="fas fa-user-circle"></i>My Profile</a></li><li><hr class="dropdown-divider"/></li><li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div>
+    <div class="topbar-search"><i class="fas fa-search search-icon"></i><input id="dashboard-search" type="search" placeholder="Search patients…"/></div>
+    <a class="topbar-btn" href="#appointments-section" aria-label="View today's appointments"><i class="fas fa-bell"></i><span class="notif-count">N/A</span></a>
+    <div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">{{ (doctor.full_name or 'N/A')[:2]|upper }}</div><span class="ud-name">{{ doctor.full_name or 'N/A' }}</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="profile.html"><i class="fas fa-user-circle"></i>My Profile</a></li><li><hr class="dropdown-divider"/></li><li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div>
   </div>
 </header>
 <main class="mc-content">
 
   <!-- Welcome Banner -->
-{# Flask Dynamic: {{ current_user.name if current_user else '' }}, {{ todays_appointments if todays_appointments else '' }} #}
   <div class="welcome-banner" style="background:linear-gradient(135deg,#1a73e8 0%,#0d47a1 60%,#29b6f6 100%);">
     <div class="row align-items-center">
       <div class="col-lg-7">
-        <h3><i class="fas fa-stethoscope me-2"></i>Good Morning, Dr. Ahmad Azman</h3>
-        <p>You have <strong>8 patients scheduled</strong> today and <strong>2 pending lab results</strong> to review.</p>
+        <h3><i class="fas fa-stethoscope me-2"></i>Good Morning, {{ doctor.full_name or 'N/A' }}</h3>
+        <p>You have <strong>{{ today_appointments|length if stats.appointments != 'N/A' else 'N/A' }} patients scheduled</strong> today and <strong>{{ stats.pending }} pending lab results</strong> to review.</p>
         <div class="mt-3">
-<a href="/doctor/create_record.html" class="btn btn-sm me-2"
-<a href="/doctor/patients.html" class="btn btn-sm"
+          <a href="/doctor/create_record.html" class="btn btn-sm me-2">New Record</a>
+          <a href="/doctor/patients.html" class="btn btn-sm">View Patients</a>
         </div>
       </div>
       <div class="col-lg-5 d-none d-lg-flex justify-content-end gap-3">
-        <div class="banner-stat"><span class="val" data-count="48">48</span><span class="lbl">My Patients</span></div>
-        <div class="banner-stat"><span class="val" data-count="8">8</span><span class="lbl">Today</span></div>
-        <div class="banner-stat"><span class="val" data-count="312">312</span><span class="lbl">Records</span></div>
+        <div class="banner-stat"><span class="val">{{ stats.patients }}</span><span class="lbl">My Patients</span></div>
+        <div class="banner-stat"><span class="val">{{ today_appointments|length if stats.appointments != 'N/A' else 'N/A' }}</span><span class="lbl">Today</span></div>
+        <div class="banner-stat"><span class="val">{{ stats.records }}</span><span class="lbl">Records</span></div>
       </div>
     </div>
   </div>
@@ -63,34 +63,33 @@
   <!-- Stats -->
   {# Flask Dynamic: {{ doctor_stats }} #}
   <div class="stats-grid mb-4">
-    <div class="stat-card primary"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value" data-count="48">48</div><div class="stat-label">My Patients</div><div class="stat-change up"><i class="fas fa-arrow-up"></i>+3 this week</div></div>
-    <div class="stat-card info"><div class="stat-icon"><i class="fas fa-calendar-check"></i></div><div class="stat-value" data-count="8">8</div><div class="stat-label">Today's Appointments</div><div class="stat-change up">2 pending</div></div>
-    <div class="stat-card success"><div class="stat-icon"><i class="fas fa-file-medical"></i></div><div class="stat-value" data-count="312">312</div><div class="stat-label">Records Created</div><div class="stat-change up"><i class="fas fa-arrow-up"></i>+14 this week</div></div>
-    <div class="stat-card warning"><div class="stat-icon"><i class="fas fa-flask"></i></div><div class="stat-value" data-count="2">2</div><div class="stat-label">Pending Lab Results</div><div class="stat-change down">Review required</div></div>
-    <div class="stat-card secondary"><div class="stat-icon"><i class="fas fa-cubes"></i></div><div class="stat-value" data-count="3820">3,820</div><div class="stat-label">Blockchain Records</div><div class="stat-change up">All verified</div></div>
+    <div class="stat-card primary"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value">{{ stats.patients }}</div><div class="stat-label">My Patients</div><div class="stat-change">Database count</div></div>
+    <div class="stat-card info"><div class="stat-icon"><i class="fas fa-calendar-check"></i></div><div class="stat-value">{{ stats.appointments }}</div><div class="stat-label">Today's Appointments</div><div class="stat-change">Database count</div></div>
+    <div class="stat-card success"><div class="stat-icon"><i class="fas fa-file-medical"></i></div><div class="stat-value">{{ stats.records }}</div><div class="stat-label">Records Created</div><div class="stat-change">Database count</div></div>
+    <div class="stat-card warning"><div class="stat-icon"><i class="fas fa-flask"></i></div><div class="stat-value">{{ stats.pending }}</div><div class="stat-label">Pending Lab Results</div><div class="stat-change">Database count</div></div>
+    <div class="stat-card secondary"><div class="stat-icon"><i class="fas fa-prescription-bottle-alt"></i></div><div class="stat-value">{{ stats.prescriptions }}</div><div class="stat-label">Prescriptions</div><div class="stat-change">Database count</div></div>
   </div>
 
   <!-- Charts + Schedule -->
   <div class="row g-4 mb-4">
     <div class="col-lg-8">
-      <div class="mc-card">
+      <div class="mc-card" id="appointments-section">
         <div class="card-header"><span><i class="fas fa-chart-bar text-primary me-2"></i>Weekly Appointments</span></div>
-        <div class="card-body"><div class="chart-container" style="height:260px;"><canvas id="appointmentsChart"></canvas></div></div>
+        <div class="card-body"><div class="chart-container" style="height:260px;"><canvas id="appointmentsChart" data-labels='{{ weekly_appointments.labels|tojson }}' data-scheduled='{{ weekly_appointments.scheduled|tojson }}' data-completed='{{ weekly_appointments.completed|tojson }}'></canvas></div></div>
       </div>
     </div>
     <div class="col-lg-4">
       <div class="mc-card">
-        <div class="card-header"><span><i class="fas fa-calendar-day text-info me-2"></i>Today's Schedule</span><span class="badge badge-primary-soft">Jun 30</span></div>
+        <div class="card-header"><span><i class="fas fa-calendar-day text-info me-2"></i>Today's Schedule</span><span class="badge badge-primary-soft">{{ today_appointments|length }} appointments</span></div>
         <div class="card-body p-0">
-          {# Flask Dynamic: {% for appt in today_appointments %} #}
           <div class="list-group list-group-flush">
-            <div class="list-group-item border-0 border-bottom py-3 px-3"><div class="d-flex justify-content-between"><div><div class="fw-600 fs-13">Ahmad Bin Jalil</div><div class="fs-12 text-muted">09:00 AM — Cardiology</div></div><span class="badge badge-success-soft">Confirmed</span></div></div>
-            <div class="list-group-item border-0 border-bottom py-3 px-3"><div class="d-flex justify-content-between"><div><div class="fw-600 fs-13">Siti Hajar Aziz</div><div class="fs-12 text-muted">10:30 AM — Follow-up</div></div><span class="badge badge-success-soft">Confirmed</span></div></div>
-            <div class="list-group-item border-0 border-bottom py-3 px-3"><div class="d-flex justify-content-between"><div><div class="fw-600 fs-13">Robert Lee</div><div class="fs-12 text-muted">02:00 PM — Review Results</div></div><span class="badge badge-warning-soft">Pending</span></div></div>
-            <div class="list-group-item border-0 py-3 px-3"><div class="d-flex justify-content-between"><div><div class="fw-600 fs-13">Raj Kumar</div><div class="fs-12 text-muted">04:00 PM — Post-op Check</div></div><span class="badge badge-info-soft">Scheduled</span></div></div>
+            {% for appt in today_appointments %}<div class="list-group-item border-0 border-bottom py-3 px-3"><div class="d-flex justify-content-between"><div><div class="fw-600 fs-13">{{ appt.patient_name or 'N/A' }}</div><div class="fs-12 text-muted">{{ appt.appointment_date or 'N/A' }}</div></div><span class="badge badge-info-soft">{{ appt.status or 'N/A' }}</span></div></div>{% else %}<div class="p-3 text-muted">{{ 'No data available' if stats.appointments == 'N/A' else 'No appointments today' }}</div>{% endfor %}
           </div>
-          {# Flask: {% endfor %} #}
         </div>
+      </div>
+      <div class="mc-card mt-4">
+        <div class="card-header"><span><i class="fas fa-file-medical text-success me-2"></i>Recent Medical Records</span></div>
+        <div class="card-body p-0"><table id="recent-records-table" class="mc-table"><thead><tr><th>Record</th><th>Patient ID</th><th>Created</th></tr></thead><tbody>{% for record in recent_records %}<tr><td>{{ record.title or 'N/A' }}</td><td>{{ record.patient_id or 'N/A' }}</td><td>{{ record.created_at or 'N/A' }}</td></tr>{% else %}<tr><td colspan="3" class="text-center text-muted py-4">{{ 'No data available' if stats.records == 'N/A' else 'No medical records available' }}</td></tr>{% endfor %}</tbody></table></div>
       </div>
     </div>
   </div>
@@ -99,18 +98,14 @@
   <div class="row g-4">
     <div class="col-lg-8">
       <div class="mc-card">
-<a href="/doctor/patients.html" class="btn btn-sm btn-outline-primary">
+        <div class="card-header"><span><i class="fas fa-users text-primary me-2"></i>Recent Patients</span><a href="/doctor/patients.html" class="btn btn-sm btn-outline-primary">View all</a></div>
         <div class="card-body p-0">
-          {# Flask Dynamic: {% for patient in recent_patients %} #}
-          <table class="mc-table">
+          <table id="recent-patients-table" class="mc-table">
             <thead><tr><th>Patient</th><th>ID</th><th>Last Visit</th><th>Diagnosis</th><th>Actions</th></tr></thead>
             <tbody>
-              <tr><td><div class="fw-600 fs-13">Ahmad Bin Jalil</div><div class="fs-11 text-muted">45 / Male</div></td><td class="font-monospace fs-11">MC-2024-008342</td><td>Jun 28</td><td>Type 2 Diabetes</td><td><div class="table-actions"><a href="medical_history.html" class="btn-icon"><i class="fas fa-history"></i></a><a href="create_record.html" class="btn-icon btn-success"><i class="fas fa-file-plus"></i></a></div></td></tr>
-              <tr><td><div class="fw-600 fs-13">Siti Hajar Aziz</div><div class="fs-11 text-muted">34 / Female</div></td><td class="font-monospace fs-11">MC-2024-007891</td><td>Jun 25</td><td>Hypertension</td><td><div class="table-actions"><a href="medical_history.html" class="btn-icon"><i class="fas fa-history"></i></a><a href="create_record.html" class="btn-icon btn-success"><i class="fas fa-file-plus"></i></a></div></td></tr>
-              <tr><td><div class="fw-600 fs-13">Aida Rahman</div><div class="fs-11 text-muted">37 / Female</div></td><td class="font-monospace fs-11">MC-2024-005120</td><td>Jun 15</td><td>Diabetes Type 2</td><td><div class="table-actions"><a href="medical_history.html" class="btn-icon"><i class="fas fa-history"></i></a><a href="create_record.html" class="btn-icon btn-success"><i class="fas fa-file-plus"></i></a></div></td></tr>
+              {% for patient in recent_patients %}<tr><td><div class="fw-600 fs-13">{{ patient.full_name or 'N/A' }}</div></td><td class="font-monospace fs-11">{{ patient.patient_id or 'N/A' }}</td><td>{{ patient.last_visit or 'N/A' }}</td><td>{{ patient.diagnosis or 'N/A' }}</td><td><div class="table-actions"><a href="medical_history.html" class="btn-icon"><i class="fas fa-history"></i></a><a href="create_record.html" class="btn-icon btn-success"><i class="fas fa-file-plus"></i></a></div></td></tr>{% else %}<tr><td colspan="5" class="text-center text-muted py-4">{{ 'No data available' if stats.patients == 'N/A' else 'No patients available' }}</td></tr>{% endfor %}
             </tbody>
           </table>
-          {# Flask: {% endfor %} #}
         </div>
       </div>
     </div>
@@ -119,12 +114,11 @@
         <div class="card-header"><span><i class="fas fa-bolt text-warning me-2"></i>Quick Actions</span></div>
         <div class="card-body">
           <div class="row g-2">
-            <div class="col-6"><a href="create_record.html" class="quick-action"><div class="qa-icon"><i class="fas fa-file-plus"></i></div>New Record</a></div>
-            <div class="col-6"><a href="upload_reports.html" class="quick-action"><div class="qa-icon"><i class="fas fa-upload"></i></div>Upload Report</a></div>
-href="/doctor/patients.html"
-            <div class="col-6"><a href="medical_history.html" class="quick-action"><div class="qa-icon"><i class="fas fa-history"></i></div>History</a></div>
-            <div class="col-6"><a href="profile.html" class="quick-action"><div class="qa-icon"><i class="fas fa-user-md"></i></div>Profile</a></div>
-<a href="#" class="quick-action" onclick="event.preventDefault();MediChain.showToast('Scheduling coming soon!','info')"><div class="qa-icon"><i class="fas fa-calendar-plus"></i></div>Schedule</a>
+            <div class="col-6"><a href="/doctor/create_record.html" class="quick-action"><div class="qa-icon"><i class="fas fa-file-plus"></i></div>New Record</a></div>
+            <div class="col-6"><a href="/doctor/upload_reports.html" class="quick-action"><div class="qa-icon"><i class="fas fa-upload"></i></div>Upload Report</a></div>
+            <div class="col-6"><a href="/doctor/medical_history.html" class="quick-action"><div class="qa-icon"><i class="fas fa-history"></i></div>History</a></div>
+            <div class="col-6"><a href="/doctor/profile.html" class="quick-action"><div class="qa-icon"><i class="fas fa-user-md"></i></div>Profile</a></div>
+            <div class="col-6"><a href="#appointments-section" class="quick-action"><div class="qa-icon"><i class="fas fa-calendar-plus"></i></div>Schedule</a></div>
           </div>
         </div>
       </div>

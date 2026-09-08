@@ -15,7 +15,7 @@
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
 <aside class="mc-sidebar" id="mc-sidebar">
   <a href="dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-chain"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Doctor Portal</span></div></a>
-  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">AA</div><div class="user-info"><div class="user-name">Dr. Ahmad Azman</div><div class="user-role">Cardiologist</div></div></div>
+  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">{{ (doctor.full_name or 'N/A')[:2]|upper }}</div><div class="user-info"><div class="user-name">{{ doctor.full_name or 'N/A' }}</div><div class="user-role">{{ doctor.specialization or 'N/A' }}</div></div></div>
   <nav class="sidebar-nav">
     <div class="nav-section-label">Overview</div>
     <a href="dashboard.html" class="nav-item-link"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
@@ -28,13 +28,13 @@
     <a href="profile.html" class="nav-item-link"><i class="fas fa-user-circle nav-icon"></i><span class="nav-text">My Profile</span></a>
     <a href="../login.html" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
   </nav>
-  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>General Hospital KL</span></div></div>
+  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>{{ doctor.hospital_name or 'N/A' }}</span></div></div>
 </aside>
 <header class="mc-topbar">
   <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><a href="dashboard.html" class="text-muted">Doctor</a><span class="bc-sep">/</span><span class="bc-current">Medical History</span></div></div>
   <div class="topbar-right">
     <div class="topbar-search"><i class="fas fa-search search-icon"></i><input type="search" placeholder="Search records…"/></div>
-    <div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">AA</div><span class="ud-name">Dr. Ahmad</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div>
+    <div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">{{ (doctor.full_name or 'N/A')[:2]|upper }}</div><span class="ud-name">{{ doctor.full_name or 'N/A' }}</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div>
   </div>
 </header>
 <main class="mc-content">
@@ -44,16 +44,14 @@
       <div class="row align-items-center g-3">
         <div class="col-md-6">
           <label class="form-label mb-1">Select Patient to View History</label>
-          {# Flask Dynamic: /api/doctor/patients #}
           <select class="form-select" onchange="loadPatientHistory(this.value)">
-            <option value="MC-2024-008342">Ahmad Bin Jalil — MC-2024-008342 ← (Current)</option>
-            <option value="MC-2024-007891">Siti Hajar Aziz — MC-2024-007891</option>
-            <option value="MC-2024-006543">Robert Lee — MC-2024-006543</option>
+            <option value="">All patients</option>
+            {% for patient in patients %}<option value="{{ patient.patient_id }}" {% if selected_patient_id|string == patient.patient_id|string %}selected{% endif %}>{{ patient.full_name or 'N/A' }} — {{ patient.patient_id }}</option>{% else %}<option disabled>No data available</option>{% endfor %}
           </select>
         </div>
         <div class="col-md-6">
           <div class="d-flex gap-2 justify-content-md-end flex-wrap">
-            <a href="create_record.html" class="btn btn-primary btn-sm"><i class="fas fa-file-plus me-1"></i>New Record</a>
+            <a href="/doctor/create_record.html" class="btn btn-primary btn-sm"><i class="fas fa-file-plus me-1"></i>New Record</a>
             <button class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button>
             <button class="btn btn-outline-success btn-sm" onclick="MediChain.showToast('PDF exported!','success')"><i class="fas fa-download me-1"></i>Export PDF</button>
           </div>
@@ -63,26 +61,24 @@
   </div>
 
   <!-- Patient Card -->
-  {# Flask Dynamic: {{ patient }} #}
   <div class="row g-4 mb-4">
     <div class="col-lg-4">
       <div class="mc-card">
         <div class="card-body text-center">
-          <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1a73e8,#00bcd4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.8rem;font-weight:700;margin:0 auto 1rem;">AJ</div>
-          <h5 class="fw-700 mb-0">Ahmad Bin Jalil</h5>
-          <div class="text-muted fs-13 mb-2">MC-2024-008342</div>
+          <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1a73e8,#00bcd4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.8rem;font-weight:700;margin:0 auto 1rem;">{{ (selected_patient.full_name if selected_patient else 'N/A')[:2]|upper }}</div>
+          <h5 class="fw-700 mb-0">{{ selected_patient.full_name if selected_patient else 'All Patients' }}</h5>
+          <div class="text-muted fs-13 mb-2">{{ selected_patient.patient_id if selected_patient else 'N/A' }}</div>
           <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
-            <span class="badge badge-primary-soft">45 years</span>
-            <span class="badge badge-success-soft">Male</span>
-            <span class="badge badge-danger-soft">O+</span>
+            <span class="badge badge-primary-soft">{{ selected_patient.date_of_birth if selected_patient else 'N/A' }}</span>
+            <span class="badge badge-success-soft">{{ selected_patient.gender if selected_patient else 'N/A' }}</span>
+            <span class="badge badge-danger-soft">{{ selected_patient.blood_group if selected_patient else 'N/A' }}</span>
           </div>
           <div class="text-start">
-            <div class="d-flex justify-content-between py-2 border-bottom fs-12"><span class="text-muted">Phone</span><strong>+60 12-XXX-XXXX</strong></div>
-            <div class="d-flex justify-content-between py-2 border-bottom fs-12"><span class="text-muted">Email</span><strong>ahmad@email.com</strong></div>
-            <div class="d-flex justify-content-between py-2 border-bottom fs-12"><span class="text-muted">IC</span><strong>810415-07-5234</strong></div>
-            <div class="d-flex justify-content-between py-2 border-bottom fs-12"><span class="text-muted">Allergies</span><strong class="text-danger">Penicillin</strong></div>
-            <div class="d-flex justify-content-between py-2 border-bottom fs-12"><span class="text-muted">Total Records</span><strong>24</strong></div>
-            <div class="d-flex justify-content-between py-2 fs-12"><span class="text-muted">Blockchain Txs</span><strong class="text-success">24 ✓</strong></div>
+            <div class="d-flex justify-content-between py-2 border-bottom fs-12"><span class="text-muted">Phone</span><strong>{{ selected_patient.phone if selected_patient else 'N/A' }}</strong></div>
+            <div class="d-flex justify-content-between py-2 border-bottom fs-12"><span class="text-muted">Email</span><strong>{{ selected_patient.email if selected_patient else 'N/A' }}</strong></div>
+            <div class="d-flex justify-content-between py-2 border-bottom fs-12"><span class="text-muted">Address</span><strong>{{ selected_patient.address if selected_patient else 'N/A' }}</strong></div>
+            <div class="d-flex justify-content-between py-2 border-bottom fs-12"><span class="text-muted">Status</span><strong>{{ selected_patient.status if selected_patient else 'N/A' }}</strong></div>
+            <div class="d-flex justify-content-between py-2 fs-12"><span class="text-muted">Records</span><strong>{{ records|length }}</strong></div>
           </div>
         </div>
       </div>
@@ -92,7 +88,7 @@
     <div class="col-lg-8">
       <div class="mc-card">
         <div class="card-header">
-          <span><i class="fas fa-history text-primary me-2"></i>Medical History — <span class="text-primary">Ahmad Bin Jalil</span></span>
+          <span><i class="fas fa-history text-primary me-2"></i>Medical Records — <span class="text-primary">{{ selected_patient.full_name if selected_patient else 'All Patients' }}</span></span>
           <div class="d-flex gap-1">
             <button class="btn btn-sm btn-outline-secondary" onclick="filterRecords('all')">All</button>
             <button class="btn btn-sm btn-outline-primary" onclick="filterRecords('consultation')">Consult</button>
@@ -100,44 +96,8 @@
           </div>
         </div>
         <div class="card-body">
-          {# Flask Dynamic: {% for record in patient.records %} #}
           <div class="timeline">
-            <div class="timeline-item">
-              <div class="timeline-dot" style="background:#e8f0fe;color:var(--primary);"><i class="fas fa-stethoscope" style="font-size:.5rem;"></i></div>
-              <div class="tl-title">Diabetes Follow-up Consultation</div>
-              <div class="tl-desc"><span class="badge badge-primary-soft me-2">Consultation</span>Dr. Ahmad Azman • HKL</div>
-              <div class="tl-desc mt-1 text-muted">HbA1c improved to 7.1%. Continue Metformin 1000mg BD. Blood pressure controlled. Next review in 3 months.</div>
-              <div class="tl-time">28 June 2026 — <span class="font-monospace text-muted fs-11">Block #18,432 • Verified</span></div>
-              <div class="mt-2"><button class="btn btn-sm btn-outline-primary fs-11" data-bs-toggle="modal" data-bs-target="#recordModal"><i class="fas fa-eye me-1"></i>Full Record</button></div>
-            </div>
-            <div class="timeline-item">
-              <div class="timeline-dot" style="background:#e8f5e9;color:var(--success);"><i class="fas fa-flask" style="font-size:.5rem;"></i></div>
-              <div class="tl-title">HbA1c Blood Test Results</div>
-              <div class="tl-desc"><span class="badge badge-success-soft me-2">Lab Result</span>HKL Pathology Lab</div>
-              <div class="tl-desc mt-1 text-muted">HbA1c: 7.1% (Target: &lt;7.0%). Fasting glucose: 6.8 mmol/L. Creatinine: Normal. Cholesterol: 5.2 mmol/L.</div>
-              <div class="tl-time">26 June 2026 — <span class="font-monospace text-muted fs-11">Block #18,398 • Verified</span></div>
-            </div>
-            <div class="timeline-item">
-              <div class="timeline-dot" style="background:#fff8e1;color:var(--warning);"><i class="fas fa-pills" style="font-size:.5rem;"></i></div>
-              <div class="tl-title">Prescription — Metformin 1000mg</div>
-              <div class="tl-desc"><span class="badge badge-warning-soft me-2">Prescription</span>Dr. Ahmad Azman</div>
-              <div class="tl-desc mt-1 text-muted">Metformin 1000mg BD × 90 days. Amlodipine 5mg OD × 90 days. Atorvastatin 20mg ON × 90 days.</div>
-              <div class="tl-time">28 March 2026 — <span class="font-monospace text-muted fs-11">Block #17,802 • Verified</span></div>
-            </div>
-            <div class="timeline-item">
-              <div class="timeline-dot" style="background:#e1f5fe;color:var(--info);"><i class="fas fa-heart" style="font-size:.5rem;"></i></div>
-              <div class="tl-title">ECG — Cardiac Assessment</div>
-              <div class="tl-desc"><span class="badge badge-info-soft me-2">Radiology</span>HKL Cardiology Dept</div>
-              <div class="tl-desc mt-1 text-muted">ECG normal sinus rhythm. No ST changes. Echocardiogram: EF 55%, normal LV function. Risk stratification: Low.</div>
-              <div class="tl-time">10 January 2026 — <span class="font-monospace text-muted fs-11">Block #17,210 • Verified</span></div>
-            </div>
-            <div class="timeline-item">
-              <div class="timeline-dot" style="background:#fce4ec;color:var(--danger);"><i class="fas fa-hospital" style="font-size:.5rem;"></i></div>
-              <div class="tl-title">Initial Diagnosis — Type 2 Diabetes Mellitus</div>
-              <div class="tl-desc"><span class="badge badge-danger-soft me-2">Consultation</span>Dr. Ahmad Azman</div>
-              <div class="tl-desc mt-1 text-muted">Patient presented with polyuria, polydipsia for 3 months. FBS: 9.2 mmol/L. HbA1c: 8.2%. Diagnosed T2DM. Started Metformin 500mg BD.</div>
-              <div class="tl-time">15 June 2024 — <span class="font-monospace text-muted fs-11">Block #12,104 • Verified</span></div>
-            </div>
+            {% for record in records %}<div class="timeline-item"><div class="timeline-dot" style="background:#e8f0fe;color:var(--primary);"><i class="fas fa-file-medical" style="font-size:.5rem;"></i></div><div class="tl-title">{{ record.diagnosis or 'N/A' }}</div><div class="tl-desc"><span class="badge badge-primary-soft me-2">{{ record.record_type or 'N/A' }}</span>{{ doctor.full_name or 'N/A' }} • {{ record.patient_name or 'N/A' }}</div><div class="tl-desc mt-1 text-muted">{{ record.clinical_notes or 'N/A' }}</div><div class="tl-time">{{ record.visit_datetime or 'N/A' }} — <span class="font-monospace text-muted fs-11">Record #{{ record.record_id }}</span></div><div class="mt-2 d-flex gap-2"><button class="btn btn-sm btn-outline-primary fs-11" data-bs-toggle="modal" data-bs-target="#recordModal" data-record='{{ record|tojson }}'><i class="fas fa-eye me-1"></i>Full Record</button><form method="post" action="/doctor/medical-records/{{ record.record_id }}/delete" onsubmit="return confirm('Delete this medical record?');"><button class="btn btn-sm btn-outline-danger fs-11"><i class="fas fa-trash me-1"></i>Delete</button></form></div></div>{% else %}<div class="text-center text-muted py-4">No data available</div>{% endfor %}
           </div>
           {# Flask: {% endfor %} #}
         </div>
@@ -154,16 +114,17 @@
       <div class="modal-body">
         <div class="p-3 rounded-3 mb-3" style="background:#f8faff;border:1px solid var(--border-color);">
           <div class="row g-2 fs-12">
-            <div class="col-md-4"><span class="text-muted">Record ID:</span> <strong>REC-2026-041892</strong></div>
-            <div class="col-md-4"><span class="text-muted">Type:</span> <strong>Consultation</strong></div>
-            <div class="col-md-4"><span class="text-muted">Date:</span> <strong>28 Jun 2026</strong></div>
+            <div class="col-md-4"><span class="text-muted">Record ID:</span> <strong id="modalRecordId">N/A</strong></div>
+            <div class="col-md-4"><span class="text-muted">Type:</span> <strong id="modalRecordType">N/A</strong></div>
+            <div class="col-md-4"><span class="text-muted">Date:</span> <strong id="modalRecordDate">N/A</strong></div>
           </div>
         </div>
-        <div class="mb-3"><strong>Diagnosis:</strong> Type 2 Diabetes Mellitus — Follow-up (E11)</div>
-        <div class="mb-3"><strong>Clinical Notes:</strong> HbA1c improved from 8.2% to 7.1% since last visit. Blood pressure well-controlled on Amlodipine. Weight stable at 72kg. Patient compliant with medication. Advised continued dietary management and regular exercise. Follow-up in 3 months with repeat HbA1c.</div>
-        <div class="p-2 rounded font-monospace fs-11 mt-3" style="background:var(--text-dark);color:#64ffda;">
-          Block #18,432 | Hash: 0xa9f2b7d1c4e8f3a2 | Tx: Tx-94218 | Status: COMMITTED | Doctor: MCR-4521
-        </div>
+        <div class="mb-3"><strong>Diagnosis:</strong> <span id="modalDiagnosis">N/A</span></div>
+        <div class="mb-3"><strong>Clinical Notes:</strong> <span id="modalNotes">N/A</span></div>
+        <div class="mb-3"><strong>Prescriptions:</strong> <span id="modalPrescriptions">N/A</span></div>
+        <form id="record-edit-form" method="post" class="border-top pt-3 mt-3">
+          <h6>Edit Record</h6><div class="row g-2"><div class="col-md-6"><input class="form-control" name="record_type" placeholder="Record type" required></div><div class="col-md-6"><input class="form-control" name="diagnosis" placeholder="Diagnosis" required></div><div class="col-12"><textarea class="form-control" name="clinical_notes" rows="3" placeholder="Clinical notes" required></textarea></div><div class="col-md-6"><textarea class="form-control" name="treatment_procedure" rows="2" placeholder="Treatment / Procedure"></textarea></div><div class="col-md-6"><textarea class="form-control" name="followup_instructions" rows="2" placeholder="Follow-up instructions"></textarea></div></div><button class="btn btn-primary btn-sm mt-3" type="submit">Update Record</button>
+        </form>
       </div>
       <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button class="btn btn-outline-primary" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button></div>
     </div>
@@ -175,8 +136,24 @@
 
 <script src="/static/js/app.js"></script>
 <script>
-  function loadPatientHistory(id) { MediChain.showToast('Loading history for patient ' + id, 'info'); }
-  function filterRecords(type) { /* Flask Dynamic Route: /doctor/medical-history?patient_id=...&type= */ }
+  function loadPatientHistory(id) { window.location.href = id ? '/doctor/medical-history?patient_id=' + encodeURIComponent(id) : '/doctor/medical-history'; }
+  function filterRecords(type) { document.querySelectorAll('.timeline-item').forEach(item => { item.style.display = type === 'all' || item.textContent.toLowerCase().includes(type) ? '' : 'none'; }); }
+  document.getElementById('recordModal').addEventListener('show.bs.modal', event => {
+    const record = JSON.parse(event.relatedTarget.dataset.record || '{}');
+    document.getElementById('modalRecordId').textContent = record.record_id || 'N/A';
+    document.getElementById('modalRecordType').textContent = record.record_type || 'N/A';
+    document.getElementById('modalRecordDate').textContent = record.visit_datetime || 'N/A';
+    document.getElementById('modalDiagnosis').textContent = record.diagnosis || 'N/A';
+    document.getElementById('modalNotes').textContent = record.clinical_notes || 'N/A';
+    document.getElementById('modalPrescriptions').textContent = (record.prescriptions || []).map(item => [item.medication_name, item.dosage, item.frequency, item.duration].filter(Boolean).join(' — ')).join('; ') || 'N/A';
+    const form = document.getElementById('record-edit-form');
+    form.action = '/doctor/medical-records/' + record.record_id + '/edit';
+    form.record_type.value = record.record_type || '';
+    form.diagnosis.value = record.diagnosis || '';
+    form.clinical_notes.value = record.clinical_notes || '';
+    form.treatment_procedure.value = record.treatment_procedure || '';
+    form.followup_instructions.value = record.followup_instructions || '';
+  });
 </script>
 </body>
 </html>

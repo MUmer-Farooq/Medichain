@@ -25,10 +25,10 @@
       </div>
     </a>
     <div class="sidebar-user">
-      <div class="user-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">AA</div>
+      <div class="user-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">{{ (doctor.full_name or 'N/A')[:2]|upper }}</div>
       <div class="user-info">
-        <div class="user-name">Dr. Ahmad Azman</div>
-        <div class="user-role">Cardiologist</div>
+        <div class="user-name">{{ doctor.full_name or 'N/A' }}</div>
+        <div class="user-role">{{ doctor.specialization or 'N/A' }}</div>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -52,7 +52,7 @@
     </nav>
     <div class="sidebar-footer">
       <div class="version-badge">
-        <div class="version-dot"></div><span>General Hospital KL</span>
+        <div class="version-dot"></div><span>{{ doctor.hospital_name or 'N/A' }}</span>
       </div>
     </div>
   </aside>
@@ -65,11 +65,11 @@
     <div class="topbar-right">
       <div class="dropdown">
         <div class="user-dropdown-btn" data-bs-toggle="dropdown">
-          <div class="ud-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">AA</div><span
-            class="ud-name">Dr. Ahmad</span>
+          <div class="ud-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">{{ (doctor.full_name or 'N/A')[:2]|upper }}</div><span
+            class="ud-name">{{ doctor.full_name or 'N/A' }}</span>
         </div>
         <ul class="dropdown-menu dropdown-menu-end">
-          <li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a>
+          <li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt"></i>Sign Out</a>
           </li>
         </ul>
       </div>
@@ -79,7 +79,7 @@
     <div class="page-header">
       <div class="page-header-left">
         <h4><i class="fas fa-file-plus me-2 text-primary"></i>Create Medical Record</h4>
-        <p>Record will be encrypted and committed to the Hyperledger Fabric blockchain</p>
+        <p>Record details will be saved to the existing medical records database.</p>
       </div>
       <div class="page-header-right">
         <a href="patients.html" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Back</a>
@@ -88,12 +88,14 @@
 
     <div class="mc-alert mc-alert-info mb-4">
       <i class="fas fa-shield-halved alert-icon"></i>
-      This record will be permanently stored on the blockchain after submission. Ensure all details are correct before
+      Ensure all details are correct before
       saving.
     </div>
 
-    {# Flask: <form action="{{ url_for('doctor_create_record') }}" method="POST" enctype="multipart/form-data"> #}
-    <form id="recordForm" novalidate>
+    {% if message %}<div class="alert alert-{{ message_category }}" role="alert">{{ message }}</div>{% endif %}
+    {% if not record_table_exists %}<div class="alert alert-warning" role="alert"><i class="fas fa-circle-info me-2"></i>Medical records are unavailable because the required database table does not exist. No data can be saved.</div>{% endif %}
+    <form id="recordForm" action="{{ url_for('doctor_create_record') }}" method="POST" enctype="multipart/form-data" novalidate>
+      <input type="hidden" name="form_token" value="{{ record_form_token }}">
       <div class="row g-4">
         <!-- Patient & Record Info -->
         <div class="col-lg-8">
@@ -103,13 +105,9 @@
               <div class="row g-3">
                 <div class="col-md-8">
                   <label class="form-label">Patient <span class="text-danger">*</span></label>
-                  {# Flask: Select from current_user.hospital.patients #}
                   <select class="form-select" name="patient_id" required onchange="loadPatientInfo(this.value)">
                     <option value="">Search and select patient…</option>
-                    <option value="MC-2024-008342">Ahmad Bin Jalil — MC-2024-008342</option>
-                    <option value="MC-2024-007891">Siti Hajar Aziz — MC-2024-007891</option>
-                    <option value="MC-2024-006543">Robert Lee — MC-2024-006543</option>
-                    <option value="MC-2024-005120">Aida Rahman — MC-2024-005120</option>
+                    {% for patient in patients %}<option value="{{ patient.patient_id }}" data-patient='{{ patient|tojson }}' {% if request.args.get('patient_id')|string == patient.patient_id|string %}selected{% endif %}>{{ patient.full_name or 'N/A' }} — {{ patient.patient_id }}</option>{% else %}<option value="" disabled>No data available</option>{% endfor %}
                   </select>
                 </div>
                 <div class="col-md-4">
@@ -157,17 +155,20 @@
                 </div>
                 <div class="col-md-6">
                   <label class="form-label">Visit Date &amp; Time <span class="text-danger">*</span></label>
-                  <input type="datetime-local" class="form-control" name="visit_datetime" required
-                    value="2026-06-30T14:30" />
+                  <input type="datetime-local" class="form-control" name="visit_datetime" required value="{{ default_visit_datetime }}" />
                 </div>
                 <div class="col-12">
                   <label class="form-label">Diagnosis / ICD-10 Code <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" name="diagnosis"
                     placeholder="e.g. Type 2 Diabetes Mellitus (E11)" required />
                 </div>
+                <div class="col-md-6">
+                  <label class="form-label">ICD-10 Code</label>
+                  <input type="text" class="form-control" name="icd10_code" placeholder="e.g. E11.9" />
+                </div>
                 <div class="col-12">
-                  <label class="form-label">Chief Complaint / Symptoms</label>
-                  <input type="text" class="form-control" name="chief_complaint"
+                  <label class="form-label">Symptoms</label>
+                  <input type="text" class="form-control" name="symptoms"
                     placeholder="Patient's main complaint" />
                 </div>
                 <div class="col-12">
@@ -266,17 +267,17 @@
                 <div class="mt-1">{</div>
                 <div class="ms-2" style="color:#80cbc4;">"type": <span style="color:#f48fb1;">"CREATE_RECORD"</span>,
                 </div>
-                <div class="ms-2" style="color:#80cbc4;">"doctorId": <span style="color:#f48fb1;">"MCR-4521"</span>,
+                <div class="ms-2" style="color:#80cbc4;">"doctorId": <span style="color:#f48fb1;">"{{ doctor.doctor_id or 'N/A' }}"</span>,
                 </div>
                 <div class="ms-2" style="color:#80cbc4;">"hospitalId": <span
-                    style="color:#f48fb1;">"HOS-2024-0001"</span>,</div>
+                    style="color:#f48fb1;">"{{ doctor.hospital_id or 'N/A' }}"</span>,</div>
                 <div class="ms-2" style="color:#80cbc4;">"timestamp": <span style="color:#f48fb1;">"auto"</span>,</div>
                 <div class="ms-2" style="color:#80cbc4;">"dataHash": <span style="color:#f48fb1;">"SHA-256"</span></div>
                 <div>}</div>
               </div>
               <div class="mt-3 d-flex align-items-center gap-2">
                 <div class="node-status online"></div>
-                <span class="fs-12 text-success fw-500">Network Ready — 58 peers online</span>
+                <span class="fs-12 text-muted fw-500">Database status: {{ 'Available' if record_table_exists else 'Medical records table unavailable' }}</span>
               </div>
             </div>
           </div>
@@ -284,14 +285,14 @@
           <div class="mc-card">
             <div class="card-body">
               <div class="form-check mb-3">
-                <input type="checkbox" class="form-check-input" id="confirmAccuracy" required />
+                <input type="checkbox" class="form-check-input" id="confirmAccuracy" name="confirmed_by_doctor" value="1" required />
                 <label class="form-check-label fs-13" for="confirmAccuracy">I confirm this record is accurate and I am
                   the treating physician.</label>
               </div>
-              <button type="submit" class="btn btn-primary w-100 py-2" onclick="submitRecord(event)">
+              <button type="submit" class="btn btn-primary w-100 py-2" {% if not record_table_exists or not patients %}disabled{% endif %}>
                 <i class="fas fa-save me-2"></i>Save &amp; Commit to Blockchain
               </button>
-              <button type="button" class="btn btn-outline-secondary w-100 mt-2 btn-sm">
+              <button type="button" class="btn btn-outline-secondary w-100 mt-2 btn-sm" disabled>
                 <i class="fas fa-floppy-disk me-1"></i>Save as Draft
               </button>
             </div>

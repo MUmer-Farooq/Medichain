@@ -391,8 +391,12 @@ function initAppointmentsChart(canvasId = 'appointmentsChart') {
   const ctx = document.getElementById(canvasId);
   if (!ctx || typeof Chart === 'undefined') return;
 
-  /* <!-- Flask Dynamic Route: /api/doctor/appointments-chart --> */
-  const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  const parseData = (value) => {
+    try { return JSON.parse(value || '[]'); } catch (error) { return []; }
+  };
+  const labels = parseData(ctx.dataset.labels);
+  const scheduled = parseData(ctx.dataset.scheduled);
+  const completed = parseData(ctx.dataset.completed);
   return new Chart(ctx, {
     type: 'bar',
     data: {
@@ -400,7 +404,7 @@ function initAppointmentsChart(canvasId = 'appointmentsChart') {
       datasets: [
         {
           label: 'Scheduled',
-          data: [8, 12, 10, 15, 9],
+          data: scheduled,
           backgroundColor: MC_COLORS.primary + 'CC',
           borderColor: MC_COLORS.primary,
           borderWidth: 2,
@@ -409,7 +413,7 @@ function initAppointmentsChart(canvasId = 'appointmentsChart') {
         },
         {
           label: 'Completed',
-          data: [7, 11, 9, 14, 8],
+          data: completed,
           backgroundColor: MC_COLORS.success + 'CC',
           borderColor: MC_COLORS.success,
           borderWidth: 2,
@@ -428,6 +432,18 @@ function initAppointmentsChart(canvasId = 'appointmentsChart') {
       },
       plugins: { legend: { position: 'top', align: 'end' } },
     },
+  });
+}
+
+function initDoctorDashboardSearch() {
+  const search = document.getElementById('dashboard-search');
+  if (!search) return;
+  const rows = Array.from(document.querySelectorAll('#recent-patients-table tbody tr, #recent-records-table tbody tr'));
+  search.addEventListener('input', () => {
+    const query = search.value.trim().toLowerCase();
+    rows.forEach(row => {
+      row.style.display = !query || row.textContent.toLowerCase().includes(query) ? '' : 'none';
+    });
   });
 }
 
@@ -893,6 +909,7 @@ document.addEventListener('DOMContentLoaded', function () {
   initGenderChart();
   initAgeDistributionChart();
   initAppointmentsChart();
+  initDoctorDashboardSearch();
   initAccessRadarChart();
 
   // Analytics charts (only on analytics page)

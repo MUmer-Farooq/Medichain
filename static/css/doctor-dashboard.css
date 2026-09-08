@@ -1,0 +1,17 @@
+/* Doctor dashboard mobile sidebar overrides persisted desktop collapse state. */
+@media (max-width: 991px) {
+  body .mc-sidebar {
+    width: var(--sidebar-width);
+    transform: translateX(-100%) !important;
+  }
+
+  body .mc-sidebar.show {
+    transform: translateX(0) !important;
+  }
+
+  body .mc-topbar,
+  body .mc-content {
+    left: 0;
+    margin-left: 0;
+  }
+}

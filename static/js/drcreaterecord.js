@@ -1,23 +1,16 @@
  let prescRowCount = 1;
 
-    /* Flask Dynamic Route: /api/patients/{id} for auto-fill */
-    const patientData = {
-      'MC-2024-008342': { age: '45 / Male', blood: 'O+', allergy: 'Penicillin', lastVisit: 'Jun 28, 2026' },
-      'MC-2024-007891': { age: '34 / Female', blood: 'A+', allergy: 'None', lastVisit: 'Jun 25, 2026' },
-      'MC-2024-006543': { age: '48 / Male', blood: 'B+', allergy: 'Sulfa drugs', lastVisit: 'Jun 20, 2026' },
-      'MC-2024-005120': { age: '37 / Female', blood: 'AB+', allergy: 'None', lastVisit: 'Jun 15, 2026' },
-    };
-
     function loadPatientInfo(id) {
       const summary = document.getElementById('patientSummary');
       const idField = document.getElementById('patientId');
       if (!id) { summary.style.display = 'none'; idField.value = ''; return; }
-      const d = patientData[id];
+      const option = document.querySelector(`[name="patient_id"] option[value="${CSS.escape(id)}"]`);
+      const d = option?.dataset.patient ? JSON.parse(option.dataset.patient) : null;
       if (d) {
-        document.getElementById('pAge').textContent = d.age;
-        document.getElementById('pBlood').textContent = d.blood;
-        document.getElementById('pAllergy').textContent = d.allergy;
-        document.getElementById('pLastVisit').textContent = d.lastVisit;
+        document.getElementById('pAge').textContent = d.date_of_birth || 'N/A';
+        document.getElementById('pBlood').textContent = d.blood_group || 'N/A';
+        document.getElementById('pAllergy').textContent = 'N/A';
+        document.getElementById('pLastVisit').textContent = d.status || 'N/A';
         idField.value = id;
         summary.style.display = 'block';
       }
@@ -57,15 +50,15 @@
       });
     });
 
-    function submitRecord(e) {
-      e.preventDefault();
-      if (!document.getElementById('confirmAccuracy').checked) {
-        MediChain.showToast('Please confirm record accuracy', 'warning'); return;
+    document.getElementById('recordForm').addEventListener('submit', function (event) {
+      if (!this.checkValidity() || !document.getElementById('confirmAccuracy').checked) {
+        event.preventDefault();
+        this.classList.add('was-validated');
+        if (!document.getElementById('confirmAccuracy').checked) MediChain.showToast('Please confirm record accuracy', 'warning');
+        return;
       }
-      MediChain.showLoading('Committing to blockchain…');
-      /* Flask Dynamic Route: POST /doctor/records/create */
-      setTimeout(() => {
-        MediChain.hideLoading();
-        Swal.fire({ icon: 'success', title: 'Record Committed!', html: 'Medical record has been saved and committed to the Hyperledger Fabric blockchain.<br/><small class="text-muted">Block #18,433 • Tx-94219</small>', confirmButtonText: 'View Record', confirmButtonColor: 'var(--primary)' }).then(() => window.location.href = 'medical_history.html');
-      }, 2200);
-    }
+      const submitButton = this.querySelector('button[type="submit"]');
+      if (submitButton.disabled) { event.preventDefault(); return; }
+      submitButton.disabled = true;
+      submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving Record…';
+    });

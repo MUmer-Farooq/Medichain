@@ -27,10 +27,10 @@
       </div>
     </a>
     <div class="sidebar-user">
-      <div class="user-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">AA</div>
+      <div class="user-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">{{ (doctor.full_name or 'N/A')[:2]|upper }}</div>
       <div class="user-info">
-        <div class="user-name">Dr. Ahmad Azman</div>
-        <div class="user-role">Cardiologist</div>
+        <div class="user-name">{{ doctor.full_name or 'N/A' }}</div>
+        <div class="user-role">{{ doctor.specialization or 'N/A' }}</div>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -54,7 +54,7 @@
     </nav>
     <div class="sidebar-footer">
       <div class="version-badge">
-        <div class="version-dot"></div><span>General Hospital KL</span>
+        <div class="version-dot"></div><span>{{ doctor.hospital_name or 'N/A' }}</span>
       </div>
     </div>
   </aside>
@@ -67,11 +67,11 @@
     <div class="topbar-right">
       <div class="dropdown">
         <div class="user-dropdown-btn" data-bs-toggle="dropdown">
-          <div class="ud-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">AA</div><span
-            class="ud-name">Dr. Ahmad</span>
+          <div class="ud-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">{{ (doctor.full_name or 'N/A')[:2]|upper }}</div><span
+            class="ud-name">{{ doctor.full_name or 'N/A' }}</span>
         </div>
         <ul class="dropdown-menu dropdown-menu-end">
-          <li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a>
+          <li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt"></i>Sign Out</a>
           </li>
         </ul>
       </div>
@@ -87,8 +87,10 @@
 
     <div class="row g-4">
       <div class="col-lg-7">
-        {# Flask: <form action="{{ url_for('doctor_upload_reports') }}" method="POST" enctype="multipart/form-data"> #}
-        <form id="uploadForm" novalidate>
+        {% if message %}<div class="alert alert-{{ message_category }}" role="alert">{{ message }}</div>{% endif %}
+        {% if request.args.get('saved') == '1' %}<div class="alert alert-success" role="alert">Reports uploaded successfully and are now attached to the medical record.</div>{% endif %}
+        <form id="uploadForm" action="{{ url_for('doctor_upload_reports') }}" method="POST" enctype="multipart/form-data" novalidate>
+          <input type="hidden" name="upload_form_token" value="{{ upload_form_token }}">
           <div class="mc-card mb-4">
             <div class="card-header"><span><i class="fas fa-user text-primary me-2"></i>Link to Patient Record</span>
             </div>
@@ -98,11 +100,12 @@
                   <label class="form-label">Select Patient <span class="text-danger">*</span></label>
                   <select class="form-select" name="patient_id" required>
                     <option value="">Select patient…</option>
-                    <option value="MC-2024-008342">Ahmad Bin Jalil — MC-2024-008342</option>
-                    <option value="MC-2024-007891">Siti Hajar Aziz — MC-2024-007891</option>
-                    <option value="MC-2024-006543">Robert Lee — MC-2024-006543</option>
-                    <option value="MC-2024-005120">Aida Rahman — MC-2024-005120</option>
+                    {% for patient in patients %}<option value="{{ patient.patient_id }}">{{ patient.full_name or 'N/A' }} — {{ patient.patient_id }}</option>{% else %}<option value="" disabled>No data available</option>{% endfor %}
                   </select>
+                </div>
+                <div class="col-md-8">
+                  <label class="form-label">Medical Record <span class="text-danger">*</span></label>
+                  <select class="form-select" name="record_id" required><option value="">Select the record to attach this report to…</option>{% for record in records %}<option value="{{ record.record_id }}" data-patient-id="{{ record.patient_id }}">{{ record.patient_name }} — {{ record.record_type }} — {{ record.visit_datetime }}</option>{% else %}<option value="" disabled>No medical records available</option>{% endfor %}</select>
                 </div>
                 <div class="col-md-4">
                   <label class="form-label">Report Type <span class="text-danger">*</span></label>
@@ -120,7 +123,7 @@
                 </div>
                 <div class="col-md-6">
                   <label class="form-label">Report Date</label>
-                  <input type="date" class="form-control" name="report_date" value="2026-06-30" />
+                  <input type="date" class="form-control" name="report_date" />
                 </div>
                 <div class="col-md-6">
                   <label class="form-label">Lab / Facility Name</label>
@@ -157,8 +160,8 @@
                 <label class="form-check-label fs-13" for="confirmUpload">I confirm these documents belong to the
                   selected patient and I have authorization to upload them.</label>
               </div>
-              <button type="submit" class="btn btn-primary w-100 py-2" onclick="handleUpload(event)">
-                <i class="fas fa-cloud-upload-alt me-2"></i>Upload &amp; Attach to Blockchain Record
+              <button type="submit" class="btn btn-primary w-100 py-2" {% if not records %}disabled{% endif %}>
+                <i class="fas fa-cloud-upload-alt me-2"></i>Upload &amp; Attach to Medical Record
               </button>
             </div>
           </div>
@@ -170,61 +173,24 @@
         <div class="mc-card mb-4">
           <div class="card-header"><span><i class="fas fa-history text-info me-2"></i>Recent Uploads</span></div>
           <div class="card-body p-0">
-            {# Flask Dynamic: {% for upload in recent_uploads %} #}
             <div class="list-group list-group-flush">
-              <div class="list-group-item border-0 border-bottom py-3">
+              {% for upload in recent_uploads %}<div class="list-group-item border-0 border-bottom py-3">
                 <div class="d-flex align-items-center gap-3">
                   <div
                     style="width:38px;height:38px;border-radius:8px;background:#ffebee;color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">
                     <i class="fas fa-file-pdf"></i></div>
                   <div class="flex-1">
-                    <div class="fw-600 fs-13">Blood_Panel_Ahmad.pdf</div>
-                    <div class="fs-11 text-muted">Ahmad Bin Jalil • Lab Result • 1.2MB</div>
-                    <div class="fs-11 text-muted mt-1"><i class="fas fa-lock text-success me-1"></i>Blockchain:
-                      0xa9f2...c92e</div>
+                    <div class="fw-600 fs-13">{{ upload.file_name }}</div>
+                    <div class="fs-11 text-muted">{{ upload.patient_name }} • {{ upload.record_type }} • {{ upload.file_size_kb or 'N/A' }} KB</div>
+                    <div class="fs-11 text-muted mt-1">Record #{{ upload.record_id }} • {{ upload.file_type or 'N/A' }}</div>
                   </div>
                   <div class="text-end">
-                    <div class="fs-11 text-muted">Jun 28</div>
-                    <span class="badge badge-success-soft mt-1">Attached</span>
+                    <div class="fs-11 text-muted">{{ upload.uploaded_at }}</div>
+                    <div class="mt-1 d-flex gap-1"><a class="btn btn-sm btn-outline-primary" href="/doctor/reports/{{ upload.attachment_id }}/download" title="Download"><i class="fas fa-download"></i></a><form method="post" action="/doctor/reports/{{ upload.attachment_id }}/delete" onsubmit="return confirm('Delete this report?');"><button class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button></form></div>
                   </div>
                 </div>
-              </div>
-              <div class="list-group-item border-0 border-bottom py-3">
-                <div class="d-flex align-items-center gap-3">
-                  <div
-                    style="width:38px;height:38px;border-radius:8px;background:#e8f0fe;color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">
-                    <i class="fas fa-x-ray"></i></div>
-                  <div class="flex-1">
-                    <div class="fw-600 fs-13">Chest_XRay_Siti.jpg</div>
-                    <div class="fs-11 text-muted">Siti Hajar • Radiology • 3.4MB</div>
-                    <div class="fs-11 text-muted mt-1"><i class="fas fa-lock text-success me-1"></i>Blockchain:
-                      0x3c7a...1b4d</div>
-                  </div>
-                  <div class="text-end">
-                    <div class="fs-11 text-muted">Jun 25</div>
-                    <span class="badge badge-success-soft mt-1">Attached</span>
-                  </div>
-                </div>
-              </div>
-              <div class="list-group-item border-0 py-3">
-                <div class="d-flex align-items-center gap-3">
-                  <div
-                    style="width:38px;height:38px;border-radius:8px;background:#e0f7fa;color:var(--secondary);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">
-                    <i class="fas fa-heartbeat"></i></div>
-                  <div class="flex-1">
-                    <div class="fw-600 fs-13">ECG_Robert.pdf</div>
-                    <div class="fs-11 text-muted">Robert Lee • ECG • 0.8MB</div>
-                    <div class="fs-11 text-muted mt-1"><i class="fas fa-lock text-success me-1"></i>Blockchain:
-                      0xf8a2...e1b9</div>
-                  </div>
-                  <div class="text-end">
-                    <div class="fs-11 text-muted">Jun 20</div>
-                    <span class="badge badge-success-soft mt-1">Attached</span>
-                  </div>
-                </div>
-              </div>
+              </div>{% else %}<div class="p-3 text-muted">No data available</div>{% endfor %}
             </div>
-            {# Flask: {% endfor %} #}
           </div>
         </div>
 
@@ -233,12 +199,9 @@
           <div class="card-header"><span><i class="fas fa-info-circle text-info me-2"></i>Upload Guidelines</span></div>
           <div class="card-body">
             <ul class="list-unstyled fs-13 mb-0">
-              <li class="mb-2 d-flex gap-2"><i class="fas fa-check-circle text-success mt-1"></i>Files are encrypted
-                before storage</li>
-              <li class="mb-2 d-flex gap-2"><i class="fas fa-check-circle text-success mt-1"></i>SHA-256 hash stored on
-                blockchain</li>
-              <li class="mb-2 d-flex gap-2"><i class="fas fa-check-circle text-success mt-1"></i>Patient must grant
-                access to view</li>
+              <li class="mb-2 d-flex gap-2"><i class="fas fa-check-circle text-success mt-1"></i>Files are stored and linked to the selected medical record</li>
+              <li class="mb-2 d-flex gap-2"><i class="fas fa-check-circle text-success mt-1"></i>Only authorized doctor and hospital records can be selected</li>
+              <li class="mb-2 d-flex gap-2"><i class="fas fa-check-circle text-success mt-1"></i>Reports can be viewed, downloaded, or deleted from this page</li>
               <li class="mb-2 d-flex gap-2"><i class="fas fa-check-circle text-success mt-1"></i>DICOM files supported
                 for imaging</li>
               <li class="mb-2 d-flex gap-2"><i class="fas fa-exclamation-circle text-warning mt-1"></i>Max file size:

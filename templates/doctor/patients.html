@@ -15,7 +15,7 @@
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
 <aside class="mc-sidebar" id="mc-sidebar">
   <a href="dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-chain"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Doctor Portal</span></div></a>
-  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">AA</div><div class="user-info"><div class="user-name">Dr. Ahmad Azman</div><div class="user-role">Cardiologist</div></div></div>
+  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">{{ (doctor.full_name or 'N/A')[:2]|upper }}</div><div class="user-info"><div class="user-name">{{ doctor.full_name or 'N/A' }}</div><div class="user-role">{{ doctor.specialization or 'N/A' }}</div></div></div>
   <nav class="sidebar-nav">
     <div class="nav-section-label">Overview</div>
     <a href="dashboard.html" class="nav-item-link"><i class="fas fa-chart-pie nav-icon"></i><span class="nav-text">Dashboard</span></a>
@@ -28,61 +28,81 @@
     <a href="profile.html" class="nav-item-link"><i class="fas fa-user-circle nav-icon"></i><span class="nav-text">My Profile</span></a>
     <a href="../login.html" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
   </nav>
-  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>General Hospital KL</span></div></div>
+  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>{{ hospital_name }}</span></div></div>
 </aside>
 <header class="mc-topbar">
   <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><a href="dashboard.html" class="text-muted">Doctor</a><span class="bc-sep">/</span><span class="bc-current">My Patients</span></div></div>
   <div class="topbar-right">
     <div class="topbar-search"><i class="fas fa-search search-icon"></i><input type="text" id="table-search" placeholder="Search patients…"/></div>
-    <div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">AA</div><span class="ud-name">Dr. Ahmad</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div>
+    <div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#29b6f6,#1a73e8);">{{ (doctor.full_name or 'N/A')[:2]|upper }}</div><span class="ud-name">{{ doctor.full_name or 'N/A' }}</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div>
   </div>
 </header>
 <main class="mc-content">
   <div class="page-header">
-    <div class="page-header-left"><h4><i class="fas fa-users me-2 text-info"></i>My Patients</h4><p>Patients under your care at General Hospital Kuala Lumpur</p></div>
+    <div class="page-header-left"><h4><i class="fas fa-users me-2 text-info"></i>My Patients</h4><p>Patients at {{ hospital_name }}</p></div>
     <div class="page-header-right">
-      <a href="create_record.html" class="btn btn-primary btn-sm"><i class="fas fa-file-plus me-1"></i>New Record</a>
+      <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#patientModal" data-mode="add"><i class="fas fa-user-plus me-1"></i>Add Patient</button>
     </div>
   </div>
 
   <div class="stats-grid mb-4">
-    <div class="stat-card primary"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value">48</div><div class="stat-label">Total Patients</div></div>
-    <div class="stat-card success"><div class="stat-icon"><i class="fas fa-calendar-check"></i></div><div class="stat-value">8</div><div class="stat-label">Scheduled Today</div></div>
-    <div class="stat-card warning"><div class="stat-icon"><i class="fas fa-flask"></i></div><div class="stat-value">2</div><div class="stat-label">Pending Results</div></div>
-    <div class="stat-card info"><div class="stat-icon"><i class="fas fa-file-medical"></i></div><div class="stat-value">312</div><div class="stat-label">Records Created</div></div>
+    <div class="stat-card primary"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value">{{ stats.total }}</div><div class="stat-label">Total Patients</div></div>
+    <div class="stat-card success"><div class="stat-icon"><i class="fas fa-calendar-check"></i></div><div class="stat-value">{{ stats.scheduled }}</div><div class="stat-label">Scheduled Today</div></div>
+    <div class="stat-card warning"><div class="stat-icon"><i class="fas fa-flask"></i></div><div class="stat-value">{{ stats.pending }}</div><div class="stat-label">Pending Results</div></div>
+    <div class="stat-card info"><div class="stat-icon"><i class="fas fa-file-medical"></i></div><div class="stat-value">{{ stats.records }}</div><div class="stat-label">Records Created</div></div>
   </div>
 
-  <div class="mc-card mb-3"><div class="card-body py-3"><div class="search-filter-bar"><div class="search-box"><i class="fas fa-search"></i><input type="text" id="table-search" placeholder="Search by name, IC, ID…"/></div><select class="form-select form-select-sm" style="width:auto;"><option value="">All Status</option><option>Active</option><option>Referred</option><option>Discharged</option></select></div></div></div>
+  <div class="mc-card mb-3"><div class="card-body py-3"><div class="search-filter-bar"><div class="search-box"><i class="fas fa-search"></i><input type="text" id="patient-search" placeholder="Search by name, email, phone, ID…"/></div><select class="form-select form-select-sm" id="status-filter" style="width:auto;"><option value="">All Status</option><option value="active">Active</option><option value="inactive">Inactive</option><option value="referred">Referred</option><option value="discharged">Discharged</option></select></div></div></div>
 
   <div class="mc-card">
     <div class="card-header"><span><i class="fas fa-list text-primary me-2"></i>Patient List</span></div>
     <div class="card-body p-0">
       <div class="table-responsive">
-        {# Flask Dynamic: {% for patient in doctor.patients %} #}
         <table class="mc-table" id="mc-table">
-          <thead><tr><th>Patient ID</th><th>Name</th><th>Age/Gender</th><th>Blood</th><th>Diagnosis</th><th>Records</th><th>Last Visit</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Patient ID</th><th>Name / Email</th><th>DOB / Gender</th><th>Blood</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
-            <tr><td class="font-monospace fs-11">MC-2024-008342</td><td><div class="fw-600">Ahmad Bin Jalil</div><div class="fs-11 text-muted">810415-07-5234</div></td><td>45 / M</td><td><span class="badge" style="background:#ffebee;color:#c62828;font-size:.68rem;">O+</span></td><td>Type 2 Diabetes</td><td>24</td><td>Jun 28</td><td><div class="table-actions"><a href="medical_history.html" class="btn-icon" title="View History"><i class="fas fa-history"></i></a><a href="create_record.html" class="btn-icon btn-success" title="New Record"><i class="fas fa-file-plus"></i></a><a href="upload_reports.html" class="btn-icon btn-info" title="Upload"><i class="fas fa-upload"></i></a></div></td></tr>
-            <tr><td class="font-monospace fs-11">MC-2024-007891</td><td><div class="fw-600">Siti Hajar Aziz</div><div class="fs-11 text-muted">920312-10-6784</div></td><td>34 / F</td><td><span class="badge" style="background:#e8f0fe;color:#1565c0;font-size:.68rem;">A+</span></td><td>Hypertension</td><td>18</td><td>Jun 25</td><td><div class="table-actions"><a href="medical_history.html" class="btn-icon"><i class="fas fa-history"></i></a><a href="create_record.html" class="btn-icon btn-success"><i class="fas fa-file-plus"></i></a><a href="upload_reports.html" class="btn-icon btn-info"><i class="fas fa-upload"></i></a></div></td></tr>
-            <tr><td class="font-monospace fs-11">MC-2024-006543</td><td><div class="fw-600">Robert Lee Cheng Wei</div><div class="fs-11 text-muted">781120-14-3312</div></td><td>48 / M</td><td><span class="badge" style="background:#e8f5e9;color:#1b5e20;font-size:.68rem;">B+</span></td><td>Coronary Artery Disease</td><td>32</td><td>Jun 20</td><td><div class="table-actions"><a href="medical_history.html" class="btn-icon"><i class="fas fa-history"></i></a><a href="create_record.html" class="btn-icon btn-success"><i class="fas fa-file-plus"></i></a><a href="upload_reports.html" class="btn-icon btn-info"><i class="fas fa-upload"></i></a></div></td></tr>
-            <tr><td class="font-monospace fs-11">MC-2024-005120</td><td><div class="fw-600">Aida binti Rahman</div><div class="fs-11 text-muted">891004-06-4521</div></td><td>37 / F</td><td><span class="badge" style="background:#fff8e1;color:#e65100;font-size:.68rem;">AB+</span></td><td>Diabetes + Hypertension</td><td>8</td><td>Jun 15</td><td><div class="table-actions"><a href="medical_history.html" class="btn-icon"><i class="fas fa-history"></i></a><a href="create_record.html" class="btn-icon btn-success"><i class="fas fa-file-plus"></i></a><a href="upload_reports.html" class="btn-icon btn-info"><i class="fas fa-upload"></i></a></div></td></tr>
-            <tr><td class="font-monospace fs-11">MC-2024-004876</td><td><div class="fw-600">Raj Kumar Pillai</div><div class="fs-11 text-muted">700518-10-7892</div></td><td>56 / M</td><td><span class="badge" style="background:#fce4ec;color:#880e4f;font-size:.68rem;">O-</span></td><td>Heart Failure</td><td>45</td><td>Jun 12</td><td><div class="table-actions"><a href="medical_history.html" class="btn-icon"><i class="fas fa-history"></i></a><a href="create_record.html" class="btn-icon btn-success"><i class="fas fa-file-plus"></i></a><a href="upload_reports.html" class="btn-icon btn-info"><i class="fas fa-upload"></i></a></div></td></tr>
+            {% for patient in patients %}<tr data-status="{{ (patient.status or '')|lower }}" data-search="{{ [patient.patient_id, patient.full_name, patient.email, patient.phone, patient.gender, patient.blood_group, patient.address, patient.emergency_contact, patient.status]|join(' ')|lower }}"><td class="font-monospace fs-11">{{ patient.patient_id or 'N/A' }}</td><td><div class="fw-600">{{ patient.full_name or 'N/A' }}</div><div class="fs-11 text-muted">{{ patient.email or 'N/A' }}</div></td><td>{{ patient.date_of_birth or 'N/A' }} / {{ patient.gender or 'N/A' }}</td><td>{{ patient.blood_group or 'N/A' }}</td><td>{{ patient.phone or 'N/A' }}</td><td><span class="badge {{ 'badge-success-soft' if (patient.status or '')|lower == 'active' else 'badge-warning-soft' }}">{{ patient.status or 'N/A' }}</span></td><td><div class="table-actions"><button type="button" class="btn-icon" title="View" data-bs-toggle="modal" data-bs-target="#patientViewModal" data-patient='{{ patient|tojson }}'><i class="fas fa-eye"></i></button><button type="button" class="btn-icon btn-success" title="Edit" data-bs-toggle="modal" data-bs-target="#patientModal" data-mode="edit" data-patient='{{ patient|tojson }}'><i class="fas fa-edit"></i></button><form method="post" action="/doctor/patients/{{ patient.patient_id }}/status" class="d-inline"><input type="hidden" name="status" value="{{ 'inactive' if (patient.status or '')|lower == 'active' else 'active' }}"><button class="btn-icon btn-info" title="{{ 'Deactivate' if (patient.status or '')|lower == 'active' else 'Activate' }}"><i class="fas fa-toggle-{{ 'on' if (patient.status or '')|lower == 'active' else 'off' }}"></i></button></form><form method="post" action="/doctor/patients/{{ patient.patient_id }}/delete" class="d-inline" onsubmit="return confirm('Delete this patient?');"><button class="btn-icon btn-danger" title="Delete"><i class="fas fa-trash"></i></button></form></div></td></tr>{% else %}<tr><td colspan="7" class="text-center text-muted py-4">{{ 'No data available' if stats.total == 'N/A' else 'No patients found' }}</td></tr>{% endfor %}
           </tbody>
         </table>
-        {# Flask: {% endfor %} #}
       </div>
     </div>
     <div class="card-footer d-flex justify-content-between align-items-center">
-      <small class="text-muted">Showing 5 of 48 patients</small>
+      <small class="text-muted" id="patient-count">Showing {{ patients|length }} of {{ stats.total }} patients</small>
       <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
     </div>
   </div>
 </main>
 
+<div class="modal fade" id="patientModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+    <form method="post" id="patient-form" action="/doctor/patients/add">
+      <div class="modal-header"><h5 class="modal-title" id="patient-modal-title">Add Patient</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body"><div class="row g-3">
+        <div class="col-md-6"><label class="form-label">Full Name</label><input class="form-control" name="full_name" required></div>
+        <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="email" required></div>
+        <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" name="phone"></div>
+        <div class="col-md-6"><label class="form-label">Date of Birth</label><input class="form-control" type="date" name="date_of_birth"></div>
+        <div class="col-md-4"><label class="form-label">Gender</label><input class="form-control" name="gender"></div>
+        <div class="col-md-4"><label class="form-label">Blood Group</label><input class="form-control" name="blood_group"></div>
+        <div class="col-md-4"><label class="form-label">Status</label><select class="form-select" name="status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="referred">Referred</option><option value="discharged">Discharged</option></select></div>
+        <div class="col-12"><label class="form-label">Address</label><textarea class="form-control" name="address" rows="2"></textarea></div>
+        <div class="col-md-6"><label class="form-label">Emergency Contact</label><input class="form-control" name="emergency_contact"></div>
+        <div class="col-md-6"><label class="form-label">Emergency Phone</label><input class="form-control" name="emergency_phone"></div>
+        <div class="col-12" id="patient-password-field"><label class="form-label">Initial Password</label><input class="form-control" type="password" name="password" autocomplete="new-password"><div class="form-text">Required when adding a patient.</div></div>
+      </div></div>
+      <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" type="submit">Save Patient</button></div>
+    </form>
+  </div></div>
+</div>
+
+<div class="modal fade" id="patientViewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Patient Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><dl class="row mb-0" id="patient-details"></dl></div></div></div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
 <script src="/static/js/app.js"></script>
-<script>document.addEventListener('DOMContentLoaded',()=>{MediChain.initTableSort();MediChain.initPagination({pageSize:10});});</script>
+<script src="/static/js/doctor-patients.js"></script>
 </body>
 </html>
