@@ -15,7 +15,7 @@
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
 <aside class="mc-sidebar" id="mc-sidebar">
   <a href="dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-chain"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Patient Portal</span></div></a>
-  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#ff6d00,#ffcc02);color:#000;">AJ</div><div class="user-info"><div class="user-name">Ahmad Bin Jalil</div><div class="user-role">Patient</div></div></div>
+  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#ff6d00,#ffcc02);color:#000;">{{ (patient.full_name or 'N/A')[:2]|upper }}</div><div class="user-info"><div class="user-name">{{ patient.full_name or 'N/A' }}</div><div class="user-role">Patient</div></div></div>
   <nav class="sidebar-nav">
     <div class="nav-section-label">Overview</div>
     <a href="dashboard.html" class="nav-item-link"><i class="fas fa-home nav-icon"></i><span class="nav-text">My Dashboard</span></a>
@@ -27,13 +27,14 @@
     <a href="profile.html" class="nav-item-link"><i class="fas fa-user-circle nav-icon"></i><span class="nav-text">My Profile</span></a>
     <a href="../login.html" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
   </nav>
-  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>General Hospital KL</span></div></div>
+  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>{{ patient.hospital_name or 'N/A' }}</span></div></div>
 </aside>
 <header class="mc-topbar">
   <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><a href="dashboard.html" class="text-muted">Patient</a><span class="bc-sep">/</span><span class="bc-current">My Records</span></div></div>
-  <div class="topbar-right"><div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#ff6d00,#ffcc02);color:#000;">AJ</div><span class="ud-name">Ahmad</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div></div>
+  <div class="topbar-right"><div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#ff6d00,#ffcc02);color:#000;">{{ (patient.full_name or 'N/A')[:2]|upper }}</div><span class="ud-name">{{ patient.full_name or 'N/A' }}</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div></div>
 </header>
 <main class="mc-content">
+  {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category, message in messages %}<div class="alert alert-{{ category }}" role="alert">{{ message }}</div>{% endfor %}{% endif %}{% endwith %}
   <div class="page-header">
     <div class="page-header-left"><h4><i class="fas fa-file-medical me-2 text-warning"></i>My Medical Records</h4><p>All your medical records — secured and verified on blockchain</p></div>
     <div class="page-header-right"><button class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="fas fa-print me-1"></i>Print All</button></div>
@@ -60,85 +61,23 @@
   </div>
 
   <!-- Records Grid -->
-  {# Flask Dynamic: {% for record in current_user.records %} #}
   <div class="row g-3 mb-4" id="recordsGrid">
-    <div class="col-md-6 col-lg-4">
-      <div class="record-card" onclick="openRecord('REC-2026-041892')">
-        <div class="record-type">Consultation</div>
-        <div class="record-title">Diabetes Follow-up Consultation</div>
-        <div class="record-meta">Dr. Ahmad Azman • Jun 28, 2026</div>
-        <div class="record-meta">General Hospital Kuala Lumpur</div>
+    {% for record in records %}<div class="col-md-6 col-lg-4 record-item" data-record-type="{{ (record.record_type or '')|lower }}" data-search="{{ record|tojson|forceescape }}">
+      <div class="record-card" data-record='{{ record|tojson }}'>
+        <div class="record-type">{{ record.record_type or 'N/A' }}</div>
+        <div class="record-title">{{ record.diagnosis or 'N/A' }}</div>
+        <div class="record-meta">{{ record.doctor_name or 'N/A' }} • {{ record.visit_datetime or 'N/A' }}</div>
+        <div class="record-meta">{{ record.hospital_name or 'N/A' }}</div>
         <div class="d-flex justify-content-between align-items-center mt-3">
-          <span class="fs-11 text-success"><i class="fas fa-lock me-1"></i>Block #18,432</span>
-          <button class="btn btn-sm btn-outline-primary fs-11" data-bs-toggle="modal" data-bs-target="#recordModal"><i class="fas fa-eye me-1"></i>View</button>
+          <span class="fs-11 text-success"><i class="fas fa-database me-1"></i>Record #{{ record.record_id }}</span>
+          <button type="button" class="btn btn-sm btn-outline-primary fs-11 view-record" data-bs-toggle="modal" data-bs-target="#recordModal" data-record='{{ record|tojson }}'><i class="fas fa-eye me-1"></i>View</button>
         </div>
       </div>
-    </div>
-    <div class="col-md-6 col-lg-4">
-      <div class="record-card">
-        <div class="record-type" style="color:var(--success);">Lab Result</div>
-        <div class="record-title">HbA1c Blood Panel</div>
-        <div class="record-meta">HKL Pathology Lab • Jun 26, 2026</div>
-        <div class="record-meta">Result: HbA1c 7.1% — Normal Range</div>
-        <div class="d-flex justify-content-between align-items-center mt-3">
-          <span class="fs-11 text-success"><i class="fas fa-lock me-1"></i>Block #18,398</span>
-          <button class="btn btn-sm btn-outline-success fs-11"><i class="fas fa-eye me-1"></i>View</button>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-4">
-      <div class="record-card">
-        <div class="record-type" style="color:var(--warning);">Prescription</div>
-        <div class="record-title">Metformin 1000mg Prescription</div>
-        <div class="record-meta">Dr. Ahmad Azman • Jun 28, 2026</div>
-        <div class="record-meta">3 medications • 90 days</div>
-        <div class="d-flex justify-content-between align-items-center mt-3">
-          <span class="fs-11 text-success"><i class="fas fa-lock me-1"></i>Block #18,433</span>
-          <button class="btn btn-sm btn-outline-warning fs-11"><i class="fas fa-eye me-1"></i>View</button>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-4">
-      <div class="record-card">
-        <div class="record-type" style="color:var(--info);">Radiology</div>
-        <div class="record-title">ECG — Cardiac Assessment</div>
-        <div class="record-meta">HKL Cardiology • Jan 10, 2026</div>
-        <div class="record-meta">Normal sinus rhythm — EF 55%</div>
-        <div class="d-flex justify-content-between align-items-center mt-3">
-          <span class="fs-11 text-success"><i class="fas fa-lock me-1"></i>Block #17,210</span>
-          <button class="btn btn-sm btn-outline-info fs-11"><i class="fas fa-eye me-1"></i>View</button>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-4">
-      <div class="record-card">
-        <div class="record-type" style="color:var(--primary);">Consultation</div>
-        <div class="record-title">Initial Diagnosis — T2DM</div>
-        <div class="record-meta">Dr. Ahmad Azman • Jun 15, 2024</div>
-        <div class="record-meta">Type 2 Diabetes Mellitus (E11)</div>
-        <div class="d-flex justify-content-between align-items-center mt-3">
-          <span class="fs-11 text-success"><i class="fas fa-lock me-1"></i>Block #12,104</span>
-          <button class="btn btn-sm btn-outline-primary fs-11"><i class="fas fa-eye me-1"></i>View</button>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-4">
-      <div class="record-card">
-        <div class="record-type" style="color:#7c4dff;">Vaccination</div>
-        <div class="record-title">COVID-19 Booster — mRNA</div>
-        <div class="record-meta">General Hospital KL • Mar 5, 2024</div>
-        <div class="record-meta">Dose 3 — Pfizer-BioNTech</div>
-        <div class="d-flex justify-content-between align-items-center mt-3">
-          <span class="fs-11 text-success"><i class="fas fa-lock me-1"></i>Block #11,892</span>
-          <button class="btn btn-sm btn-outline-secondary fs-11"><i class="fas fa-eye me-1"></i>View</button>
-        </div>
-      </div>
-    </div>
+    </div>{% else %}<div class="col-12 text-center text-muted py-5">No medical records available</div>{% endfor %}
   </div>
-  {# Flask: {% endfor %} #}
 
   <div class="text-center mt-2">
-    <button class="btn btn-outline-primary" onclick="MediChain.showToast('Loading more records…','info')"><i class="fas fa-plus me-1"></i>Load More Records</button>
+    <span class="text-muted fs-12">{{ records|length }} record{{ '' if records|length == 1 else 's' }} available</span>
   </div>
 </main>
 
@@ -148,19 +87,21 @@
     <div class="modal-content">
       <div class="modal-header"><h5 class="modal-title"><i class="fas fa-file-medical me-2 text-warning"></i>Medical Record Detail</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
-        {# Flask Dynamic: {{ record }} #}
         <div class="row g-3 mb-3">
-          <div class="col-md-4"><span class="text-muted fs-12">Record ID</span><div class="fw-600">REC-2026-041892</div></div>
-          <div class="col-md-4"><span class="text-muted fs-12">Type</span><div><span class="badge badge-primary-soft">Consultation</span></div></div>
-          <div class="col-md-4"><span class="text-muted fs-12">Date</span><div class="fw-600">28 June 2026, 14:30</div></div>
-          <div class="col-md-4"><span class="text-muted fs-12">Doctor</span><div class="fw-600">Dr. Ahmad Azman</div></div>
-          <div class="col-md-4"><span class="text-muted fs-12">Hospital</span><div class="fw-600">General Hospital KL</div></div>
-          <div class="col-md-4"><span class="text-muted fs-12">Diagnosis</span><div class="fw-600">Type 2 Diabetes — E11</div></div>
+          <div class="col-md-4"><span class="text-muted fs-12">Record ID</span><div id="modalRecordId" class="fw-600">N/A</div></div>
+          <div class="col-md-4"><span class="text-muted fs-12">Type</span><div><span id="modalRecordType" class="badge badge-primary-soft">N/A</span></div></div>
+          <div class="col-md-4"><span class="text-muted fs-12">Date</span><div id="modalRecordDate" class="fw-600">N/A</div></div>
+          <div class="col-md-4"><span class="text-muted fs-12">Doctor</span><div id="modalDoctor" class="fw-600">N/A</div></div>
+          <div class="col-md-4"><span class="text-muted fs-12">Hospital</span><div id="modalHospital" class="fw-600">N/A</div></div>
+          <div class="col-md-4"><span class="text-muted fs-12">Diagnosis / ICD-10</span><div id="modalDiagnosis" class="fw-600">N/A</div></div>
         </div>
-        <div class="mb-3"><strong>Clinical Notes:</strong><p class="fs-13 mt-1">HbA1c improved from 8.2% to 7.1%. Blood pressure well-controlled. Weight stable at 72kg. Patient compliant with medication. Advised continued dietary management and exercise. Follow-up in 3 months.</p></div>
-        <div class="p-2 rounded font-monospace fs-11" style="background:var(--text-dark);color:#64ffda;">
-          Block #18,432 | Hash: 0xa9f2b7d1c4e8f3a2 | Tx: Tx-94218 | Status: COMMITTED
-        </div>
+        <div class="mb-3"><strong>Symptoms:</strong><p id="modalSymptoms" class="fs-13 mt-1">N/A</p></div>
+        <div class="mb-3"><strong>Clinical Notes:</strong><p id="modalNotes" class="fs-13 mt-1">N/A</p></div>
+        <div class="mb-3"><strong>Treatment / Procedure:</strong><p id="modalTreatment" class="fs-13 mt-1">N/A</p></div>
+        <div class="mb-3"><strong>Follow-up Instructions:</strong><p id="modalFollowup" class="fs-13 mt-1">N/A</p></div>
+        <div class="mb-3"><strong>Prescriptions:</strong><div id="modalPrescriptions" class="fs-13 mt-1">N/A</div></div>
+        <div class="mb-3"><strong>Reports / Attachments:</strong><div id="modalAttachments" class="fs-13 mt-1">N/A</div></div>
+        <div id="modalVitals" class="row g-2 fs-12"></div>
       </div>
       <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button class="btn btn-outline-primary" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button></div>
     </div>
@@ -170,5 +111,51 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 <script src="/static/js/app.js"></script>
+<script>
+  function escapeHtml(value) {
+    return String(value ?? 'N/A').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+  }
+  function showRecord(record) {
+    const value = field => record[field] || 'N/A';
+    document.getElementById('modalRecordId').textContent = value('record_id');
+    document.getElementById('modalRecordType').textContent = value('record_type');
+    document.getElementById('modalRecordDate').textContent = value('visit_datetime');
+    document.getElementById('modalDoctor').textContent = value('doctor_name');
+    document.getElementById('modalHospital').textContent = value('hospital_name');
+    document.getElementById('modalDiagnosis').textContent = [record.diagnosis, record.icd10_code].filter(Boolean).join(' — ') || 'N/A';
+    document.getElementById('modalSymptoms').textContent = value('symptoms');
+    document.getElementById('modalNotes').textContent = value('clinical_notes');
+    document.getElementById('modalTreatment').textContent = value('treatment_procedure');
+    document.getElementById('modalFollowup').textContent = value('followup_instructions');
+    document.getElementById('modalPrescriptions').innerHTML = (record.prescriptions || []).length
+      ? record.prescriptions.map(item => escapeHtml([item.medication_name, item.dosage, item.frequency, item.duration].filter(Boolean).join(' — '))).join('<br>')
+      : 'N/A';
+    document.getElementById('modalAttachments').innerHTML = (record.attachments || []).length
+      ? record.attachments.map(item => `<a href="/patient/records/${encodeURIComponent(record.record_id)}/attachments/${encodeURIComponent(item.attachment_id)}/download" class="d-block"><i class="fas fa-download me-1"></i>${escapeHtml(item.file_name)} (${escapeHtml(item.file_size_kb || 'N/A')} KB)</a>`).join('')
+      : 'N/A';
+    const vitalFields = [['blood_pressure', 'Blood pressure'], ['heart_rate', 'Heart rate'], ['temperature', 'Temperature'], ['spo2', 'SpO2'], ['height_cm', 'Height (cm)'], ['weight_kg', 'Weight (kg)'], ['bmi', 'BMI'], ['status', 'Status']];
+    document.getElementById('modalVitals').innerHTML = vitalFields.filter(([key]) => record[key] !== null && record[key] !== undefined && record[key] !== '').map(([key, label]) => `<div class="col-md-3"><span class="text-muted">${label}:</span> <strong>${escapeHtml(record[key])}</strong></div>`).join('') || '<div class="col-12 text-muted">No additional measurements available</div>';
+  }
+  document.querySelectorAll('.view-record').forEach(button => button.addEventListener('click', event => showRecord(JSON.parse(event.currentTarget.dataset.record || '{}'))));
+  document.querySelectorAll('.record-card').forEach(card => card.addEventListener('click', event => {
+    if (!event.target.closest('button,a')) {
+      showRecord(JSON.parse(card.dataset.record || '{}'));
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('recordModal')).show();
+    }
+  }));
+  const searchInput = document.getElementById('table-search');
+  const typeFilter = document.querySelector('.search-filter-bar select');
+  function applyRecordFilters() {
+    const query = (searchInput?.value || '').toLowerCase().trim();
+    const type = (typeFilter?.value || '').toLowerCase();
+    document.querySelectorAll('.record-item').forEach(item => {
+      const matchesSearch = !query || item.dataset.search.toLowerCase().includes(query);
+      const matchesType = !type || item.dataset.recordType.includes(type);
+      item.style.display = matchesSearch && matchesType ? '' : 'none';
+    });
+  }
+  searchInput?.addEventListener('input', applyRecordFilters);
+  typeFilter?.addEventListener('change', applyRecordFilters);
+</script>
 </body>
 </html>

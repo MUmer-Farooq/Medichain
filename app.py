@@ -65,17 +65,37 @@ def login():
         db.ping(reconnect=True, attempts=1, delay=0)
         cursor = db.cursor(dictionary=True)
 
-        # Search user by email and role
-        query = """
-            SELECT user_id, full_name, email, password, role
-            FROM users
-            WHERE email = %s AND role = %s
-        """
+        # Patient credentials are stored on the patient record. Resolve that
+        # record first so an unrelated users row cannot reject valid access.
+        if db_role == "patient":
+            cursor.execute(
+                "SELECT p.patient_id, p.hospital_id, p.full_name, p.email, p.password, "
+                "u.user_id FROM patients p "
+                "LEFT JOIN users u ON u.email=p.email AND u.role='patient' "
+                "WHERE p.email=%s LIMIT 1",
+                (email,),
+            )
+            patient_user = cursor.fetchone()
+            if patient_user:
+                user = {
+                    "user_id": patient_user["user_id"],
+                    "full_name": patient_user["full_name"],
+                    "email": patient_user["email"],
+                    "password": patient_user["password"] or "",
+                    "role": "patient",
+                    "patient_id": patient_user["patient_id"],
+                    "hospital_id": patient_user["hospital_id"],
+                }
+            else:
+                user = None
+        else:
+            cursor.execute(
+                "SELECT user_id, full_name, email, password, role FROM users "
+                "WHERE email=%s AND role=%s",
+                (email, db_role),
+            )
+            user = cursor.fetchone()
 
-        cursor.execute(query, (email, db_role))
-        user = cursor.fetchone()
-
-        # User not found
         if not user:
             flash("User is not registered.", "danger")
             return redirect(url_for("login"))
@@ -89,6 +109,9 @@ def login():
         if not password_matches:
             flash("Incorrect password.", "danger")
             return redirect(url_for("login"))
+        if user["role"] == "patient":
+            session["patient_id"] = user["patient_id"]
+            session["patient_hospital_id"] = user["hospital_id"]
 
         # Login success
         session["user_id"] = user["user_id"]
@@ -268,6 +291,154 @@ def _get_logged_in_doctor(cursor):
 
 def _doctor_patients_redirect():
     return redirect(url_for("doctor_patients"))
+
+
+def _doctor_profile_redirect(message=None, category=None):
+    if message:
+        flash(message, category or "info")
+    return redirect(url_for("doctor_profile"))
+
+
+@app.route("/doctor/profile", methods=["GET", "POST"])
+@app.route("/doctor/profile.html", methods=["GET", "POST"])
+def doctor_profile():
+    if session.get("user_role") != "doctor":
+        return redirect(url_for("login"))
+
+    cursor = None
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        doctor = _get_logged_in_doctor(cursor)
+        if not doctor:
+            return redirect(url_for("login"))
+
+        cursor.execute(
+            "SELECT d.*, h.hospital_name FROM doctors d "
+            "LEFT JOIN hospitals h ON h.hospital_id=d.hospital_id "
+            "WHERE d.doctor_id=%s AND d.hospital_id=%s",
+            (doctor["doctor_id"], doctor["hospital_id"]),
+        )
+        profile = cursor.fetchone()
+        if not profile:
+            return _doctor_profile_redirect("Your doctor profile could not be found.", "danger")
+        profile["hospital_name"] = profile.get("hospital_name") or "N/A"
+        for field in ("created_at",):
+            if profile.get(field) is not None:
+                profile[field] = str(profile[field])
+
+        cursor.execute("SELECT COUNT(*) AS count FROM patients WHERE hospital_id=%s", (profile["hospital_id"],))
+        patient_count = cursor.fetchone()["count"]
+        cursor.execute(
+            "SELECT COUNT(*) AS present FROM information_schema.tables "
+            "WHERE table_schema=DATABASE() AND table_name='medical_records'"
+        )
+        record_count = "N/A"
+        if cursor.fetchone()["present"]:
+            cursor.execute(
+                "SELECT COUNT(*) AS count FROM medical_records "
+                "WHERE doctor_id=%s AND hospital_id=%s",
+                (profile["doctor_id"], profile["hospital_id"]),
+            )
+            record_count = cursor.fetchone()["count"]
+
+        if request.method == "POST":
+            action = request.form.get("action", "profile").strip().lower()
+            if action == "password":
+                current_password = request.form.get("current_password", "")
+                new_password = request.form.get("new_password", "")
+                confirm_password = request.form.get("confirm_password", "")
+                cursor.execute(
+                    "SELECT password FROM users WHERE user_id=%s AND role='doctor'",
+                    (session.get("user_id"),),
+                )
+                user = cursor.fetchone()
+                stored_password = user.get("password", "") if user else ""
+                password_valid = (
+                    check_password_hash(stored_password, current_password)
+                    if stored_password.startswith(("scrypt:", "pbkdf2:", "argon2:"))
+                    else stored_password == current_password
+                )
+                if not user or not password_valid:
+                    return _doctor_profile_redirect("Current password is incorrect.", "danger")
+                if len(new_password) < 8:
+                    return _doctor_profile_redirect("New password must be at least 8 characters.", "danger")
+                if new_password != confirm_password:
+                    return _doctor_profile_redirect("New passwords do not match.", "danger")
+                hashed_password = generate_password_hash(new_password)
+                cursor.execute(
+                    "UPDATE users SET password=%s WHERE user_id=%s AND role='doctor'",
+                    (hashed_password, session.get("user_id")),
+                )
+                cursor.execute(
+                    "UPDATE doctors SET password=%s WHERE doctor_id=%s AND hospital_id=%s",
+                    (hashed_password, profile["doctor_id"], profile["hospital_id"]),
+                )
+                db.commit()
+                return _doctor_profile_redirect("Password updated successfully.", "success")
+
+            fields = {
+                "full_name": request.form.get("full_name", "").strip(),
+                "email": request.form.get("email", "").strip().lower(),
+                "phone": request.form.get("phone", "").strip(),
+                "specialization": request.form.get("specialization", "").strip(),
+                "department": request.form.get("department", "").strip(),
+                "qualification": request.form.get("qualification", "").strip(),
+                "license_number": request.form.get("license_number", "").strip(),
+                "experience_years": request.form.get("experience_years", "").strip(),
+            }
+            if not fields["full_name"] or not fields["email"]:
+                return _doctor_profile_redirect("Full name and email are required.", "danger")
+            if "@" not in fields["email"] or " " in fields["email"]:
+                return _doctor_profile_redirect("Enter a valid email address.", "danger")
+            try:
+                experience_years = int(fields["experience_years"]) if fields["experience_years"] else None
+                if experience_years is not None and experience_years < 0:
+                    raise ValueError
+            except ValueError:
+                return _doctor_profile_redirect("Experience must be a non-negative whole number.", "danger")
+
+            cursor.execute(
+                "SELECT doctor_id FROM doctors WHERE email=%s AND doctor_id<>%s",
+                (fields["email"], profile["doctor_id"]),
+            )
+            if cursor.fetchone():
+                return _doctor_profile_redirect("Another doctor already uses that email address.", "danger")
+            cursor.execute(
+                "SELECT user_id FROM users WHERE email=%s AND user_id<>%s",
+                (fields["email"], session.get("user_id")),
+            )
+            if cursor.fetchone():
+                return _doctor_profile_redirect("That email address is already in use.", "danger")
+
+            cursor.execute(
+                "UPDATE doctors SET full_name=%s, email=%s, phone=%s, specialization=%s, "
+                "department=%s, qualification=%s, license_number=%s, experience_years=%s "
+                "WHERE doctor_id=%s AND hospital_id=%s",
+                (
+                    fields["full_name"], fields["email"], fields["phone"], fields["specialization"],
+                    fields["department"], fields["qualification"], fields["license_number"],
+                    experience_years, profile["doctor_id"], profile["hospital_id"],
+                ),
+            )
+            cursor.execute(
+                "UPDATE users SET full_name=%s, email=%s, phone=%s "
+                "WHERE user_id=%s AND role='doctor'",
+                (fields["full_name"], fields["email"], fields["phone"], session.get("user_id")),
+            )
+            db.commit()
+            return _doctor_profile_redirect("Profile updated successfully.", "success")
+
+        return render_template(
+            "doctor/profile.html", doctor=profile, patient_count=patient_count, record_count=record_count
+        )
+    except Exception as error:
+        db.rollback()
+        print("DB Error Doctor Profile:", error)
+        return _doctor_profile_redirect("Unable to load or update your profile.", "danger")
+    finally:
+        if cursor is not None:
+            cursor.close()
 
 
 @app.route("/doctor/patients")
@@ -619,23 +790,62 @@ def doctor_medical_history():
         doctor = _get_logged_in_doctor(cursor)
         if not doctor:
             return redirect(url_for("login"))
-        cursor.execute("SELECT patient_id, full_name FROM patients WHERE hospital_id=%s ORDER BY full_name", (doctor["hospital_id"],))
-        patients = cursor.fetchall()
         cursor.execute(
-            "SELECT mr.*, p.full_name AS patient_name FROM medical_records mr "
-            "INNER JOIN patients p ON p.patient_id=mr.patient_id "
-            "WHERE mr.doctor_id=%s AND mr.hospital_id=%s ORDER BY mr.visit_datetime DESC, mr.record_id DESC",
-            (doctor["doctor_id"], doctor["hospital_id"]),
+            "SELECT patient_id, full_name, email, phone, date_of_birth, gender, blood_group, address, status "
+            "FROM patients WHERE hospital_id=%s ORDER BY full_name, patient_id",
+            (doctor["hospital_id"],),
         )
-        records = cursor.fetchall()
-        for record in records:
-            for field in ("visit_datetime", "created_at", "updated_at"):
-                if record.get(field) is not None:
-                    record[field] = str(record[field])
-            cursor.execute("SELECT medication_name, dosage, frequency, duration FROM prescriptions WHERE record_id=%s ORDER BY prescription_id", (record["record_id"],))
-            record["prescriptions"] = cursor.fetchall()
-            cursor.execute("SELECT file_name, file_path, file_type, file_size_kb FROM record_attachments WHERE record_id=%s ORDER BY attachment_id", (record["record_id"],))
-            record["attachments"] = cursor.fetchall()
+        patients = cursor.fetchall()
+        for patient in patients:
+            for field in ("date_of_birth", "created_at", "updated_at"):
+                if patient.get(field) is not None:
+                    patient[field] = str(patient[field])
+
+        cursor.execute(
+            "SELECT COUNT(*) AS present FROM information_schema.tables "
+            "WHERE table_schema=DATABASE() AND table_name='medical_records'"
+        )
+        records = []
+        if cursor.fetchone()["present"]:
+            cursor.execute(
+                "SELECT mr.*, p.full_name AS patient_name FROM medical_records mr "
+                "INNER JOIN patients p ON p.patient_id=mr.patient_id "
+                "WHERE mr.doctor_id=%s AND mr.hospital_id=%s AND p.hospital_id=%s "
+                "ORDER BY mr.visit_datetime ASC, mr.record_id ASC",
+                (doctor["doctor_id"], doctor["hospital_id"], doctor["hospital_id"]),
+            )
+            records = cursor.fetchall()
+
+            cursor.execute(
+                "SELECT COUNT(*) AS present FROM information_schema.tables "
+                "WHERE table_schema=DATABASE() AND table_name='prescriptions'"
+            )
+            prescriptions_available = bool(cursor.fetchone()["present"])
+            cursor.execute(
+                "SELECT COUNT(*) AS present FROM information_schema.tables "
+                "WHERE table_schema=DATABASE() AND table_name='record_attachments'"
+            )
+            attachments_available = bool(cursor.fetchone()["present"])
+            for record in records:
+                for field, value in record.items():
+                    if value is not None and not isinstance(value, (str, int, float, bool)):
+                        record[field] = str(value)
+                record["prescriptions"] = []
+                record["attachments"] = []
+                if prescriptions_available:
+                    cursor.execute(
+                        "SELECT medication_name, dosage, frequency, duration "
+                        "FROM prescriptions WHERE record_id=%s ORDER BY prescription_id",
+                        (record["record_id"],),
+                    )
+                    record["prescriptions"] = cursor.fetchall()
+                if attachments_available:
+                    cursor.execute(
+                        "SELECT file_name, file_path, file_type, file_size_kb "
+                        "FROM record_attachments WHERE record_id=%s ORDER BY attachment_id",
+                        (record["record_id"],),
+                    )
+                    record["attachments"] = cursor.fetchall()
         selected_patient_id = request.args.get("patient_id", "")
         if selected_patient_id:
             records = [record for record in records if str(record["patient_id"]) == str(selected_patient_id)]
@@ -2288,6 +2498,546 @@ def hospital_admin_patients_delete(patient_id):
     return redirect(url_for("hospital_admin_patients"))
 
 # ====================================================================
+# Patient Dashboard Route
+# ====================================================================
+@app.route("/patient/my-records")
+@app.route("/patient/my_records.html")
+def patient_my_records():
+    if session.get("user_role") != "patient" or not session.get("patient_id"):
+        return redirect(url_for("login"))
+
+    cursor = None
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT p.*, h.hospital_name FROM patients p "
+            "LEFT JOIN hospitals h ON h.hospital_id=p.hospital_id "
+            "WHERE p.patient_id=%s AND p.hospital_id=%s LIMIT 1",
+            (session["patient_id"], session.get("patient_hospital_id")),
+        )
+        patient = cursor.fetchone()
+        if not patient:
+            session.pop("patient_id", None)
+            session.pop("patient_hospital_id", None)
+            flash("Your patient profile could not be found.", "danger")
+            return redirect(url_for("login"))
+
+        cursor.execute(
+            "SELECT COUNT(*) AS present FROM information_schema.tables "
+            "WHERE table_schema=DATABASE() AND table_name='medical_records'"
+        )
+        records_available = bool(cursor.fetchone()["present"])
+        records = []
+        prescriptions_available = False
+        attachments_available = False
+        if records_available:
+            cursor.execute(
+                "SELECT mr.*, d.full_name AS doctor_name, d.specialization, "
+                "h.hospital_name FROM medical_records mr "
+                "LEFT JOIN doctors d ON d.doctor_id=mr.doctor_id "
+                "LEFT JOIN hospitals h ON h.hospital_id=mr.hospital_id "
+                "WHERE mr.patient_id=%s AND mr.hospital_id=%s "
+                "ORDER BY mr.visit_datetime DESC, mr.record_id DESC",
+                (patient["patient_id"], patient["hospital_id"]),
+            )
+            records = cursor.fetchall()
+            cursor.execute(
+                "SELECT COUNT(*) AS present FROM information_schema.tables "
+                "WHERE table_schema=DATABASE() AND table_name='prescriptions'"
+            )
+            prescriptions_available = bool(cursor.fetchone()["present"])
+            cursor.execute(
+                "SELECT COUNT(*) AS present FROM information_schema.tables "
+                "WHERE table_schema=DATABASE() AND table_name='record_attachments'"
+            )
+            attachments_available = bool(cursor.fetchone()["present"])
+        for record in records:
+            for field, value in record.items():
+                if value is not None and not isinstance(value, (str, int, float, bool)):
+                    record[field] = str(value)
+            record["prescriptions"] = []
+            record["attachments"] = []
+            if prescriptions_available:
+                cursor.execute(
+                    "SELECT medication_name, dosage, frequency, duration "
+                    "FROM prescriptions WHERE record_id=%s ORDER BY prescription_id",
+                    (record["record_id"],),
+                )
+                record["prescriptions"] = cursor.fetchall()
+            if attachments_available:
+                cursor.execute(
+                    "SELECT attachment_id, file_name, file_type, file_size_kb, uploaded_at "
+                    "FROM record_attachments WHERE record_id=%s ORDER BY attachment_id",
+                    (record["record_id"],),
+                )
+                record["attachments"] = cursor.fetchall()
+            for attachment in record["attachments"]:
+                if attachment.get("uploaded_at") is not None:
+                    attachment["uploaded_at"] = str(attachment["uploaded_at"])
+
+        return render_template("patient/my_records.html", patient=patient, records=records)
+    except Exception as error:
+        db.rollback()
+        print("DB Error Patient My Records:", error)
+        return render_template(
+            "patient/my_records.html",
+            patient={"full_name": "N/A", "hospital_name": "N/A"},
+            records=[],
+        )
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+
+@app.route("/patient/records/<int:record_id>/attachments/<int:attachment_id>/download")
+def patient_record_attachment_download(record_id, attachment_id):
+    if session.get("user_role") != "patient" or not session.get("patient_id"):
+        return redirect(url_for("login"))
+
+    cursor = None
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT ra.file_path, ra.file_name FROM record_attachments ra "
+            "INNER JOIN medical_records mr ON mr.record_id=ra.record_id "
+            "WHERE ra.attachment_id=%s AND ra.record_id=%s "
+            "AND mr.patient_id=%s AND mr.hospital_id=%s",
+            (attachment_id, record_id, session["patient_id"], session.get("patient_hospital_id")),
+        )
+        attachment = cursor.fetchone()
+        if not attachment:
+            abort(404)
+        file_path = Path(app.static_folder) / attachment["file_path"]
+        if not file_path.is_file():
+            abort(404)
+        return send_file(file_path, as_attachment=True, download_name=attachment["file_name"])
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+
+@app.route("/patient/reports")
+@app.route("/patient/reports.html")
+def patient_reports():
+    if session.get("user_role") != "patient" or not session.get("patient_id"):
+        return redirect(url_for("login"))
+
+    cursor = None
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT p.full_name, p.patient_id, p.hospital_id, h.hospital_name "
+            "FROM patients p LEFT JOIN hospitals h ON h.hospital_id=p.hospital_id "
+            "WHERE p.patient_id=%s AND p.hospital_id=%s LIMIT 1",
+            (session["patient_id"], session.get("patient_hospital_id")),
+        )
+        patient = cursor.fetchone()
+        if not patient:
+            return redirect(url_for("login"))
+
+        cursor.execute(
+            "SELECT COUNT(*) AS present FROM information_schema.tables "
+            "WHERE table_schema=DATABASE() AND table_name='medical_records'"
+        )
+        records_available = bool(cursor.fetchone()["present"])
+        attachments_available = False
+        reports = []
+        if records_available:
+            cursor.execute(
+                "SELECT COUNT(*) AS present FROM information_schema.tables "
+                "WHERE table_schema=DATABASE() AND table_name='record_attachments'"
+            )
+            attachments_available = bool(cursor.fetchone()["present"])
+            attachment_select = (
+                "ra.attachment_id, ra.file_name, ra.file_type, ra.file_size_kb, ra.uploaded_at"
+                if attachments_available else
+                "NULL AS attachment_id, NULL AS file_name, NULL AS file_type, "
+                "NULL AS file_size_kb, NULL AS uploaded_at"
+            )
+            attachment_join = "LEFT JOIN record_attachments ra ON ra.record_id=mr.record_id" if attachments_available else ""
+            cursor.execute(
+                "SELECT mr.record_id, mr.record_type, mr.visit_datetime, mr.diagnosis, "
+                "mr.symptoms, mr.clinical_notes, mr.treatment_procedure, mr.status, "
+                "d.full_name AS doctor_name, d.specialization, h.hospital_name, "
+                f"{attachment_select} FROM medical_records mr "
+                "LEFT JOIN doctors d ON d.doctor_id=mr.doctor_id "
+                "LEFT JOIN hospitals h ON h.hospital_id=mr.hospital_id "
+                f"{attachment_join} "
+                "WHERE mr.patient_id=%s AND mr.hospital_id=%s "
+                "ORDER BY mr.visit_datetime DESC, mr.record_id DESC, ra.attachment_id",
+                (patient["patient_id"], patient["hospital_id"]),
+            )
+            for report in cursor.fetchall():
+                record_type = (report.get("record_type") or "").lower()
+                is_report_record = any(term in record_type for term in ("lab", "radiology", "imaging", "ecg", "report"))
+                if not report.get("attachment_id") and not is_report_record:
+                    continue
+                for field, value in report.items():
+                    if value is not None and not isinstance(value, (str, int, float, bool)):
+                        report[field] = str(value)
+                report["report_name"] = report.get("file_name") or report.get("diagnosis") or "N/A"
+                reports.append(report)
+
+        return render_template("patient/reports.html", patient=patient, reports=reports)
+    except Exception as error:
+        db.rollback()
+        print("DB Error Patient Reports:", error)
+        return render_template(
+            "patient/reports.html",
+            patient={"full_name": "N/A", "hospital_name": "N/A"},
+            reports=[],
+        )
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+
+@app.route("/patient/access-history")
+@app.route("/patient/access_history.html")
+def patient_access_history():
+    if session.get("user_role") != "patient" or not session.get("patient_id"):
+        return redirect(url_for("login"))
+
+    cursor = None
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT p.full_name, p.patient_id, p.hospital_id, h.hospital_name "
+            "FROM patients p LEFT JOIN hospitals h ON h.hospital_id=p.hospital_id "
+            "WHERE p.patient_id=%s AND p.hospital_id=%s LIMIT 1",
+            (session["patient_id"], session.get("patient_hospital_id")),
+        )
+        patient = cursor.fetchone()
+        if not patient:
+            return redirect(url_for("login"))
+
+        cursor.execute(
+            "SELECT COUNT(*) AS present FROM information_schema.tables "
+            "WHERE table_schema=DATABASE() AND table_name IN "
+            "('access_logs', 'audit_logs', 'record_access_logs', 'patient_consents')"
+        )
+        access_history_available = bool(cursor.fetchone()["present"])
+        access_logs = []
+        active_consents = []
+        # No access/consent schema exists in the current database. Do not
+        # infer access events from medical records or create a new table.
+        return render_template(
+            "patient/access_history.html",
+            patient=patient,
+            access_logs=access_logs,
+            active_consents=active_consents,
+            access_history_available=access_history_available,
+        )
+    except Exception as error:
+        db.rollback()
+        print("DB Error Patient Access History:", error)
+        return render_template(
+            "patient/access_history.html",
+            patient={"full_name": "N/A", "hospital_name": "N/A"},
+            access_logs=[], active_consents=[], access_history_available=False,
+        )
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+
+@app.route("/patient/profile", methods=["GET", "POST"])
+@app.route("/patient/profile.html", methods=["GET", "POST"])
+def patient_profile():
+    if session.get("user_role") != "patient" or not session.get("patient_id"):
+        return redirect(url_for("login"))
+
+    cursor = None
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT p.*, h.hospital_name FROM patients p "
+            "LEFT JOIN hospitals h ON h.hospital_id=p.hospital_id "
+            "WHERE p.patient_id=%s AND p.hospital_id=%s LIMIT 1",
+            (session["patient_id"], session.get("patient_hospital_id")),
+        )
+        patient = cursor.fetchone()
+        if not patient:
+            return redirect(url_for("login"))
+
+        if request.method == "POST":
+            action = request.form.get("action", "profile").strip().lower()
+            if action == "password":
+                current_password = request.form.get("current_password", "")
+                new_password = request.form.get("new_password", "")
+                confirm_password = request.form.get("confirm_password", "")
+                stored_password = patient.get("password") or ""
+                password_valid = (
+                    check_password_hash(stored_password, current_password)
+                    if stored_password.startswith(("scrypt:", "pbkdf2:", "argon2:"))
+                    else stored_password == current_password
+                )
+                if not password_valid:
+                    flash("Current password is incorrect.", "danger")
+                    return redirect(url_for("patient_profile"))
+                if len(new_password) < 8:
+                    flash("New password must be at least 8 characters.", "danger")
+                    return redirect(url_for("patient_profile"))
+                if new_password != confirm_password:
+                    flash("New passwords do not match.", "danger")
+                    return redirect(url_for("patient_profile"))
+                hashed_password = generate_password_hash(new_password)
+                cursor.execute(
+                    "UPDATE patients SET password=%s WHERE patient_id=%s AND hospital_id=%s",
+                    (hashed_password, patient["patient_id"], patient["hospital_id"]),
+                )
+                if session.get("user_id"):
+                    cursor.execute(
+                        "UPDATE users SET password=%s WHERE user_id=%s AND role='patient'",
+                        (hashed_password, session["user_id"]),
+                    )
+                db.commit()
+                flash("Password updated successfully.", "success")
+                return redirect(url_for("patient_profile"))
+
+            fields = {
+                "full_name": request.form.get("full_name", "").strip(),
+                "email": request.form.get("email", "").strip().lower(),
+                "phone": request.form.get("phone", "").strip(),
+                "date_of_birth": request.form.get("date_of_birth", "").strip(),
+                "gender": request.form.get("gender", "").strip(),
+                "blood_group": request.form.get("blood_group", "").strip(),
+                "address": request.form.get("address", "").strip(),
+                "emergency_contact": request.form.get("emergency_contact", "").strip(),
+                "emergency_phone": request.form.get("emergency_phone", "").strip(),
+            }
+            if not fields["full_name"] or not fields["email"]:
+                flash("Full name and email are required.", "danger")
+                return redirect(url_for("patient_profile"))
+            if "@" not in fields["email"] or " " in fields["email"]:
+                flash("Enter a valid email address.", "danger")
+                return redirect(url_for("patient_profile"))
+            if fields["date_of_birth"]:
+                try:
+                    date.fromisoformat(fields["date_of_birth"])
+                except ValueError:
+                    flash("Enter a valid date of birth.", "danger")
+                    return redirect(url_for("patient_profile"))
+            cursor.execute(
+                "SELECT patient_id FROM patients WHERE email=%s AND patient_id<>%s",
+                (fields["email"], patient["patient_id"]),
+            )
+            if cursor.fetchone():
+                flash("Another patient already uses that email address.", "danger")
+                return redirect(url_for("patient_profile"))
+            if session.get("user_id"):
+                cursor.execute(
+                    "SELECT user_id FROM users WHERE email=%s AND user_id<>%s",
+                    (fields["email"], session["user_id"]),
+                )
+                if cursor.fetchone():
+                    flash("That email address is already in use.", "danger")
+                    return redirect(url_for("patient_profile"))
+            cursor.execute(
+                "UPDATE patients SET full_name=%s, email=%s, phone=%s, date_of_birth=%s, "
+                "gender=%s, blood_group=%s, address=%s, emergency_contact=%s, emergency_phone=%s "
+                "WHERE patient_id=%s AND hospital_id=%s",
+                (
+                    fields["full_name"], fields["email"], fields["phone"], fields["date_of_birth"] or None,
+                    fields["gender"], fields["blood_group"], fields["address"], fields["emergency_contact"],
+                    fields["emergency_phone"], patient["patient_id"], patient["hospital_id"],
+                ),
+            )
+            if session.get("user_id"):
+                cursor.execute(
+                    "UPDATE users SET full_name=%s, email=%s, phone=%s "
+                    "WHERE user_id=%s AND role='patient'",
+                    (fields["full_name"], fields["email"], fields["phone"], session["user_id"]),
+                )
+            db.commit()
+            flash("Profile updated successfully.", "success")
+            return redirect(url_for("patient_profile"))
+
+        cursor.execute(
+            "SELECT COUNT(*) AS count FROM medical_records WHERE patient_id=%s AND hospital_id=%s",
+            (patient["patient_id"], patient["hospital_id"]),
+        )
+        record_count = cursor.fetchone()["count"]
+        cursor.execute(
+            "SELECT MAX(visit_datetime) AS last_visit FROM medical_records WHERE patient_id=%s AND hospital_id=%s",
+            (patient["patient_id"], patient["hospital_id"]),
+        )
+        last_visit = cursor.fetchone()["last_visit"]
+        last_visit = str(last_visit) if last_visit else "N/A"
+        cursor.execute(
+            "SELECT d.full_name FROM medical_records mr INNER JOIN doctors d ON d.doctor_id=mr.doctor_id "
+            "WHERE mr.patient_id=%s AND mr.hospital_id=%s ORDER BY mr.visit_datetime DESC LIMIT 1",
+            (patient["patient_id"], patient["hospital_id"]),
+        )
+        doctor_row = cursor.fetchone()
+        patient["doctor_name"] = doctor_row["full_name"] if doctor_row else "N/A"
+        patient["record_count"] = record_count
+        patient["last_visit"] = last_visit
+        patient["age"] = "N/A"
+        if patient.get("date_of_birth"):
+            today = date.today()
+            dob = patient["date_of_birth"]
+            patient["age"] = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+            patient["date_of_birth"] = dob.isoformat()
+        return render_template("patient/profile.html", patient=patient)
+    except Exception as error:
+        db.rollback()
+        print("DB Error Patient Profile:", error)
+        return render_template("patient/profile.html", patient={"full_name": "N/A", "hospital_name": "N/A"})
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+
+@app.route("/patient/dashboard")
+@app.route("/patient/dashboard.html")
+def patient_dashboard():
+    if session.get("user_role") != "patient":
+        return redirect(url_for("login"))
+
+    cursor = None
+    empty = {
+        "patient": {"full_name": "N/A", "patient_id": None, "hospital_name": "N/A"},
+        "stats": {"records": "N/A", "verified": "N/A", "doctors": "N/A", "appointments": "N/A", "prescriptions": "N/A"},
+        "recent_records": [], "doctors": [], "appointments": [], "last_visit": "N/A",
+    }
+    try:
+        db.ping(reconnect=True)
+        cursor = db.cursor(dictionary=True)
+        cursor.execute(
+            "SELECT p.*, h.hospital_name FROM patients p "
+            "LEFT JOIN hospitals h ON h.hospital_id=p.hospital_id "
+            "WHERE p.patient_id=%s AND p.hospital_id=%s LIMIT 1",
+            (session.get("patient_id"), session.get("patient_hospital_id")),
+        )
+        patient = cursor.fetchone()
+        if not patient:
+            return redirect(url_for("login"))
+        patient["hospital_name"] = patient.get("hospital_name") or "N/A"
+        if patient.get("date_of_birth"):
+            today = date.today()
+            dob = patient["date_of_birth"]
+            patient["age"] = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+        else:
+            patient["age"] = "N/A"
+        for field in ("date_of_birth", "created_at"):
+            if patient.get(field) is not None:
+                patient[field] = str(patient[field])
+
+        stats = {"records": 0, "verified": 0, "doctors": 0, "appointments": "N/A", "prescriptions": "N/A"}
+        recent_records, doctors, appointments = [], [], []
+        last_visit = "N/A"
+        cursor.execute(
+            "SELECT COUNT(*) AS present FROM information_schema.tables "
+            "WHERE table_schema=DATABASE() AND table_name='medical_records'"
+        )
+        records_available = bool(cursor.fetchone()["present"])
+        if records_available:
+            cursor.execute(
+                "SELECT mr.*, d.full_name AS doctor_name, d.specialization, h.hospital_name "
+                "FROM medical_records mr "
+                "LEFT JOIN doctors d ON d.doctor_id=mr.doctor_id "
+                "LEFT JOIN hospitals h ON h.hospital_id=mr.hospital_id "
+                "WHERE mr.patient_id=%s AND mr.hospital_id=%s "
+                "ORDER BY mr.visit_datetime DESC, mr.record_id DESC LIMIT 5",
+                (patient["patient_id"], patient["hospital_id"]),
+            )
+            recent_records = cursor.fetchall()
+            for record in recent_records:
+                for field, value in record.items():
+                    if value is not None and not isinstance(value, (str, int, float, bool)):
+                        record[field] = str(value)
+                record["prescriptions"] = []
+            cursor.execute(
+                "SELECT COUNT(*) AS present FROM information_schema.tables "
+                "WHERE table_schema=DATABASE() AND table_name='prescriptions'"
+            )
+            prescriptions_available = bool(cursor.fetchone()["present"])
+            if prescriptions_available:
+                cursor.execute(
+                    "SELECT COUNT(*) AS count FROM prescriptions pr "
+                    "INNER JOIN medical_records mr ON mr.record_id=pr.record_id "
+                    "WHERE mr.patient_id=%s AND mr.hospital_id=%s",
+                    (patient["patient_id"], patient["hospital_id"]),
+                )
+                stats["prescriptions"] = cursor.fetchone()["count"]
+                for record in recent_records:
+                    cursor.execute(
+                        "SELECT medication_name, dosage, frequency, duration FROM prescriptions "
+                        "WHERE record_id=%s ORDER BY prescription_id",
+                        (record["record_id"],),
+                    )
+                    record["prescriptions"] = cursor.fetchall()
+            cursor.execute(
+                "SELECT COUNT(*) AS count FROM medical_records WHERE patient_id=%s AND hospital_id=%s",
+                (patient["patient_id"], patient["hospital_id"]),
+            )
+            stats["records"] = cursor.fetchone()["count"]
+            stats["verified"] = stats["records"]
+            cursor.execute(
+                "SELECT COUNT(DISTINCT doctor_id) AS count FROM medical_records "
+                "WHERE patient_id=%s AND hospital_id=%s AND doctor_id IS NOT NULL",
+                (patient["patient_id"], patient["hospital_id"]),
+            )
+            stats["doctors"] = cursor.fetchone()["count"]
+            if recent_records:
+                last_visit = recent_records[0].get("visit_datetime") or "N/A"
+            cursor.execute(
+                "SELECT DISTINCT d.doctor_id, d.full_name, d.specialization, d.department, "
+                "d.status, h.hospital_name FROM medical_records mr "
+                "INNER JOIN doctors d ON d.doctor_id=mr.doctor_id "
+                "LEFT JOIN hospitals h ON h.hospital_id=d.hospital_id "
+                "WHERE mr.patient_id=%s AND mr.hospital_id=%s ORDER BY d.full_name",
+                (patient["patient_id"], patient["hospital_id"]),
+            )
+            doctors = cursor.fetchall()
+
+        cursor.execute(
+            "SELECT COUNT(*) AS present FROM information_schema.tables "
+            "WHERE table_schema=DATABASE() AND table_name='appointments'"
+        )
+        appointments_available = bool(cursor.fetchone()["present"])
+        if appointments_available:
+            cursor.execute("SHOW COLUMNS FROM appointments")
+            appointment_columns = {row["Field"] for row in cursor.fetchall()}
+            appointment_date = next((name for name in ("appointment_datetime", "appointment_date", "scheduled_at", "date") if name in appointment_columns), None)
+            if "patient_id" in appointment_columns and appointment_date:
+                status_select = "a.status" if "status" in appointment_columns else "'N/A' AS status"
+                doctor_join = "LEFT JOIN doctors d ON d.doctor_id=a.doctor_id" if "doctor_id" in appointment_columns else ""
+                doctor_select = "d.full_name AS doctor_name" if "doctor_id" in appointment_columns else "'N/A' AS doctor_name"
+                cursor.execute(
+                    f"SELECT a.{appointment_date} AS appointment_date, {status_select}, {doctor_select} "
+                    f"FROM appointments a {doctor_join} WHERE a.patient_id=%s "
+                    f"ORDER BY a.{appointment_date} DESC LIMIT 5",
+                    (patient["patient_id"],),
+                )
+                appointments = cursor.fetchall()
+                for appointment in appointments:
+                    for field, value in appointment.items():
+                        if value is not None and not isinstance(value, (str, int, float, bool)):
+                            appointment[field] = str(value)
+                cursor.execute("SELECT COUNT(*) AS count FROM appointments WHERE patient_id=%s", (patient["patient_id"],))
+                stats["appointments"] = cursor.fetchone()["count"]
+
+        return render_template(
+            "patient/dashboard.html", patient=patient, stats=stats,
+            recent_records=recent_records, doctors=doctors, appointments=appointments,
+            appointments_available=appointments_available, last_visit=last_visit,
+        )
+    except Exception as error:
+        db.rollback()
+        print("DB Error Patient Dashboard:", error)
+        return render_template("patient/dashboard.html", **empty, appointments_available=False)
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+# ====================================================================
 # Hospital Admin Reports Route
 # ====================================================================
 @app.route("/hospital-admin/reports")
@@ -2595,7 +3345,13 @@ for html in templates_dir.rglob("*.html"):
         "doctor/patients.html",
         "doctor/create_record.html",
         "doctor/upload_reports.html",
-        "doctor/medical_history.html"
+        "doctor/medical_history.html",
+        "doctor/profile.html",
+        "patient/dashboard.html",
+        "patient/my_records.html",
+        "patient/reports.html",
+        "patient/access_history.html",
+        "patient/profile.html"
     ]:
         continue
 

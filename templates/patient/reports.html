@@ -15,7 +15,7 @@
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="this.classList.remove('show');document.getElementById('mc-sidebar').classList.remove('show');"></div>
 <aside class="mc-sidebar" id="mc-sidebar">
   <a href="dashboard.html" class="sidebar-brand"><div class="brand-icon"><i class="fas fa-chain"></i></div><div class="brand-text"><span class="brand-name">MediChain</span><span class="brand-tagline">Patient Portal</span></div></a>
-  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#ff6d00,#ffcc02);color:#000;">AJ</div><div class="user-info"><div class="user-name">Ahmad Bin Jalil</div><div class="user-role">Patient</div></div></div>
+  <div class="sidebar-user"><div class="user-avatar" style="background:linear-gradient(135deg,#ff6d00,#ffcc02);color:#000;">{{ (patient.full_name or 'N/A')[:2]|upper }}</div><div class="user-info"><div class="user-name">{{ patient.full_name or 'N/A' }}</div><div class="user-role">Patient</div></div></div>
   <nav class="sidebar-nav">
     <div class="nav-section-label">Overview</div>
     <a href="dashboard.html" class="nav-item-link"><i class="fas fa-home nav-icon"></i><span class="nav-text">My Dashboard</span></a>
@@ -27,13 +27,14 @@
     <a href="profile.html" class="nav-item-link"><i class="fas fa-user-circle nav-icon"></i><span class="nav-text">My Profile</span></a>
     <a href="../login.html" class="nav-item-link"><i class="fas fa-sign-out-alt nav-icon"></i><span class="nav-text">Sign Out</span></a>
   </nav>
-  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>General Hospital KL</span></div></div>
+  <div class="sidebar-footer"><div class="version-badge"><div class="version-dot"></div><span>{{ patient.hospital_name or 'N/A' }}</span></div></div>
 </aside>
 <header class="mc-topbar">
   <div class="topbar-left"><div class="sidebar-toggle" id="sidebar-toggle"><i class="fas fa-bars"></i></div><div class="topbar-breadcrumb"><a href="dashboard.html" class="text-muted">Patient</a><span class="bc-sep">/</span><span class="bc-current">Lab &amp; Reports</span></div></div>
-  <div class="topbar-right"><div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#ff6d00,#ffcc02);color:#000;">AJ</div><span class="ud-name">Ahmad</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div></div>
+  <div class="topbar-right"><div class="dropdown"><div class="user-dropdown-btn" data-bs-toggle="dropdown"><div class="ud-avatar" style="background:linear-gradient(135deg,#ff6d00,#ffcc02);color:#000;">{{ (patient.full_name or 'N/A')[:2]|upper }}</div><span class="ud-name">{{ patient.full_name or 'N/A' }}</span></div><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item text-danger" href="../login.html"><i class="fas fa-sign-out-alt"></i>Sign Out</a></li></ul></div></div>
 </header>
 <main class="mc-content">
+  {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category, message in messages %}<div class="alert alert-{{ category }}" role="alert">{{ message }}</div>{% endfor %}{% endif %}{% endwith %}
   <div class="page-header">
     <div class="page-header-left"><h4><i class="fas fa-file-alt me-2 text-info"></i>Lab &amp; Diagnostic Reports</h4><p>All your lab results, imaging, and diagnostic reports</p></div>
   </div>
@@ -41,28 +42,76 @@
   <div class="mc-card mb-3"><div class="card-body py-3"><div class="search-filter-bar"><div class="search-box"><i class="fas fa-search"></i><input type="text" id="table-search" placeholder="Search reports…"/></div><select class="form-select form-select-sm" style="width:auto;"><option value="">All Types</option><option>Lab Result</option><option>Radiology</option><option>ECG</option><option>Ultrasound</option></select><select class="form-select form-select-sm" style="width:auto;"><option>All Time</option><option>This Year</option><option>Last 6 Months</option></select></div></div></div>
 
   <div class="mc-card">
-    <div class="card-header"><span><i class="fas fa-flask text-info me-2"></i>Reports &amp; Documents <span class="badge badge-info-soft ms-2">12</span></span></div>
+    <div class="card-header"><span><i class="fas fa-flask text-info me-2"></i>Reports &amp; Documents <span class="badge badge-info-soft ms-2">{{ reports|length }}</span></span></div>
     <div class="card-body p-0">
       <div class="table-responsive">
-        {# Flask Dynamic: {% for report in patient.reports %} #}
         <table class="mc-table" id="mc-table">
           <thead><tr><th>Report Name</th><th>Type</th><th>Lab / Facility</th><th>Doctor</th><th>Date</th><th>Blockchain</th><th>Actions</th></tr></thead>
           <tbody>
-            <tr><td><div class="d-flex align-items-center gap-2"><div style="width:32px;height:32px;border-radius:6px;background:#ffebee;color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;"><i class="fas fa-file-pdf"></i></div><div class="fw-600 fs-13">Blood_Panel_Jun2026.pdf</div></div></td><td><span class="badge badge-success-soft">Lab Result</span></td><td>HKL Pathology</td><td>Dr. Ahmad Azman</td><td>Jun 26</td><td><span class="fs-11 text-success"><i class="fas fa-lock me-1"></i>Verified</span></td><td><div class="table-actions"><a href="#" class="btn-icon" title="View" onclick="MediChain.showToast('Opening PDF…','info')"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-success" title="Download"><i class="fas fa-download"></i></a></div></td></tr>
-            <tr><td><div class="d-flex align-items-center gap-2"><div style="width:32px;height:32px;border-radius:6px;background:#e1f5fe;color:var(--info);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;"><i class="fas fa-heartbeat"></i></div><div class="fw-600 fs-13">ECG_Report_Jan2026.pdf</div></div></td><td><span class="badge badge-info-soft">ECG</span></td><td>HKL Cardiology</td><td>Dr. Ahmad Azman</td><td>Jan 10</td><td><span class="fs-11 text-success"><i class="fas fa-lock me-1"></i>Verified</span></td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-success"><i class="fas fa-download"></i></a></div></td></tr>
-            <tr><td><div class="d-flex align-items-center gap-2"><div style="width:32px;height:32px;border-radius:6px;background:#e8f5e9;color:var(--success);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;"><i class="fas fa-x-ray"></i></div><div class="fw-600 fs-13">Chest_XRay_2025.jpg</div></div></td><td><span class="badge badge-primary-soft">Radiology</span></td><td>HKL Radiology</td><td>Dr. Suresh Kumar</td><td>Aug 2025</td><td><span class="fs-11 text-success"><i class="fas fa-lock me-1"></i>Verified</span></td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-success"><i class="fas fa-download"></i></a></div></td></tr>
-            <tr><td><div class="d-flex align-items-center gap-2"><div style="width:32px;height:32px;border-radius:6px;background:#ffebee;color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;"><i class="fas fa-file-pdf"></i></div><div class="fw-600 fs-13">HbA1c_Results_Mar2025.pdf</div></div></td><td><span class="badge badge-success-soft">Lab Result</span></td><td>HKL Pathology</td><td>Dr. Ahmad Azman</td><td>Mar 2025</td><td><span class="fs-11 text-success"><i class="fas fa-lock me-1"></i>Verified</span></td><td><div class="table-actions"><a href="#" class="btn-icon"><i class="fas fa-eye"></i></a><a href="#" class="btn-icon btn-success"><i class="fas fa-download"></i></a></div></td></tr>
+            {% for report in reports %}<tr data-report-type="{{ (report.record_type or '')|lower }}" data-search="{{ report|tojson|forceescape }}"><td><div class="d-flex align-items-center gap-2"><div style="width:32px;height:32px;border-radius:6px;background:#e1f5fe;color:var(--info);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;"><i class="fas fa-file-medical"></i></div><div class="fw-600 fs-13">{{ report.report_name or 'N/A' }}</div></div></td><td><span class="badge badge-info-soft">{{ report.record_type or 'N/A' }}</span></td><td>{{ report.hospital_name or 'N/A' }}</td><td>{{ report.doctor_name or 'N/A' }}</td><td>{{ report.visit_datetime or 'N/A' }}</td><td><span class="fs-11 text-success"><i class="fas fa-database me-1"></i>Available</span></td><td><div class="table-actions"><a href="#reportModal" class="btn-icon view-report" title="View" data-bs-toggle="modal" data-bs-target="#reportModal" data-report='{{ report|tojson }}'><i class="fas fa-eye"></i></a>{% if report.attachment_id %}<a href="/patient/records/{{ report.record_id }}/attachments/{{ report.attachment_id }}/download" class="btn-icon btn-success" title="Download"><i class="fas fa-download"></i></a>{% else %}<span class="btn-icon text-muted" title="No file available"><i class="fas fa-download"></i></span>{% endif %}</div></td></tr>{% else %}<tr><td colspan="7" class="text-center text-muted py-4">No reports available</td></tr>{% endfor %}
           </tbody>
         </table>
-        {# Flask: {% endfor %} #}
       </div>
     </div>
   </div>
 </main>
 
+<div class="modal fade" id="reportModal" tabindex="-1">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="fas fa-file-alt me-2 text-info"></i>Report Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-4"><span class="text-muted fs-12">Report Name</span><div id="modalReportName" class="fw-600">N/A</div></div>
+        <div class="col-md-4"><span class="text-muted fs-12">Type</span><div id="modalReportType" class="fw-600">N/A</div></div>
+        <div class="col-md-4"><span class="text-muted fs-12">Date</span><div id="modalReportDate" class="fw-600">N/A</div></div>
+        <div class="col-md-4"><span class="text-muted fs-12">Doctor</span><div id="modalReportDoctor" class="fw-600">N/A</div></div>
+        <div class="col-md-4"><span class="text-muted fs-12">Hospital</span><div id="modalReportHospital" class="fw-600">N/A</div></div>
+        <div class="col-md-4"><span class="text-muted fs-12">Status</span><div id="modalReportStatus" class="fw-600">N/A</div></div>
+      </div>
+      <div class="mb-3"><strong>Diagnosis:</strong><p id="modalReportDiagnosis" class="fs-13 mt-1">N/A</p></div>
+      <div class="mb-3"><strong>Symptoms:</strong><p id="modalReportSymptoms" class="fs-13 mt-1">N/A</p></div>
+      <div class="mb-3"><strong>Clinical Notes:</strong><p id="modalReportNotes" class="fs-13 mt-1">N/A</p></div>
+      <div class="mb-3"><strong>Treatment / Procedure:</strong><p id="modalReportTreatment" class="fs-13 mt-1">N/A</p></div>
+      <div id="modalReportDownload"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Close</button><button class="btn btn-outline-primary" onclick="window.print()"><i class="fas fa-print me-1"></i>Print</button></div>
+  </div></div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 <script src="/static/js/app.js"></script>
-<script>document.addEventListener('DOMContentLoaded',()=>{MediChain.initTableSort();});</script>
+<script>
+  function escapeHtml(value) { return String(value ?? 'N/A').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character])); }
+  function showReport(report) {
+    const value = key => report[key] || 'N/A';
+    document.getElementById('modalReportName').textContent = value('report_name');
+    document.getElementById('modalReportType').textContent = value('record_type');
+    document.getElementById('modalReportDate').textContent = value('visit_datetime');
+    document.getElementById('modalReportDoctor').textContent = value('doctor_name');
+    document.getElementById('modalReportHospital').textContent = value('hospital_name');
+    document.getElementById('modalReportStatus').textContent = value('status');
+    document.getElementById('modalReportDiagnosis').textContent = value('diagnosis');
+    document.getElementById('modalReportSymptoms').textContent = value('symptoms');
+    document.getElementById('modalReportNotes').textContent = value('clinical_notes');
+    document.getElementById('modalReportTreatment').textContent = value('treatment_procedure');
+    document.getElementById('modalReportDownload').innerHTML = report.attachment_id
+      ? `<a class="btn btn-success btn-sm" href="/patient/records/${encodeURIComponent(report.record_id)}/attachments/${encodeURIComponent(report.attachment_id)}/download"><i class="fas fa-download me-1"></i>Download ${escapeHtml(report.file_name)}</a>`
+      : '<span class="text-muted fs-12">No uploaded file is associated with this report.</span>';
+  }
+  document.querySelectorAll('.view-report').forEach(button => button.addEventListener('click', event => showReport(JSON.parse(event.currentTarget.dataset.report || '{}'))));
+  const reportSearch = document.getElementById('table-search');
+  const reportType = document.querySelector('.search-filter-bar select');
+  function applyReportFilters() {
+    const query = (reportSearch?.value || '').toLowerCase().trim();
+    const type = (reportType?.value || '').toLowerCase();
+    document.querySelectorAll('#mc-table tbody tr[data-report-type]').forEach(row => {
+      row.style.display = (!query || row.dataset.search.toLowerCase().includes(query)) && (!type || row.dataset.reportType.includes(type)) ? '' : 'none';
+    });
+  }
+  reportSearch?.addEventListener('input', applyReportFilters);
+  reportType?.addEventListener('change', applyReportFilters);
+  document.addEventListener('DOMContentLoaded', () => { MediChain.initTableSort(); });
+</script>
 </body>
 </html>
