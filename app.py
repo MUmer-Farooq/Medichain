@@ -17,15 +17,28 @@ app = Flask(
     template_folder="templates",
     static_folder="static",
 )
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CA_PATH = os.path.join(BASE_DIR, "ca.pem")
+
+app = Flask(
+    __name__,
+    template_folder="templates",
+    static_folder="static",
+)
+
 app.secret_key = os.environ.get("SECRET_KEY")
-#sql connection build
+
 db = mysql.connector.connect(
     host=os.environ.get("DB_HOST"),
     port=int(os.environ.get("DB_PORT")),
     user=os.environ.get("DB_USER"),
     password=os.environ.get("DB_PASSWORD"),
     database=os.environ.get("DB_NAME"),
-    ssl_ca="ca.pem",
+    ssl_ca=CA_PATH,
     ssl_verify_cert=True
 )
 print("Database connection established successfully.")
