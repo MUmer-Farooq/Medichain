@@ -1,28 +1,33 @@
 from __future__ import annotations
+
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from pathlib import Path
 from datetime import date, timedelta
 import secrets
+import os
 import mysql.connector
 from flask import Flask, abort, render_template, request, redirect, url_for, flash, session, send_file
+from dotenv import load_dotenv
 
+load_dotenv()
 
 app = Flask(
     __name__,
     template_folder="templates",
     static_folder="static",
 )
-
-app.secret_key = "N!ghtFalcon"
+app.secret_key = os.environ.get("SECRET_KEY")
 #sql connection build
 db = mysql.connector.connect(
-    host="127.0.0.1",
-    user="root",
-    password="1234",
-    database="registration"
+    host=os.environ.get("DB_HOST"),
+    port=int(os.environ.get("DB_PORT")),
+    user=os.environ.get("DB_USER"),
+    password=os.environ.get("DB_PASSWORD"),
+    database=os.environ.get("DB_NAME"),
+    ssl_ca="ca.pem",
+    ssl_verify_cert=True
 )
-
 print("Database connection established successfully.")
 
 
